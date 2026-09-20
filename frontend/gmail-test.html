@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Gmail Connection Test</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 980px; margin: 40px auto; padding: 0 20px; background:#f6f6f7; color:#171717; }
+    .card { background:white; border:1px solid #ddd; border-radius:14px; padding:24px; margin-bottom:18px; }
+    button { padding:10px 16px; border:0; border-radius:9px; cursor:pointer; font-weight:700; margin-right:8px; }
+    .primary { background:#635bff; color:white; }
+    .secondary { background:#e7e7e7; }
+    .ok { color:#087a2f; font-weight:700; }
+    .bad { color:#b42318; font-weight:700; }
+    table { width:100%; border-collapse:collapse; }
+    th, td { text-align:left; padding:10px; border-bottom:1px solid #eee; vertical-align:top; }
+    th { font-size:12px; text-transform:uppercase; color:#666; }
+    small { color:#666; }
+  </style>
+</head>
+<body>
+  <p><a href="index.html">← Back to Dashboard</a></p>
+  <h1>Gmail Local Test</h1>
+  <p>This page only checks the local Python backend. It does not use Claude yet.</p>
+
+  <div class="card">
+    <h2>1. Connection</h2>
+    <p id="status">Checking...</p>
+    <button class="secondary" id="refresh-status">Refresh Status</button>
+  </div>
+
+  <div class="card">
+    <h2>2. Sync Gmail</h2>
+    <p><small>After Gmail is connected, click Sync Gmail to fetch the latest Inbox messages into the local SQLite database.</small></p>
+    <button class="primary" id="sync">Sync Gmail</button>
+    <button class="secondary" id="load">Load Stored Messages</button>
+    <p id="sync-result"></p>
+  </div>
+
+  <div class="card">
+    <h2>3. Messages</h2>
+    <table>
+      <thead><tr><th>From</th><th>Subject</th><th>Received</th><th>Attachments</th></tr></thead>
+      <tbody id="messages"><tr><td colspan="4">No messages loaded yet.</td></tr></tbody>
+    </table>
+  </div>
+
+  <script src="assets/js/pages/gmailTest.js"></script>
+</body>
+</html>

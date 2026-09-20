@@ -1,0 +1,84 @@
+body { background: #f3f3f3; }
+
+.supplier-payable-page {
+  width: min(1120px, calc(100% - 48px));
+  min-height: calc(100vh - 40px);
+  margin-top: 20px;
+  padding: 38px 42px 70px;
+  background: #fff;
+}
+
+.supplier-payable-header { margin: 8px 0 28px; }
+.supplier-payable-header .page-title { margin: 0; font-size: 30px; }
+
+.supplier-toolbar {
+  display: flex;
+  margin-bottom: 110px;
+}
+
+.supplier-search-field { width: min(380px, 100%); }
+.supplier-search-field label { color: #111; }
+.supplier-search-field input {
+  min-height: 44px;
+  border: 0;
+  border-radius: 4px;
+  background: #ddd;
+}
+
+.supplier-table-card {
+  overflow: hidden;
+  border: 1px solid #e1e1e1;
+  border-radius: 4px;
+}
+
+.supplier-payable-table {
+  width: 100%;
+  min-width: 880px;
+  border-collapse: collapse;
+}
+
+.supplier-payable-table th {
+  padding: 12px 18px;
+  background: #fff;
+  text-align: left;
+  font-size: 13px;
+}
+
+.supplier-payable-table td {
+  padding: 15px 18px;
+  border-top: 1px solid #e3e3e3;
+  font-size: 13px;
+  vertical-align: middle;
+}
+
+.supplier-payable-table th:nth-child(1) { width: 29%; }
+.supplier-payable-table th:nth-child(2) { width: 25%; }
+.supplier-payable-table th:nth-child(3) { width: 10%; text-align: center; }
+.supplier-payable-table th:nth-child(4) { width: 13%; }
+.supplier-payable-table th:nth-child(5) { width: 11%; }
+.supplier-payable-table th:nth-child(6) { width: 12%; }
+.supplier-payable-table td:nth-child(3) { text-align: center; font-weight: 700; }
+
+.supplier-payable-table select {
+  min-width: 116px;
+  min-height: 34px;
+  border: 0;
+  border-radius: 7px;
+  background: #dedede;
+  padding: 0 10px;
+  font-weight: 700;
+}
+
+.supplier-rule-note {
+  margin: 12px 0 0;
+  color: #777;
+  font-size: 11px;
+}
+
+@media (max-width: 760px) {
+  .supplier-payable-page {
+    width: calc(100% - 18px);
+    padding: 24px 16px 48px;
+  }
+  .supplier-toolbar { margin-bottom: 35px; }
+}

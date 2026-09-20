@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MaxGreen Agent — Dashboard</title>
+  <link rel="icon" href="data:," />
+  <link rel="stylesheet" href="./assets/css/base.css" />
+  <link rel="stylesheet" href="./assets/css/dashboard.css" />
+</head>
+<body class="dashboard-page">
+  <main class="page">
+    <header class="dashboard-header">
+      <h1>Dashboard</h1>
+      <div class="dashboard-actions">
+        <input class="dashboard-search" type="search" placeholder="Search" aria-label="Search" />
+        <a class="settings-link" href="./settings.html">Settings <span class="settings-icon" aria-hidden="true">⚙</span></a>
+      </div>
+    </header>
+
+    <div class="dashboard-grid">
+      <section class="dashboard-left" aria-label="Dashboard shortcuts">
+        <div class="dashboard-top-cards">
+          <a class="dashboard-stat" href="./inbox.html">
+            <div class="dashboard-stat-number" id="count-inbox">0</div>
+            <div class="dashboard-stat-title">Inbox</div>
+            <div class="dashboard-stat-subtitle">(To be Reviewed)</div>
+          </a>
+
+          <a class="dashboard-stat" href="./customer-receivable.html">
+            <div class="dashboard-stat-number" id="count-receivable">0</div>
+            <div class="dashboard-stat-title">Customer<br />Receivable</div>
+          </a>
+
+          <a class="dashboard-stat" href="./supplier-payable.html">
+            <div class="dashboard-stat-number" id="count-payable">0</div>
+            <div class="dashboard-stat-title">Supplier<br />Payable</div>
+          </a>
+        </div>
+
+        <div class="dashboard-middle-cards">
+          <a class="dashboard-stat" href="./pending.html">
+            <div class="dashboard-stat-number" id="count-pending">0</div>
+            <div class="dashboard-stat-title">Pending</div>
+          </a>
+
+          <a class="dashboard-stat" href="./completed.html">
+            <div class="dashboard-stat-number" id="count-completed">0</div>
+            <div class="dashboard-stat-title">Completed</div>
+          </a>
+        </div>
+
+        <a class="all-customers-card" href="./customers.html">All Customers</a>
+      </section>
+
+      <section class="receivable-card" aria-label="Receivable amount">
+        <h2>Receivable Amount</h2>
+
+        <div class="money-summary">
+          <div>
+            <strong id="receivable-total">0.00</strong>
+            <span>awaiting payment</span>
+          </div>
+          <div class="divider"></div>
+          <div>
+            <strong id="receivable-overdue">0.00</strong>
+            <span>overdue</span>
+          </div>
+        </div>
+
+        <div class="chart-area">
+          <div class="chart-y-label">Amount</div>
+          <div class="chart">
+            <div class="chart-item"><div class="chart-bar" style="height:82%"></div><span>Older</span></div>
+            <div class="chart-item"><div class="chart-bar" style="height:28%"></div><span>This week</span></div>
+            <div class="chart-item"><div class="chart-bar" style="height:55%"></div><span>Sep 20–26</span></div>
+            <div class="chart-item"><div class="chart-bar" style="height:18%"></div><span>Sep 27–Oct 3</span></div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script type="module" src="./assets/js/pages/dashboard.js"></script>
+</body>
+</html>

@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MaxGreen Agent — Edit Construction Quotation</title>
+  <link rel="icon" href="data:," />
+  <link rel="stylesheet" href="./assets/css/base.css" />
+  <link rel="stylesheet" href="./assets/css/quotation-edit.css" />
+</head>
+<body>
+  <main class="quotation-edit-page">
+    <a id="back-to-quotation" class="back-link" href="./quotation.html">← Back to QUOTATION.pdf</a>
+
+    <header class="editor-page-header">
+      <div>
+        <p class="eyebrow">Quotation</p>
+        <h1>Construction Quotation.pdf</h1>
+      </div>
+      <p class="manual-rule">Quotation requires manual entry. If a previous completed quotation has a similar subject title, TallyAI can suggest it as a reference.</p>
+    </header>
+
+    <section class="quotation-editor-card">
+      <div class="editor-toolbar">
+        <div>
+          <h2>Construction Quotation.pdf</h2>
+          <p id="source-summary">Editing quotation draft</p>
+        </div>
+        <div class="editor-toolbar-actions">
+          <button class="btn btn-primary" id="save-quotation" type="button">Save</button>
+        </div>
+      </div>
+
+
+
+      <form id="quotation-form" autocomplete="off">
+        <section class="form-section">
+          <div class="form-grid top-fields">
+            <div class="field company-picker-field">
+              <label for="company">Company</label>
+              <div class="company-combobox">
+                <input
+                  id="company"
+                  name="company"
+                  type="text"
+                  autocomplete="off"
+                  role="combobox"
+                  aria-autocomplete="list"
+                  aria-expanded="false"
+                  aria-controls="company-suggestions"
+                  placeholder="Search existing customer"
+                />
+                <div id="company-suggestions" class="company-suggestions" role="listbox" hidden></div>
+              </div>
+            </div>
+            <div class="field">
+              <label for="attn">Attn</label>
+              <select id="attn" name="attn">
+                <option value="">Select company first</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="issue-date">Issue date</label>
+              <input id="issue-date" name="issueDate" type="date" />
+            </div>
+            <div class="field">
+              <label for="due-date">Due date</label>
+              <input id="due-date" name="dueDate" type="date" />
+            </div>
+            <div class="field">
+              <label for="quotation-number">Quotation reference</label>
+              <input id="quotation-number" name="quotationNumber" type="text" readonly />
+            </div>
+            <div class="field currency-field">
+              <label for="currency">Currency</label>
+              <select id="currency" name="currency">
+                <option value="SGD">SGD</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="field subject-field">
+            <label for="subject-title">Subject Title</label>
+            <input id="subject-title" name="subjectTitle" type="text" placeholder="Enter quotation subject" />
+          </div>
+        </section>
+
+        <section class="quotation-items-section">
+          <div class="table-scroll">
+            <table class="quotation-items-table">
+              <thead>
+                <tr>
+                  <th>Item</th>
+                  <th>Description</th>
+                  <th>Qty</th>
+                  <th>UOM</th>
+                  <th>Unit Price</th>
+                  <th>Tax Rate</th>
+                  <th>Tax Amount</th>
+                  <th>Amount SGD</th>
+                  <th aria-label="Delete"></th>
+                </tr>
+              </thead>
+              <tbody id="quotation-items"></tbody>
+            </table>
+          </div>
+          <div class="items-footer">
+            <button class="btn btn-small" id="add-row" type="button">Add Row</button>
+          </div>
+        </section>
+
+        <section class="quotation-actions-row">
+          <button class="btn" id="attach-files" type="button">Attach files</button>
+          <span id="attachment-note" class="subtle-note"></span>
+        </section>
+
+        <section class="quotation-summary">
+          <div class="amount-in-words">
+            <strong id="amount-words">Sum of Singapore Zero Dollars Only</strong>
+            <p>This is a computer generated document, no signature is required.</p>
+          </div>
+          <dl class="totals">
+            <div><dt>Subtotal</dt><dd id="subtotal">0.00</dd></div>
+            <div><dt id="tax-summary-label">GST (9%)</dt><dd id="gst-total">0.00</dd></div>
+            <div class="grand-total"><dt>Total</dt><dd id="grand-total">0.00</dd></div>
+          </dl>
+        </section>
+      </form>
+    </section>
+  </main>
+
+
+  <div id="new-company-modal" class="contact-modal" hidden>
+    <div class="contact-modal-backdrop" data-close-company-modal></div>
+    <section class="contact-modal-card" role="dialog" aria-modal="true" aria-labelledby="new-company-modal-title">
+      <header class="contact-modal-header">
+        <h2 id="new-company-modal-title">Update contact detail</h2>
+        <div class="contact-modal-actions">
+          <button class="company-popup-button" id="cancel-new-company" type="button">Cancel</button>
+          <button class="company-popup-button" id="save-new-company" type="button">Save</button>
+        </div>
+      </header>
+
+      <div class="contact-modal-fields">
+        <div class="popup-field">
+          <label for="new-company-name">Company Name</label>
+          <input id="new-company-name" type="text" autocomplete="organization" />
+        </div>
+
+        <div class="popup-field">
+          <label for="new-company-attn">Name (Attn)</label>
+          <input id="new-company-attn" type="text" autocomplete="name" />
+        </div>
+
+        <div class="popup-field">
+          <label for="new-company-email">Email</label>
+          <input id="new-company-email" type="email" autocomplete="email" />
+        </div>
+
+        <div class="popup-two-column">
+          <div class="popup-field">
+            <label for="new-company-address">Address</label>
+            <input id="new-company-address" type="text" autocomplete="street-address" />
+          </div>
+          <div class="popup-field">
+            <label for="new-company-postal">Postal</label>
+            <input id="new-company-postal" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="postal-code" />
+          </div>
+        </div>
+
+        <div class="popup-field">
+          <label for="new-company-contact">Contact Number</label>
+          <input id="new-company-contact" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="tel" />
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script type="module" src="./assets/js/pages/quotationEdit.js"></script>
+</body>
+</html>

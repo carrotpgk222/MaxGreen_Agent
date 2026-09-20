@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MaxGreen Agent — Invoice & Delivery Order Review</title>
+  <link rel="icon" href="data:," />
+  <link rel="stylesheet" href="./assets/css/base.css" />
+  <link rel="stylesheet" href="./assets/css/quotation.css" />
+  <link rel="stylesheet" href="./assets/css/invoice.css" />
+  <link rel="stylesheet" href="./assets/css/delivery-order.css" />
+  <link rel="stylesheet" href="./assets/css/invoice-do.css" />
+</head>
+<body>
+  <main class="quotation-review-page invoice-do-review-page">
+    <a class="back-link" href="./inbox.html">← Back to Inbox</a>
+
+    <header class="review-header">
+      <p class="review-context">Inbox View (INVOICE &amp; DO)</p>
+      <h1>Invoice.pdf &amp; DO.pdf</h1>
+    </header>
+
+    <section class="email-review-card">
+      <div class="email-subject-row">
+        <div><span class="mini-label">Subject</span><strong id="source-subject">—</strong></div>
+        <button class="btn btn-muted" type="button" disabled>Open in Gmail ↗</button>
+      </div>
+      <div class="email-details-row">
+        <div><span class="mini-label">From</span><span id="source-from">—</span></div>
+        <div><span class="mini-label">Received</span><span id="source-date">—</span></div>
+      </div>
+      <p class="email-body" id="source-body"></p>
+      <div class="attachments" id="source-attachments"></div>
+      <div class="po-quote-note" id="po-quote-note" hidden></div>
+    </section>
+
+    <section class="quotation-review-toolbar">
+      <div class="detected-category">
+        <strong>TallyAI detects <span id="detected-category">Invoice &amp; DO</span></strong>
+        <span class="ai-indicator" aria-hidden="true"></span>
+      </div>
+      <div class="review-actions">
+        <div class="field compact-field">
+          <label for="category-select">Category</label>
+          <select id="category-select"></select>
+        </div>
+        <button class="btn btn-primary" id="save-pending" type="button">Save to Pending</button>
+      </div>
+    </section>
+
+    <section class="bundle-section">
+      <header class="bundle-section-header">
+        <div>
+          <p class="review-context">GENERATED DOCUMENT 1</p>
+          <h2 id="invoice-section-name">Invoice.pdf</h2>
+        </div>
+        <a class="btn" id="edit-invoice" href="#">Edit Invoice</a>
+      </header>
+
+      <section class="invoice-pdf-shell" aria-label="Tax Invoice PDF preview">
+        <article class="invoice-paper">
+          <header class="invoice-paper-header">
+            <div>
+              <h2>MAXGREEN CONTRACTOR PTE LTD</h2>
+              <p>71 Woodlands Ave 10 #06-18 Woodlands Industrial Xchange Singapore 737743</p>
+              <p>Tel/Fax: 69097551/7552 &nbsp; HP: 91998892 &nbsp; Email: green_01kat@yahoo.com</p>
+              <p>Co Reg No./ GST Reg. No: 200915795C</p>
+            </div>
+            <div class="invoice-register"><img src="./assets/images/bizsafe-logo.png" alt="Registered with bizSAFE" /></div>
+          </header>
+          <div class="invoice-title-row"><h3>Tax Invoice</h3></div>
+          <section class="invoice-info-row">
+            <div class="invoice-customer">
+              <strong id="inv-preview-company">Customer / Company</strong>
+              <span id="inv-preview-address"></span>
+              <span id="inv-preview-postal"></span>
+              <span id="inv-preview-attn"></span>
+            </div>
+            <dl class="invoice-meta">
+              <div><dt>No.</dt><dd id="inv-preview-number">:</dd></div>
+              <div><dt>Date</dt><dd id="inv-preview-date">:</dd></div>
+              <div><dt>Ref.</dt><dd id="inv-preview-reference">:</dd></div>
+              <div><dt>External Ref.</dt><dd id="inv-preview-external-reference">:</dd></div>
+              <div><dt>Staff</dt><dd id="inv-preview-staff">:</dd></div>
+              <div><dt>Terms</dt><dd id="inv-preview-terms">:</dd></div>
+              <div><dt>Job</dt><dd id="inv-preview-job">:</dd></div>
+            </dl>
+          </section>
+          <h4 id="inv-preview-subject">INVOICE SUBJECT</h4>
+          <table class="invoice-table">
+            <thead><tr><th>SNo</th><th>Description</th><th>Quantity</th><th>Unit Price</th><th>Amount</th></tr></thead>
+            <tbody id="inv-preview-items"></tbody>
+          </table>
+          <section class="invoice-total-row">
+            <div id="inv-preview-amount-words">Sum of Singapore Zero Dollars Only</div>
+            <div class="invoice-totals">
+              <div><span>Amt S$</span><strong id="inv-preview-subtotal">0.00</strong></div>
+              <div><span id="inv-preview-tax-label">9% GST</span><strong id="inv-preview-gst">0.00</strong></div>
+              <div><span>Total S$</span><strong id="inv-preview-total">0.00</strong></div>
+            </div>
+          </section>
+          <section class="invoice-payment">
+            <div>
+              <strong>MODE OF PAYMENT :</strong>
+              <p>Bank Transfer to DBS Current : 066-9036370</p>
+              <p>PAYNOW UEN : 200915795C &nbsp; PAYNOW QR</p>
+              <p>Cheque payable to:<br />MAXGREEN CONTRACTOR PTE LTD</p>
+            </div>
+            <img id="invoice-paynow-qr" src="./assets/images/paynow-qr.png" alt="PayNow QR" />
+          </section>
+          <footer class="invoice-footer">
+            <span>Page 1 of 1 - E. &amp; O.E.</span>
+            <span>This is a computer generated document, no signature is required.</span>
+          </footer>
+        </article>
+      </section>
+    </section>
+
+    <section class="bundle-section">
+      <header class="bundle-section-header">
+        <div>
+          <p class="review-context">GENERATED DOCUMENT 2</p>
+          <h2 id="do-section-name">Delivery Order.pdf</h2>
+        </div>
+        <a class="btn" id="edit-delivery-order" href="#">Edit Delivery Order</a>
+      </header>
+
+      <section class="delivery-pdf-shell" aria-label="Delivery Order PDF preview">
+        <article class="delivery-paper">
+          <header class="delivery-paper-header">
+            <div>
+              <h2>MAXGREEN CONTRACTOR PTE LTD</h2>
+              <p>71 Woodlands Ave 10 #06-18 Woodlands Industrial Xchange Singapore 737743</p>
+              <p>Tel/Fax: 69097551/7552 &nbsp; HP: 91998892 &nbsp; Email: green_01kat@yahoo.com</p>
+              <p>Co Reg No./ GST Reg. No: 200915795C</p>
+            </div>
+            <div class="delivery-register"><img src="./assets/images/bizsafe-logo.png" alt="Registered with bizSAFE" /></div>
+          </header>
+          <div class="delivery-title-row"><h3>Delivery Order</h3></div>
+          <section class="delivery-info-row">
+            <div class="delivery-customer">
+              <strong id="do-preview-company">Customer / Company</strong>
+              <span id="do-preview-address"></span>
+              <span id="do-preview-postal"></span>
+              <span id="do-preview-attn"></span>
+            </div>
+            <dl class="delivery-meta">
+              <div><dt>No.</dt><dd id="do-preview-number">:</dd></div>
+              <div><dt>Date</dt><dd id="do-preview-date">:</dd></div>
+              <div><dt>Ref.</dt><dd id="do-preview-reference">:</dd></div>
+              <div><dt>External Ref.</dt><dd id="do-preview-external-reference">:</dd></div>
+              <div><dt>Staff</dt><dd id="do-preview-staff">:</dd></div>
+              <div><dt>Terms</dt><dd id="do-preview-terms">:</dd></div>
+              <div><dt>Job</dt><dd id="do-preview-job">:</dd></div>
+            </dl>
+          </section>
+          <h4 id="do-preview-subject">DELIVERY ORDER SUBJECT</h4>
+          <table class="delivery-table">
+            <thead><tr><th>SNo</th><th>Description</th><th>Quantity</th></tr></thead>
+            <tbody id="do-preview-items"></tbody>
+          </table>
+          <footer class="delivery-footer delivery-footer-generated">
+            <div class="delivery-page-mark">Page 1 of 1 - E. &amp; O.E.</div>
+            <div class="computer-generated-note">This is a computer generated document, no signature is required.</div>
+          </footer>
+        </article>
+      </section>
+    </section>
+
+    <div id="review-toast" class="save-toast" role="status" hidden>Saved to Pending.</div>
+  </main>
+  <script type="module" src="./assets/js/pages/invoiceDoView.js"></script>
+</body>
+</html>

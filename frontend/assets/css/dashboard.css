@@ -1,0 +1,84 @@
+.dashboard-page { background: #fff; min-height: 100vh; }
+.dashboard-page .page { padding-top: 42px; }
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+  margin-bottom: 28px;
+}
+.dashboard-header h1 { margin: 0; font-size: 38px; letter-spacing: -0.04em; }
+.dashboard-actions { display: flex; align-items: center; gap: 14px; }
+.dashboard-search {
+  width: 320px;
+  border: 0;
+  border-radius: 5px;
+  background: #e3e3e3;
+  padding: 10px 13px;
+  outline: none;
+}
+.settings-link { font-weight: 800; display: inline-flex; gap: 8px; align-items: center; }
+.settings-icon { font-size: 22px; }
+.dashboard-grid { display: grid; grid-template-columns: minmax(560px, 1.15fr) minmax(390px, .85fr); gap: 40px; }
+.dashboard-left { display: flex; flex-direction: column; gap: 20px; }
+.dashboard-top-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
+.dashboard-middle-cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 34px; }
+.dashboard-stat {
+  min-height: 156px;
+  border-radius: 4px;
+  background: #dedede;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 18px;
+  transition: transform .15s ease, background .15s ease;
+}
+.dashboard-stat:hover { transform: translateY(-2px); background: #d5d5d5; }
+.dashboard-stat-number { font-size: 39px; font-weight: 800; line-height: 1; }
+.dashboard-stat-title { margin-top: 7px; font-size: 21px; font-weight: 800; line-height: 1.12; }
+.dashboard-stat-subtitle { margin-top: 5px; font-size: 12px; }
+.all-customers-card {
+  min-height: 110px;
+  border-radius: 3px;
+  background: #dedede;
+  display: grid;
+  place-items: center;
+  font-size: 39px;
+  font-weight: 800;
+}
+.receivable-card { background: #dedede; border-radius: 5px; padding: 24px 30px 28px; }
+.receivable-card h2 { margin: 0; font-size: 28px; }
+.money-summary { display: flex; gap: 18px; margin: 18px 0 28px; }
+.money-summary > div:not(.divider) { display: flex; flex-direction: column; gap: 4px; }
+.money-summary strong { font-size: 13px; }
+.money-summary span { font-size: 12px; font-weight: 700; }
+.divider { width: 1px; min-height: 42px; background: #4f4f4f; }
+.chart-area { position: relative; padding-left: 40px; }
+.chart-y-label { position: absolute; left: 0; top: 50%; transform: translateY(-50%) rotate(-90deg); font-size: 12px; font-weight: 700; }
+.chart {
+  height: 220px;
+  border-left: 1px solid #666;
+  border-bottom: 1px solid #666;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 28px;
+  align-items: end;
+  padding: 12px 16px 0;
+}
+.chart-item { height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 10px; }
+.chart-bar { width: 62%; min-width: 28px; background: #fff; }
+.chart-item span { font-size: 11px; font-weight: 700; white-space: nowrap; }
+
+@media (max-width: 980px) {
+  .dashboard-grid { grid-template-columns: 1fr; }
+  .dashboard-search { width: 220px; }
+}
+@media (max-width: 680px) {
+  .dashboard-header { flex-direction: column; }
+  .dashboard-actions { width: 100%; }
+  .dashboard-search { flex: 1; min-width: 0; }
+  .dashboard-top-cards { grid-template-columns: 1fr; }
+  .dashboard-middle-cards { grid-template-columns: 1fr; gap: 20px; }
+}

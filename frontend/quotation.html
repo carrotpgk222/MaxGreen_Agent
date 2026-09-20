@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MaxGreen Agent — Quotation Review</title>
+  <link rel="icon" href="data:," />
+  <link rel="stylesheet" href="./assets/css/base.css" />
+  <link rel="stylesheet" href="./assets/css/quotation.css" />
+</head>
+<body>
+  <main class="quotation-review-page">
+    <a class="back-link" href="./inbox.html">← Back to Inbox</a>
+
+    <header class="review-header">
+      <p class="review-context">Inbox Edit (QUOTATION)</p>
+      <h1 id="quotation-file-name">QUOTATION.pdf</h1>
+    </header>
+
+    <section class="email-review-card" aria-label="Source email">
+      <div class="email-subject-row">
+        <div>
+          <span class="mini-label">Email subject</span>
+          <strong id="source-subject">—</strong>
+        </div>
+        <button class="btn btn-muted" type="button" disabled title="Gmail integration will be added later">Open in Gmail ↗</button>
+      </div>
+
+      <div class="email-details-row">
+        <div>
+          <span class="mini-label">From</span>
+          <span id="source-from">—</span>
+        </div>
+        <div>
+          <span class="mini-label">Received</span>
+          <span id="source-date">—</span>
+        </div>
+      </div>
+
+      <p class="email-body" id="source-body"></p>
+      <div class="attachments" id="source-attachments"></div>
+    </section>
+
+    <section class="quotation-review-toolbar">
+      <div class="detected-category">
+        <strong>TallyAI detects <span id="detected-category">Quotation</span></strong>
+        <span class="ai-indicator" aria-hidden="true"></span>
+      </div>
+
+      <div class="review-actions">
+        <div class="field compact-field">
+          <label for="category-select">Category</label>
+          <select id="category-select">
+            <option value="Quotation">Quotation</option>
+            <option value="Delivery Order">Delivery Order</option>
+            <option value="Invoice">Invoice</option>
+            <option value="Invoice & DO">Invoice &amp; DO</option>
+          </select>
+        </div>
+        <a class="btn" id="edit-quotation" href="#">Edit</a>
+        <button class="btn btn-primary" id="save-pending" type="button">Save to Pending</button>
+      </div>
+    </section>
+
+    <section class="quotation-pdf-shell" aria-label="Quotation PDF preview">
+      <article class="quotation-paper" id="quotation-preview">
+        <header class="paper-header">
+          <div>
+            <h2>MAXGREEN CONTRACTOR PTE LTD</h2>
+            <p>71 Woodlands Ave 10 #06-18 Woodlands Industrial Xchange Singapore 737743</p>
+            <p>Tel/Fax: 69097551/7552 &nbsp; HP: 91998892 &nbsp; Email: green_01kat@yahoo.com</p>
+            <p>Co Reg No./ GST Reg. No: 200915795C</p>
+          </div>
+          <div class="paper-register"><img src="./assets/images/bizsafe-logo.png" alt="Registered with bizSAFE" /></div>
+        </header>
+
+        <div class="paper-title-row">
+          <h3>Quotation</h3>
+        </div>
+
+        <section class="paper-info-row">
+          <div class="paper-customer">
+            <strong id="preview-company">Customer / Company</strong>
+            <span id="preview-address"></span>
+            <span id="preview-postal"></span>
+            <span id="preview-attn"></span>
+          </div>
+
+          <dl class="paper-meta">
+            <div><dt>No.</dt><dd id="preview-number">:</dd></div>
+            <div><dt>Date</dt><dd id="preview-date">:</dd></div>
+            <div><dt>Ref.</dt><dd id="preview-ref">:</dd></div>
+            <div><dt>External Ref.</dt><dd id="preview-external-ref">:</dd></div>
+            <div><dt>Staff</dt><dd>:</dd></div>
+            <div><dt>Terms</dt><dd>:</dd></div>
+            <div><dt>Job</dt><dd>:</dd></div>
+          </dl>
+        </section>
+
+        <h4 id="preview-subject">QUOTATION SUBJECT</h4>
+
+        <table class="paper-table">
+          <thead>
+            <tr>
+              <th>SNo</th>
+              <th>Description</th>
+              <th>Quantity</th>
+              <th>Unit Price</th>
+              <th>Amount</th>
+            </tr>
+          </thead>
+          <tbody id="preview-items"></tbody>
+        </table>
+
+        <section class="paper-total-row">
+          <div id="preview-amount-words">Sum of Singapore Zero Dollars Only</div>
+          <div class="paper-totals">
+            <div><span>Amt S$</span><strong id="preview-subtotal">0.00</strong></div>
+            <div><span id="preview-tax-label">9% GST</span><strong id="preview-gst">0.00</strong></div>
+            <div><span>Total S$</span><strong id="preview-total">0.00</strong></div>
+          </div>
+        </section>
+
+        <footer class="paper-footer paper-footer-generated">
+          <span>Page 1 of 1 - E. &amp; O.E.</span>
+          <span class="computer-generated-note">This is a computer generated document, no signature is required.</span>
+        </footer>
+      </article>
+    </section>
+
+    <div id="review-toast" class="save-toast" role="status" hidden>Saved to Pending.</div>
+  </main>
+
+  <script type="module" src="./assets/js/pages/quotationView.js"></script>
+</body>
+</html>

@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MaxGreen Agent — Pending</title>
+  <link rel="icon" href="data:," />
+  <link rel="stylesheet" href="./assets/css/base.css" />
+  <link rel="stylesheet" href="./assets/css/pending.css" />
+</head>
+<body>
+  <main class="page pending-page">
+    <a class="back-link" href="./index.html">← Back to Dashboard</a>
+
+    <header class="page-header pending-header">
+      <div>
+        <h1 class="page-title">Pending</h1>
+        <p class="page-description">Documents reviewed and saved, waiting to be emailed.</p>
+      </div>
+    </header>
+
+    <section class="pending-controls" aria-label="Pending filters">
+      <div class="field pending-search-field">
+        <label for="pending-search">Search</label>
+        <input id="pending-search" type="search" placeholder="Search name or reference" autocomplete="off" />
+      </div>
+      <div class="field">
+        <label for="pending-category">Category</label>
+        <select id="pending-category">
+          <option value="All">All</option>
+          <option value="Quotation">Quotation</option>
+          <option value="Delivery Order">Delivery Order</option>
+          <option value="Invoice">Invoice</option>
+          <option value="Invoice & DO">Invoice &amp; DO</option>
+          <option value="Statement of Account">Statement of Account</option>
+          <option value="Request for Payment">Request for Payment</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="pending-date">Date</label>
+        <select id="pending-date">
+          <option value="All">All dates</option>
+        </select>
+      </div>
+    </section>
+
+    <div class="pending-tabs" role="tablist" aria-label="Party type">
+      <button class="pending-tab active" type="button" data-party="customer" role="tab" aria-selected="true">Customers</button>
+      <button class="pending-tab" type="button" data-party="supplier" role="tab" aria-selected="false">Suppliers</button>
+    </div>
+
+    <section class="pending-table-card">
+      <div class="table-wrap">
+        <table class="pending-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Reference No.</th>
+              <th>Category</th>
+              <th>Approve on</th>
+              <th aria-label="View"></th>
+            </tr>
+          </thead>
+          <tbody id="pending-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="./assets/js/pages/pending.js"></script>
+</body>
+</html>

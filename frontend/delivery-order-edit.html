@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MaxGreen Agent — Construction Delivery Order</title>
+  <link rel="icon" href="data:," />
+  <link rel="stylesheet" href="./assets/css/base.css" />
+  <link rel="stylesheet" href="./assets/css/delivery-order-edit.css" />
+</head>
+<body>
+  <main class="delivery-edit-page">
+    <a id="back-to-delivery" class="back-link" href="./delivery-order.html">← Back to Delivery Order.pdf</a>
+
+    <section class="delivery-editor-card">
+      <header class="delivery-editor-header">
+        <h1>Construction Delivery Order.pdf</h1>
+        <button class="btn btn-primary" id="save-delivery-order" type="button">Save</button>
+      </header>
+
+      <form id="delivery-order-form" autocomplete="off">
+        <section class="delivery-fields-grid top-row-fields">
+          <div class="field company-picker-field">
+            <label for="do-company">Company</label>
+            <div class="company-combobox">
+              <input id="do-company" type="text" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="do-company-suggestions" placeholder="Search existing customer" />
+              <div id="do-company-suggestions" class="company-suggestions" role="listbox" hidden></div>
+            </div>
+          </div>
+          <div class="field">
+            <label for="do-attn">Attn</label>
+            <select id="do-attn"><option value="">Select company first</option></select>
+          </div>
+          <div class="field">
+            <label for="do-date">Issue date</label>
+            <input id="do-date" type="date" />
+          </div>
+          <div class="field">
+            <label for="do-due-date">Due date</label>
+            <input id="do-due-date" type="date" />
+          </div>
+          <div class="field">
+            <label for="do-number">DO reference</label>
+            <input id="do-number" type="text" readonly />
+          </div>
+        </section>
+
+        <section class="delivery-secondary-row">
+          <div class="field currency-field">
+            <label for="do-currency">Currency</label>
+            <select id="do-currency">
+              <option value="SGD">SGD</option>
+            </select>
+          </div>
+
+          <div class="field ref-quote-picker-field">
+            <label for="ref-quote-search">Ref Quote:</label>
+            <div class="ref-quote-combobox">
+              <input
+                id="ref-quote-search"
+                type="text"
+                autocomplete="off"
+                role="combobox"
+                aria-autocomplete="list"
+                aria-expanded="false"
+                aria-controls="ref-quote-suggestions"
+                placeholder="Search completed quotation"
+              />
+              <div id="ref-quote-suggestions" class="ref-quote-suggestions" role="listbox" hidden></div>
+            </div>
+            <small class="ref-quote-help">Only completed quotations can be selected.</small>
+          </div>
+        </section>
+
+        <section class="field delivery-subject-field">
+          <label for="do-subject">Subject Title</label>
+          <input id="do-subject" type="text" />
+        </section>
+
+        <section class="delivery-items-section">
+          <div class="table-wrap">
+            <table class="delivery-items-table">
+              <thead>
+                <tr>
+                  <th>Item</th>
+                  <th>Description</th>
+                  <th>Qty</th>
+                  <th>UOM</th>
+                  <th>Unit Price</th>
+                  <th>Tax Rate</th>
+                  <th>Tax Amount</th>
+                  <th>Amount SGD</th>
+                  <th aria-label="Delete"></th>
+                </tr>
+              </thead>
+              <tbody id="delivery-items"></tbody>
+            </table>
+          </div>
+          <div class="delivery-items-footer">
+            <button class="btn btn-small" id="add-do-row" type="button">Add Row</button>
+          </div>
+        </section>
+
+        <section class="delivery-attachment-row">
+          <button class="btn" id="attach-do-files" type="button">Attach files</button>
+          <span id="do-attachment-note" class="subtle-note"></span>
+        </section>
+
+        <section class="delivery-summary">
+          <div class="amount-in-words">
+            <strong id="do-amount-words">Sum of Singapore Zero Dollars Only</strong>
+            <p>This is a computer generated document, no signature is required.</p>
+          </div>
+          <dl class="totals">
+            <div><dt>Subtotal</dt><dd id="do-subtotal">0.00</dd></div>
+            <div><dt id="do-tax-label">GST (9%)</dt><dd id="do-gst">0.00</dd></div>
+            <div class="grand-total"><dt>Total</dt><dd id="do-total">0.00</dd></div>
+          </dl>
+        </section>
+      </form>
+    </section>
+  </main>
+
+
+  <div id="do-new-company-modal" class="contact-modal" hidden>
+    <div class="contact-modal-backdrop" data-close-do-company-modal></div>
+    <section class="contact-modal-card" role="dialog" aria-modal="true" aria-labelledby="do-new-company-title">
+      <header class="contact-modal-header">
+        <h2 id="do-new-company-title">Update contact detail</h2>
+        <div class="contact-modal-actions">
+          <button class="company-popup-button" id="do-cancel-new-company" type="button">Cancel</button>
+          <button class="company-popup-button" id="do-save-new-company" type="button">Save</button>
+        </div>
+      </header>
+      <div class="contact-modal-fields">
+        <div class="popup-field"><label for="do-new-company-name">Company Name</label><input id="do-new-company-name" type="text" /></div>
+        <div class="popup-field"><label for="do-new-company-attn">Name (Attn)</label><input id="do-new-company-attn" type="text" /></div>
+        <div class="popup-field"><label for="do-new-company-email">Email</label><input id="do-new-company-email" type="email" /></div>
+        <div class="popup-two-column">
+          <div class="popup-field"><label for="do-new-company-address">Address</label><input id="do-new-company-address" type="text" /></div>
+          <div class="popup-field"><label for="do-new-company-postal">Postal</label><input id="do-new-company-postal" type="text" inputmode="numeric" pattern="[0-9]*" /></div>
+        </div>
+        <div class="popup-field"><label for="do-new-company-contact">Contact Number</label><input id="do-new-company-contact" type="text" inputmode="numeric" pattern="[0-9]*" /></div>
+      </div>
+    </section>
+  </div>
+
+  <script type="module" src="./assets/js/pages/deliveryOrderEdit.js"></script>
+</body>
+</html>

@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Purchase Order.pdf</title>
+  <link rel="icon" href="data:," />
+  <link rel="stylesheet" href="./assets/css/base.css" />
+  <style>
+    body{background:#eef0f3}
+    .po-page{width:min(100% - 32px,900px);margin:28px auto}
+    .po-paper{background:#fff;border:1px solid #b8bdc7;min-height:1050px;padding:44px 50px;box-shadow:0 10px 28px rgba(0,0,0,.06)}
+    .po-header{display:flex;justify-content:space-between;border-bottom:2px solid #333;padding-bottom:14px}
+    .po-header h1{margin:0;font-size:28px}.po-label{font-weight:700;font-size:14px;color:#555}
+    .po-meta{display:grid;grid-template-columns:1fr 1fr;gap:8px 32px;margin:22px 0 34px}
+    .po-table{width:100%;border-collapse:collapse}.po-table th,.po-table td{border:1px solid #555;padding:9px;vertical-align:top}
+    .po-table th{background:#f1f1f1}.po-description{min-height:430px;white-space:pre-wrap}
+    .po-note{margin-top:20px;padding-top:14px;border-top:1px solid #555;font-weight:700;white-space:pre-wrap}
+  </style>
+</head>
+<body>
+  <main class="po-page">
+    <a class="back-link" href="javascript:window.close()">← Close attachment</a>
+    <article class="po-paper">
+      <header class="po-header">
+        <div><h1>PURCHASE ORDER</h1><div id="po-company">Customer</div></div>
+        <div><span class="po-label">PO No.</span><div id="po-number">—</div></div>
+      </header>
+      <section class="po-meta">
+        <div><span class="po-label">Subject</span><div id="po-subject">—</div></div>
+        <div><span class="po-label">Date</span><div id="po-date">—</div></div>
+      </section>
+      <table class="po-table">
+        <thead><tr><th style="width:70px">Item</th><th>Item Description</th><th style="width:130px">Quantity</th></tr></thead>
+        <tbody><tr><td>1</td><td><div class="po-description" id="po-description"></div><div class="po-note" id="po-note"></div></td><td>As quoted</td></tr></tbody>
+      </table>
+    </article>
+  </main>
+  <script type="module">
+    import { getEmails } from './assets/js/core/storage.js'
+    const id = new URLSearchParams(location.search).get('id')
+    const email = getEmails().find(item => item.id === id)
+    if (email) {
+      const refs = Array.isArray(email.purchaseOrderQuoteRefs) ? email.purchaseOrderQuoteRefs : []
+      document.getElementById('po-company').textContent = email.from || 'Customer'
+      document.getElementById('po-number').textContent = email.attachments?.[0]?.name?.replace(/\.pdf$/i,'') || 'PO'
+      document.getElementById('po-subject').textContent = email.subject || ''
+      document.getElementById('po-date').textContent = email.receivedDate || ''
+      document.getElementById('po-description').textContent = 'Please supply and complete the works described in the referenced quotation(s).'
+      document.getElementById('po-note').textContent = refs.length ? `Note to Supplier:\nQuote Ref: ${refs.join(' / ')}` : 'Note to Supplier:'
+    }
+  </script>
+</body>
+</html>

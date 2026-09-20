@@ -1,0 +1,394 @@
+body { background: #f1f1f1; }
+
+.quotation-review-page {
+  width: min(980px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 18px 0 54px;
+}
+
+.review-header {
+  margin-bottom: 10px;
+}
+
+.review-context {
+  margin: 0 0 6px;
+  color: #a0a0a0;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.review-header h1 {
+  margin: 0;
+  font-size: 22px;
+  letter-spacing: -.02em;
+}
+
+.email-review-card {
+  background: #fff;
+  border: 1px solid #dedede;
+  padding: 16px;
+}
+
+.email-subject-row,
+.email-details-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.email-subject-row {
+  padding-bottom: 13px;
+  border-bottom: 1px solid #d8d8d8;
+}
+
+.email-subject-row > div,
+.email-details-row > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.email-subject-row strong {
+  max-width: 700px;
+  font-size: 15px;
+  line-height: 1.4;
+}
+
+.email-details-row {
+  justify-content: flex-start;
+  margin-top: 12px;
+}
+
+.email-details-row > div { min-width: 220px; }
+
+.mini-label {
+  color: #8a8a8a;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+}
+
+.email-body {
+  margin: 15px 0 10px;
+  color: #333;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.attachments {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.attachment {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 8px 12px;
+  background: #e8e8e8;
+  color: #2f2f2f;
+  font-size: 11px;
+}
+
+.btn-muted {
+  border-color: #d3d3d3;
+  background: #e5e5e5;
+  color: #4b4b4b;
+}
+
+.quotation-review-toolbar {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 14px;
+}
+
+.detected-category {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 39px;
+  font-size: 15px;
+}
+
+.ai-indicator {
+  width: 0;
+  height: 0;
+  border-top: 7px solid transparent;
+  border-bottom: 7px solid transparent;
+  border-left: 12px solid #10c96a;
+}
+
+.review-actions {
+  display: flex;
+  align-items: end;
+  gap: 10px;
+}
+
+.compact-field {
+  min-width: 150px;
+}
+
+.compact-field label {
+  font-size: 10px;
+}
+
+.compact-field select {
+  min-height: 38px;
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
+.quotation-pdf-shell {
+  margin-top: 12px;
+  padding: 10px;
+  background: #e2e2e2;
+  overflow-x: auto;
+}
+
+/* Fixed quotation layout based on the supplied one-page MaxGreen quotation template. */
+.quotation-paper {
+  width: min(100%, 760px);
+  min-height: 980px;
+  margin: 0 auto;
+  background: #fff;
+  border: 2px solid #c82222;
+  padding: 34px 30px 26px;
+  color: #111;
+  font-family: Arial, Helvetica, sans-serif;
+  box-shadow: 0 5px 18px rgba(0,0,0,.08);
+}
+
+.paper-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  padding-bottom: 14px;
+}
+
+.paper-header h2 {
+  margin: 0 0 3px;
+  font: 700 24px/1.05 Georgia, "Times New Roman", serif;
+  letter-spacing: .01em;
+}
+
+.paper-header p {
+  margin: 1px 0;
+  font: 10px/1.25 Arial, Helvetica, sans-serif;
+}
+
+.paper-register {
+  flex: 0 0 105px;
+  padding-top: 2px;
+  text-align: right;
+}
+
+.paper-register img {
+  display: block;
+  width: 100px;
+  height: auto;
+  margin-left: auto;
+  object-fit: contain;
+}
+
+.paper-title-row {
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-end;
+  border-bottom: 2px solid #333;
+  min-height: 34px;
+}
+
+.paper-title-row h3 {
+  margin: 0 0 -2px;
+  padding: 0 2px 3px;
+  font-size: 23px;
+  line-height: 1;
+}
+
+/* Customer information and quotation metadata share one row, matching the
+   supplied MaxGreen quotation layout. */
+.paper-info-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 190px;
+  column-gap: 28px;
+  align-items: start;
+  min-height: 118px;
+  padding-top: 7px;
+}
+
+.paper-customer {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  max-width: 100%;
+  font-size: 10px;
+  line-height: 1.2;
+}
+
+.paper-customer strong {
+  font-weight: 700;
+}
+
+.paper-meta {
+  margin: 0;
+  padding-top: 0;
+  font-size: 9px;
+}
+
+.paper-meta div {
+  display: grid;
+  grid-template-columns: 68px 1fr;
+  min-height: 12px;
+}
+
+.paper-meta dt,
+.paper-meta dd { margin: 0; }
+
+.quotation-paper h4 {
+  margin: 5px 0 4px;
+  font-size: 14px;
+  text-transform: uppercase;
+}
+
+.paper-table {
+  width: 100%;
+  height: 560px;
+  border: 1px solid #555;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.paper-table th,
+.paper-table td {
+  border-right: 1px solid #6e6e6e;
+  padding: 5px 6px;
+  font-size: 9px;
+  vertical-align: top;
+}
+
+.paper-table th {
+  border-bottom: 1px solid #555;
+  padding-top: 3px;
+  padding-bottom: 3px;
+  text-align: center;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
+  color: #111;
+}
+
+.paper-table th:last-child,
+.paper-table td:last-child { border-right: 0; }
+
+.paper-table th:nth-child(1) { width: 7%; }
+.paper-table th:nth-child(2) { width: 59%; }
+.paper-table th:nth-child(3) { width: 11%; }
+.paper-table th:nth-child(4) { width: 11.5%; }
+.paper-table th:nth-child(5) { width: 11.5%; }
+
+.paper-table tbody tr.paper-data-row { height: 1%; }
+.paper-table tbody tr.paper-data-row td { min-height: 28px; }
+.paper-table tbody tr.paper-spacer-row { height: 100%; }
+.paper-table tbody tr + tr td { border-top: 1px solid #777; }
+.paper-table td:nth-child(1),
+.paper-table td:nth-child(3),
+.paper-table td:nth-child(4),
+.paper-table td:nth-child(5) { text-align: center; }
+
+.paper-total-row {
+  display: grid;
+  grid-template-columns: 1fr 174px;
+  min-height: 47px;
+  border: 1px solid #555;
+  border-top: 0;
+  font-size: 8px;
+}
+
+.paper-total-row > div:first-child {
+  display: flex;
+  align-items: center;
+  padding: 5px 7px;
+  border-right: 1px solid #555;
+}
+
+.paper-totals {
+  padding: 3px 7px;
+}
+
+.paper-totals div {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  line-height: 1.25;
+}
+
+.paper-footer {
+  display: grid;
+  grid-template-columns: 1fr 145px 145px;
+  align-items: end;
+  gap: 10px;
+  margin-top: 93px;
+  font-size: 8px;
+  text-align: center;
+}
+
+.paper-footer span:nth-child(2),
+.paper-footer span:nth-child(3) {
+  border-top: 1px solid #555;
+  padding-top: 4px;
+}
+
+.save-toast {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  padding: 11px 15px;
+  border-radius: 8px;
+  background: #151515;
+  color: #fff;
+  font-size: 12px;
+  box-shadow: 0 10px 26px rgba(0,0,0,.2);
+}
+
+@media (max-width: 760px) {
+  .quotation-review-page { width: min(100% - 18px, 980px); }
+  .quotation-review-toolbar,
+  .email-subject-row { flex-direction: column; align-items: stretch; }
+  .review-actions { flex-wrap: wrap; }
+  .review-actions .compact-field { flex: 1 1 100%; }
+  .email-details-row { flex-direction: column; gap: 8px; }
+}
+
+
+/* PDF data safety: long unbroken text must stay inside its column. */
+.paper-table td,
+.paper-table th {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  white-space: normal;
+}
+
+.paper-footer-generated {
+  grid-template-columns: auto 1fr;
+  align-items: end;
+}
+
+.paper-footer-generated .computer-generated-note {
+  border-top: 0 !important;
+  padding-top: 0 !important;
+  text-align: right;
+  font-size: 8px;
+}
+
+.attachment-link {
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+}
+.attachment-link:hover { text-decoration: underline; }

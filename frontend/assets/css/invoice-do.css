@@ -1,0 +1,9 @@
+
+.invoice-do-review-page { max-width: 1260px; }
+.bundle-section { margin-top: 28px; padding-top: 8px; border-top: 1px solid #cfd4dc; }
+.bundle-section-header { display:flex; align-items:center; justify-content:space-between; gap:16px; margin: 0 0 12px; }
+.bundle-section-header h2 { margin: 2px 0 0; font-size: 1.15rem; }
+.po-quote-note { margin-top: 12px; padding: 10px 12px; border-left: 3px solid #6557ff; background: #f4f2ff; font-size: .92rem; }
+@media (max-width: 760px) {
+  .bundle-section-header { align-items:flex-start; flex-direction:column; }
+}

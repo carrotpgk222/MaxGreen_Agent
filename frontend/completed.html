@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MaxGreen Agent — Completed</title>
+  <link rel="icon" href="data:," />
+  <link rel="stylesheet" href="./assets/css/base.css" />
+  <link rel="stylesheet" href="./assets/css/completed.css" />
+</head>
+<body>
+  <main class="page completed-page">
+    <a class="back-link" href="./index.html">← Back to Dashboard</a>
+
+    <header class="completed-header">
+      <h1 class="page-title">Completed</h1>
+    </header>
+
+    <section class="completed-controls" aria-label="Completed filters">
+      <div class="field completed-search-field">
+        <label for="completed-search">Search</label>
+        <input id="completed-search" type="search" placeholder="Search" autocomplete="off" />
+      </div>
+      <div class="field">
+        <label for="completed-category">Category</label>
+        <select id="completed-category">
+          <option value="All">ALL</option>
+          <option value="Quotation">Quotation</option>
+          <option value="Delivery Order">Delivery Order</option>
+          <option value="Invoice">Invoice</option>
+          <option value="Statement of Account">SOA</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="completed-date">Date</label>
+        <select id="completed-date">
+          <option value="All">All dates</option>
+        </select>
+      </div>
+    </section>
+
+    <div class="completed-tabs" role="tablist" aria-label="Party type">
+      <button class="completed-tab active" type="button" data-party="customer" role="tab" aria-selected="true">Customers</button>
+      <button class="completed-tab" type="button" data-party="supplier" role="tab" aria-selected="false">Suppliers</button>
+    </div>
+
+    <section class="completed-table-card">
+      <div class="table-wrap">
+        <table class="completed-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Reference No.</th>
+              <th>Category</th>
+              <th>Sent Email on</th>
+            </tr>
+          </thead>
+          <tbody id="completed-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="./assets/js/pages/completed.js"></script>
+</body>
+</html>

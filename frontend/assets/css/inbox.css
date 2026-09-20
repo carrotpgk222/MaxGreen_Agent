@@ -1,0 +1,45 @@
+.inbox-card { padding: 24px; }
+.inbox-filters {
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) 220px 190px;
+  gap: 12px;
+  align-items: end;
+}
+.tabs { display: flex; gap: 26px; margin-top: 22px; border-bottom: 1px solid #dfe4eb; }
+.tab {
+  border: 0;
+  background: transparent;
+  padding: 12px 2px 11px;
+  color: #7b8495;
+  font-weight: 800;
+  border-bottom: 3px solid transparent;
+}
+.tab.active { color: #111827; border-bottom-color: #635bff; }
+.inbox-table { min-width: 860px; }
+.view-cell { width: 90px; }
+.view-link {
+  display: inline-flex;
+  justify-content: center;
+  min-width: 58px;
+  border-radius: 8px;
+  padding: 7px 11px;
+  background: #f1efff;
+  color: #5548e8;
+  font-size: 12px;
+  font-weight: 800;
+}
+.view-link:hover { background: #e7e3ff; }
+.sender-link {
+  color: #111827;
+  font-weight: 800;
+  text-decoration: none;
+}
+.sender-link:hover {
+  color: #5548e8;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+@media (max-width: 800px) {
+  .inbox-filters { grid-template-columns: 1fr; }
+}
