@@ -176,3 +176,19 @@ def fetch_latest_messages(limit: int = 25, query: str = "in:inbox") -> list[dict
         )
         messages.append(normalize_message(full))
     return messages
+
+
+def fetch_attachment(gmail_message_id: str, attachment_id: str) -> bytes:
+    service = get_service()
+    payload = (
+        service.users()
+        .messages()
+        .attachments()
+        .get(userId="me", messageId=gmail_message_id, id=attachment_id)
+        .execute()
+    )
+    data = payload.get("data", "")
+    if not data:
+        return b""
+    padding = "=" * (-len(data) % 4)
+    return base64.urlsafe_b64decode((data + padding).encode("ascii"))

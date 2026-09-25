@@ -21,11 +21,13 @@ export function displayDate(value) {
 }
 
 export function createQuotationItem(item = {}, index = 1) {
+  const preserveBlankQty = Boolean(item.preserveBlankQty) && (item.qty == null || item.qty === '')
   return {
     rowId: item.rowId || `row-${Date.now()}-${Math.random().toString(16).slice(2)}`,
     item: item.item ?? String(index),
     description: item.description ?? '',
-    qty: Number(item.qty ?? 1),
+    qty: preserveBlankQty ? '' : Number(item.qty ?? 1),
+    preserveBlankQty,
     uom: item.uom ?? '',
     unitPrice: Number(item.unitPrice ?? 0),
     taxRate: Number(item.taxRate ?? 9)

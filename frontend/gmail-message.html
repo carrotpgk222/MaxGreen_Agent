@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MaxGreen Agent — Gmail Message</title>
+  <link rel="icon" href="data:," />
+  <link rel="stylesheet" href="./assets/css/base.css" />
+  <link rel="stylesheet" href="./assets/css/gmail-message.css" />
+</head>
+<body>
+  <main class="page gmail-message-page">
+    <a class="back-link" href="./inbox.html">← Back to Inbox</a>
+
+    <header class="page-header gmail-message-header">
+      <div>
+        <p class="eyebrow">Real Gmail Message</p>
+        <h1 class="page-title" id="message-title">Loading…</h1>
+        <p class="page-description">This email was synced from Gmail and stored in the local SQLite database.</p>
+      </div>
+      <a class="btn btn-soft" id="open-gmail" href="#" target="_blank" rel="noopener">Open in Gmail ↗</a>
+    </header>
+
+    <section class="card gmail-message-card" id="message-card">
+      <div class="message-meta-grid">
+        <div>
+          <span class="meta-label">From</span>
+          <strong id="message-from">—</strong>
+          <span class="meta-secondary" id="message-from-email"></span>
+        </div>
+        <div>
+          <span class="meta-label">Received</span>
+          <strong id="message-received">—</strong>
+          <span class="meta-secondary">Singapore Time (SGT)</span>
+        </div>
+        <div>
+          <span class="meta-label">Category</span>
+          <strong class="chip chip-unclassified">Unclassified</strong>
+          <span class="meta-secondary">Claude classification is the next step.</span>
+        </div>
+      </div>
+
+      <div class="message-section">
+        <div class="message-section-heading">
+          <h2>Email body</h2>
+          <button class="btn btn-soft" id="toggle-message-body" type="button" aria-expanded="false">Show email body</button>
+        </div>
+        <pre class="message-body" id="message-body" hidden>Loading…</pre>
+      </div>
+
+      <div class="message-section">
+        <h2>Attachments</h2>
+        <div class="attachment-list" id="message-attachments"></div>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="./assets/js/pages/gmailMessage.js"></script>
+</body>
+</html>

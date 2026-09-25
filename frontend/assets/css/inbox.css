@@ -43,3 +43,66 @@
 @media (max-width: 800px) {
   .inbox-filters { grid-template-columns: 1fr; }
 }
+
+.inbox-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+.inbox-toolbar > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sync-status {
+  color: #6b7280;
+  font-size: 13px;
+}
+
+.sync-status.ok {
+  color: #137a31;
+}
+
+.sync-status.bad,
+.error-state {
+  color: #b42318;
+}
+
+.sender-name {
+  margin-top: 3px;
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.chip-unclassified {
+  background: #f0f0f4;
+  color: #5a5a68;
+}
+
+@media (max-width: 720px) {
+  .inbox-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
+
+.inbox-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.chip-classified {
+  background: #eef7f1;
+  color: #276749;
+}
+
+.chip-warning {
+  background: #fff4e5;
+  color: #9a5b13;
+}

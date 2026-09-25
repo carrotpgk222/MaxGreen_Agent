@@ -94,6 +94,18 @@ body { background: #f1f1f1; }
   font-size: 11px;
 }
 
+
+.email-source-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.email-body[hidden] {
+  display: none;
+}
+
 .btn-muted {
   border-color: #d3d3d3;
   background: #e5e5e5;
@@ -392,3 +404,72 @@ body { background: #f1f1f1; }
   cursor: pointer;
 }
 .attachment-link:hover { text-decoration: underline; }
+
+/* v29: make the automation visible without implying that AI output is final. */
+.ai-prep-card {
+  margin-top: 12px;
+  padding: 14px 16px;
+  border: 1px solid #d7d7d7;
+  background: #fff;
+}
+
+.ai-prep-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.ai-prep-heading > div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.ai-prep-badge {
+  padding: 5px 9px;
+  border: 1px solid #d6d6d6;
+  border-radius: 999px;
+  background: #f5f5f5;
+  color: #555;
+  font-size: 10px;
+  font-weight: 750;
+  text-transform: uppercase;
+  letter-spacing: .035em;
+}
+
+.ai-prep-summary {
+  margin: 10px 0 0;
+  color: #444;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.ai-prep-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 12px;
+}
+
+.ai-prep-columns > div {
+  padding: 10px 12px;
+  background: #f7f7f7;
+}
+
+.ai-prep-columns strong {
+  font-size: 11px;
+}
+
+.ai-prep-columns ul {
+  margin: 7px 0 0;
+  padding-left: 18px;
+  color: #454545;
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+@media (max-width: 700px) {
+  .ai-prep-heading { align-items: flex-start; flex-direction: column; }
+  .ai-prep-columns { grid-template-columns: 1fr; }
+}

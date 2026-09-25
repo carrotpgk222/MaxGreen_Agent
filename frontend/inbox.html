@@ -16,11 +16,22 @@
       <div>
         <p class="eyebrow">Email Processing</p>
         <h1 class="page-title">Inbox</h1>
-        <p class="page-description">AI-classified customer and supplier emails waiting for review.</p>
+        <p class="page-description">Real Gmail routed by Claude. Quotation, Invoice & DO, and Others stay here; Supplier Payable is routed to its dashboard page.</p>
       </div>
     </header>
 
     <section class="card inbox-card">
+      <div class="inbox-toolbar">
+        <div>
+          <strong>Real Gmail Inbox</strong>
+          <span class="sync-status" id="sync-status">Loading stored Gmail messages…</span>
+        </div>
+        <div class="inbox-actions">
+          <button class="btn" id="classify-inbox" type="button">Classify Unclassified</button>
+          <button class="btn btn-primary" id="sync-inbox" type="button">Sync Gmail</button>
+        </div>
+      </div>
+
       <div class="inbox-filters">
         <div class="field">
           <label for="inbox-search">Search</label>
@@ -31,10 +42,10 @@
           <label for="category-filter">Category</label>
           <select id="category-filter">
             <option value="All">All</option>
+            <option value="Unclassified">Unclassified</option>
             <option value="Quotation">Quotation</option>
-            <option value="Delivery Order">Delivery Order</option>
-            <option value="Invoice">Invoice</option>
-            <option value="Invoice & DO">Invoice &amp; DO</option>
+            <option value="Invoice &amp; DO">Invoice &amp; DO</option>
+            <option value="Others">Others</option>
           </select>
         </div>
 

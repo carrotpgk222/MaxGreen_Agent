@@ -5,6 +5,7 @@ import { getDeliveryOrderDraft } from '../core/deliveryOrderStorage.js'
 import { getQueryParam } from '../core/utils.js'
 import { changeWorkflowCategory } from '../core/workflowCategory.js'
 import { renderAttachmentLinks } from '../core/attachmentUtils.js'
+import { setupEmailBodyToggle } from '../core/emailBodyToggle.js'
 import {
   createInvoiceItem,
   displayDate as invoiceDisplayDate,
@@ -132,13 +133,65 @@ $('source-from').textContent = email.from
 $('source-date').textContent = email.receivedDate
 $('source-body').textContent = email.body
 $('source-attachments').innerHTML = renderAttachmentLinks(email.attachments || [])
+
+const gmailTarget = email.threadId || email.gmailMessageId || email.id
+const openGmail = $('open-gmail')
+if (email.sourceType === 'gmail' && gmailTarget) {
+  openGmail.href = `https://mail.google.com/mail/u/0/#all/${encodeURIComponent(gmailTarget)}`
+} else {
+  openGmail.hidden = true
+}
+setupEmailBodyToggle()
+
+function renderAiPreparationStatus() {
+  const card = $('ai-prep-card')
+  if (!card || email?.sourceType !== 'gmail') return
+
+  const refs = Array.isArray(email.purchaseOrderQuoteRefs) ? email.purchaseOrderQuoteRefs.filter(Boolean) : []
+  const filled = []
+  const review = []
+
+  if (refs.length) filled.push(`PO Quote Ref detected: ${refs.join(' / ')}`)
+  else review.push('Quote Ref was not detected from the PO attachment')
+
+  if (email.purchaseOrderQuoteMatched) {
+    filled.push('Matched the Quote Ref to a completed quotation')
+    filled.push('Invoice draft prepared from the matched quotation')
+    filled.push('Delivery Order draft prepared from the matched quotation')
+    review.push('Check both generated documents against the PO and completed quotation')
+  } else if (refs.length) {
+    review.push('No matching completed quotation was found for the detected Quote Ref')
+    review.push('Invoice and Delivery Order may require manual editing')
+  }
+
+  const confidence = Number(email.confidence)
+  const confidenceText = Number.isFinite(confidence)
+    ? ` Classification confidence: ${Math.round(confidence * 100)}%.`
+    : ''
+
+  $('ai-prep-summary').textContent = `Claude read the incoming PO and the system used the detected Quote Ref to prepare this bundle.${confidenceText} AI output is a draft and remains editable before Pending.`
+  $('ai-prep-filled').innerHTML = filled.length
+    ? filled.map(item => `<li>${escapeHtml(item)}</li>`).join('')
+    : '<li>No document data was confidently auto-prepared.</li>'
+  $('ai-prep-review').innerHTML = review.length
+    ? review.map(item => `<li>${escapeHtml(item)}</li>`).join('')
+    : '<li>Review both documents before approval.</li>'
+  card.hidden = false
+}
+
+renderAiPreparationStatus()
 $('detected-category').textContent = email.originalCategory
 $('edit-invoice').href = `./invoice-edit.html?id=${encodeURIComponent(emailId)}&bundle=1`
 $('edit-delivery-order').href = `./delivery-order-edit.html?id=${encodeURIComponent(emailId)}&bundle=1`
 
 if (Array.isArray(email.purchaseOrderQuoteRefs) && email.purchaseOrderQuoteRefs.length) {
   $('po-quote-note').hidden = false
-  $('po-quote-note').innerHTML = `<strong>Purchase Order note detected:</strong> Note to Supplier: Quote Ref: ${email.purchaseOrderQuoteRefs.map(escapeHtml).join(' / ')}`
+  const refs = email.purchaseOrderQuoteRefs.map(escapeHtml).join(' / ')
+  if (email.purchaseOrderQuoteMatched) {
+    $('po-quote-note').innerHTML = `<strong>Purchase Order Quote Ref detected:</strong> ${refs}<br><span>Matched to the completed quotation. The Invoice and Delivery Order below are filled from that quotation.</span>`
+  } else {
+    $('po-quote-note').innerHTML = `<strong>Purchase Order Quote Ref detected:</strong> ${refs}<br><span>No matching completed quotation was found yet. The Invoice and Delivery Order cannot be auto-filled until the referenced quotation exists in Completed.</span>`
+  }
 }
 
 categorySelect.addEventListener('change', () => {
@@ -169,4 +222,9 @@ function render() {
 }
 
 render()
-window.addEventListener('pageshow', render)
+window.addEventListener('pageshow', () => {
+  emails = getEmails()
+  email = emails.find(item => item.id === emailId) || email
+  render()
+  renderAiPreparationStatus()
+})

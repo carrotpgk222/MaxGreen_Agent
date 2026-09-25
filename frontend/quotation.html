@@ -23,7 +23,10 @@
           <span class="mini-label">Email subject</span>
           <strong id="source-subject">—</strong>
         </div>
-        <button class="btn btn-muted" type="button" disabled title="Gmail integration will be added later">Open in Gmail ↗</button>
+        <div class="email-source-actions">
+          <button class="btn btn-muted" id="toggle-email-body" type="button" aria-expanded="false">Show email body</button>
+          <a class="btn btn-muted" id="open-gmail" href="#" target="_blank" rel="noopener">Open in Gmail ↗</a>
+        </div>
       </div>
 
       <div class="email-details-row">
@@ -39,6 +42,27 @@
 
       <p class="email-body" id="source-body"></p>
       <div class="attachments" id="source-attachments"></div>
+    </section>
+
+    <section class="ai-prep-card" id="ai-prep-card" hidden aria-live="polite">
+      <div class="ai-prep-heading">
+        <div>
+          <span class="mini-label">Automation status</span>
+          <strong>AI Prepared Draft</strong>
+        </div>
+        <span class="ai-prep-badge">Human review required</span>
+      </div>
+      <p class="ai-prep-summary" id="ai-prep-summary"></p>
+      <div class="ai-prep-columns">
+        <div>
+          <strong>Automatically prepared</strong>
+          <ul id="ai-prep-filled"></ul>
+        </div>
+        <div>
+          <strong>Review / edit</strong>
+          <ul id="ai-prep-review"></ul>
+        </div>
+      </div>
     </section>
 
     <section class="quotation-review-toolbar">

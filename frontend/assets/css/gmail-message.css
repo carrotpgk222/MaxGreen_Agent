@@ -1,0 +1,144 @@
+.gmail-message-page {
+  max-width: 1180px;
+}
+
+.gmail-message-header {
+  align-items: flex-end;
+}
+
+.gmail-message-card {
+  padding: 28px;
+}
+
+.message-meta-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(180px, .8fr) minmax(200px, .8fr);
+  gap: 22px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid #dfe4eb;
+}
+
+.message-meta-grid > div {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.meta-label {
+  color: #6b7280;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.meta-secondary {
+  color: #6b7280;
+  font-size: 13px;
+}
+
+.message-section {
+  padding-top: 24px;
+}
+
+.message-section h2 {
+  margin: 0 0 12px;
+  font-size: 18px;
+}
+
+.message-body {
+  margin: 0;
+  padding: 20px;
+  border: 1px solid #dfe4eb;
+  border-radius: 12px;
+  background: #fafafa;
+  color: #111827;
+  font: inherit;
+  line-height: 1.65;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.attachment-list {
+  display: grid;
+  gap: 10px;
+}
+
+.attachment-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 54px;
+  padding: 10px 14px;
+  border: 1px solid #dfe4eb;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.attachment-card > span:nth-child(2) {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.attachment-card small,
+.attachment-empty {
+  color: #6b7280;
+}
+
+.attachment-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.attachment-link:hover {
+  border-color: #6257ff;
+  box-shadow: 0 4px 16px rgba(70, 57, 215, .08);
+}
+
+.chip-unclassified {
+  width: fit-content;
+}
+
+@media (max-width: 800px) {
+  .message-meta-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .gmail-message-header {
+    align-items: flex-start;
+  }
+}
+
+.classification-card {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  align-items: center;
+  margin: 14px 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #f7f8fb;
+  font-size: 14px;
+}
+
+.classification-card strong { color: #34226d; }
+.classification-card small { flex-basis: 100%; color: #687080; }
+
+.message-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.message-section-heading h2 {
+  margin: 0;
+}
+
+.message-body[hidden] {
+  display: none;
+}

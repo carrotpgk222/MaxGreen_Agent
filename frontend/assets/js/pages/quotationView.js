@@ -5,6 +5,7 @@ import { getCompanies } from '../core/customerStorage.js'
 import { getQueryParam } from '../core/utils.js'
 import { changeWorkflowCategory } from '../core/workflowCategory.js'
 import { renderAttachmentLinks } from '../core/attachmentUtils.js'
+import { setupEmailBodyToggle } from '../core/emailBodyToggle.js'
 import {
   createDefaultQuotation,
   createQuotationItem,
@@ -47,6 +48,42 @@ function loadQuotation() {
     saveQuotationDraft(emailId, draft)
   }
 
+  // Self-heal older Gmail quotations that already have a blank/default local
+  // draft. The Inbox bridge normally prepares these, but this also works when
+  // the user refreshes or opens quotation.html directly.
+  if (email?.sourceType === 'gmail' && !draft?.humanEdited) {
+    const hasDescription = Array.isArray(draft?.items) && draft.items.some(item => String(item?.description || '').trim())
+    // Never copy the full email into the quotation Description. If structured AI
+    // extraction is unavailable, use a short subject-based placeholder that the
+    // user can edit while keeping the source email visible above the PDF.
+    const sourceDescription = String(email.subject || '')
+      .replace(/^\s*\[[^\]]+\]\s*/, '')
+      .trim()
+    let changed = false
+
+    if (!String(draft.subjectTitle || '').trim() && String(email.subject || '').trim()) {
+      draft.subjectTitle = email.subject.trim()
+      changed = true
+    }
+
+    if (!hasDescription && sourceDescription) {
+      draft.items = [createQuotationItem({
+        item: '1',
+        description: sourceDescription,
+        qty: '',
+        preserveBlankQty: true,
+        uom: '',
+        unitPrice: 0,
+        taxRate: 9
+      }, 1)]
+      draft.automationFallback = true
+      draft.aiSourceGmailMessageId = email.gmailMessageId || email.id
+      changed = true
+    }
+
+    if (changed) saveQuotationDraft(emailId, draft)
+  }
+
   quotation = {
     ...createDefaultQuotation(email),
     ...draft,
@@ -70,6 +107,66 @@ $('edit-quotation').href = `./quotation-edit.html?id=${encodeURIComponent(emailI
 $('quotation-file-name').textContent = email.fileName || `${email.documentId || 'Quotation'}.pdf`
 
 $('source-attachments').innerHTML = renderAttachmentLinks(email.attachments || [])
+
+const gmailTarget = email.threadId || email.gmailMessageId || email.id
+const openGmail = $('open-gmail')
+if (email.sourceType === 'gmail' && gmailTarget) {
+  openGmail.href = `https://mail.google.com/mail/u/0/#all/${encodeURIComponent(gmailTarget)}`
+} else {
+  openGmail.hidden = true
+}
+setupEmailBodyToggle()
+
+function renderAiPreparationStatus() {
+  const card = $('ai-prep-card')
+  if (!card || email?.sourceType !== 'gmail') return
+
+  // Report what is actually present in the PDF draft, not only what Claude
+  // returned. This includes the safe source-email fallback used when AI could
+  // classify the message but did not return structured quotation fields.
+  const items = Array.isArray(quotation?.items) ? quotation.items : []
+  const meaningfulItems = items.filter(item => String(item?.description || '').trim())
+  const filled = []
+  const review = []
+
+  if (quotation?.company) filled.push('Company')
+  else review.push('Company was not confidently found')
+
+  if (quotation?.attn) filled.push('Attention / contact')
+  else review.push('Attention / contact needs checking')
+
+  if (quotation?.customerAddress || quotation?.customerPostal) filled.push('Customer address')
+  else review.push('Customer address was not found')
+
+  if (quotation?.subjectTitle) filled.push('Quotation subject')
+  else review.push('Quotation subject needs checking')
+
+  if (meaningfulItems.length) {
+    filled.push(`${meaningfulItems.length} requested description${meaningfulItems.length === 1 ? '' : 's'}`)
+    if (meaningfulItems.some(item => item.qty === '' || item.qty == null)) review.push('One or more quantities were not found')
+    if (meaningfulItems.some(item => Number(item.unitPrice || 0) === 0)) review.push('One or more unit prices were not found')
+  } else {
+    review.push('No quotation description was prepared')
+  }
+
+  if (!review.length) review.push('Check the prepared fields against the source email before approval')
+
+  const confidence = Number(email.confidence)
+  const confidenceText = Number.isFinite(confidence)
+    ? ` Classification confidence: ${Math.round(confidence * 100)}%.`
+    : ''
+
+  const usedFallback = Boolean(quotation?.automationFallback && !quotation?.aiPrefilled)
+  $('ai-prep-summary').textContent = usedFallback
+    ? `Automation prepared a safe first draft from the real email subject/body because structured AI extraction was unavailable.${confidenceText} Review and edit it before Pending.`
+    : `Claude prepared this quotation draft from the source email.${confidenceText} AI output can be wrong, so the document remains editable before Pending.`
+
+  $('ai-prep-filled').innerHTML = filled.length
+    ? filled.map(item => `<li>${escapeHtml(item)}</li>`).join('')
+    : '<li>No fields were automatically prepared.</li>'
+  $('ai-prep-review').innerHTML = review.map(item => `<li>${escapeHtml(item)}</li>`).join('')
+  card.hidden = false
+}
 
 function resolveCustomerDetails() {
   const companies = getCompanies()
@@ -151,8 +248,10 @@ $('save-pending').addEventListener('click', () => {
 
 loadQuotation()
 renderQuotation()
+renderAiPreparationStatus()
 
 window.addEventListener('pageshow', () => {
   loadQuotation()
   renderQuotation()
+  renderAiPreparationStatus()
 })

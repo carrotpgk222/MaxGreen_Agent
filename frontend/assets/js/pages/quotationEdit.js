@@ -507,6 +507,8 @@ elements.save.addEventListener('click', () => {
   saveQuotationDraft(emailId, {
     ...state,
     documentId: email.documentId || state.documentId || '',
+    humanEdited: true,
+    humanEditedAt: new Date().toISOString(),
     savedAt: new Date().toISOString()
   })
 

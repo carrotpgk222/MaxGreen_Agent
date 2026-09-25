@@ -1,34 +1,48 @@
 from __future__ import annotations
 
+import logging
+import mimetypes
+import traceback
 from pathlib import Path
+from urllib.parse import quote
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import Response
 import uvicorn
 
 BASE_DIR = Path(__file__).resolve().parent
+logger = logging.getLogger("maxgreen")
 load_dotenv(BASE_DIR.parent / ".env")
 
-from services.database_service import count_messages, init_db, list_messages
-from services.gmail_service import get_profile, is_connected
+from services.database_service import (
+    count_messages,
+    count_inbox_messages,
+    count_supplier_payable_messages,
+    get_message,
+    init_db,
+    list_messages,
+    list_supplier_payable_messages,
+    list_unclassified_messages,
+    update_message_classification,
+)
+from services.gmail_service import fetch_attachment, get_profile, is_connected
 from services.sync_service import sync_gmail
+from services.classification_service import classify_message
+from services.llm_service import configured_model, is_configured as llm_is_configured, test_connection
 
 app = FastAPI(
     title="MaxGreen Agent Local Backend",
-    version="0.1.0",
-    description="Local backend for Gmail integration before AWS/Claude integration.",
+    version="0.5.0",
+    description="Local backend for Gmail, Claude classification, and workflow routing.",
 )
 
+# Local development only: allow any localhost/127.0.0.1 port, including Live Server on :3000.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://127.0.0.1:5500",
-        "http://localhost:5500",
-        "http://127.0.0.1:5501",
-        "http://localhost:5501",
-    ],
-    allow_credentials=True,
+    allow_origin_regex=r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$",
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -80,14 +94,125 @@ def gmail_sync(
             "fetched": result["fetched"],
             "stored_messages": count_messages(),
             "query": result["query"],
+            "ai": result.get("ai", {}),
         }
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 
+@app.get("/api/llm/status")
+def llm_status() -> dict:
+    return {
+        "configured": llm_is_configured(),
+        "model": configured_model(),
+    }
+
+
+@app.post("/api/llm/test")
+def llm_test() -> dict:
+    try:
+        return test_connection()
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+
+@app.post("/api/ai/classify/{gmail_message_id}")
+def classify_gmail_message(gmail_message_id: str) -> dict:
+    message = get_message(gmail_message_id)
+    if message is None:
+        raise HTTPException(status_code=404, detail="Stored Gmail message not found.")
+    try:
+        result = classify_message(message)
+        update_message_classification(gmail_message_id, result)
+        return {"ok": True, "gmail_message_id": gmail_message_id, "classification": result}
+    except Exception as exc:
+        logger.error("AI classification failed for Gmail %s: %s\n%s", gmail_message_id, exc, traceback.format_exc())
+        raise HTTPException(status_code=502, detail=f"AI preparation failed: {exc}") from exc
+
+
+@app.post("/api/ai/classify-unclassified")
+def classify_unclassified(limit: int = Query(default=10, ge=1, le=25)) -> dict:
+    items = list_unclassified_messages(limit=limit)
+    results = []
+    for message in items:
+        if not message:
+            continue
+        message_id = message["gmail_message_id"]
+        try:
+            result = classify_message(message)
+            update_message_classification(message_id, result)
+            results.append({"gmail_message_id": message_id, "ok": True, "classification": result})
+        except Exception as exc:
+            results.append({"gmail_message_id": message_id, "ok": False, "error": str(exc)})
+    return {"ok": True, "processed": len(results), "results": results}
+
+
+
+
+@app.get("/api/dashboard/counts")
+def dashboard_counts() -> dict:
+    return {
+        "inbox": count_inbox_messages(),
+        "supplier_payable": count_supplier_payable_messages(),
+    }
+
+
+@app.get("/api/supplier-payable/messages")
+def supplier_payable_messages(limit: int = Query(default=200, ge=1, le=500)) -> dict:
+    return {"messages": list_supplier_payable_messages(limit=limit)}
+
+
 @app.get("/api/gmail/messages")
 def gmail_messages(limit: int = Query(default=25, ge=1, le=100)) -> dict:
     return {"messages": list_messages(limit=limit)}
+
+
+@app.get("/api/gmail/messages/{gmail_message_id}")
+def gmail_message(gmail_message_id: str) -> dict:
+    message = get_message(gmail_message_id)
+    if message is None:
+        raise HTTPException(status_code=404, detail="Stored Gmail message not found.")
+    return {"message": message}
+
+
+@app.get("/api/gmail/messages/{gmail_message_id}/attachments/{attachment_id}")
+def gmail_attachment(
+    gmail_message_id: str,
+    attachment_id: str,
+    filename: str = Query(default="attachment"),
+) -> Response:
+    message = get_message(gmail_message_id)
+    if message is None:
+        raise HTTPException(status_code=404, detail="Stored Gmail message not found.")
+
+    attachment_meta = next(
+        (
+            item
+            for item in message.get("attachments", [])
+            if item.get("attachment_id") == attachment_id
+        ),
+        None,
+    )
+    if attachment_meta is None:
+        raise HTTPException(status_code=404, detail="Attachment not found for this Gmail message.")
+
+    try:
+        data = fetch_attachment(gmail_message_id, attachment_id)
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Could not fetch Gmail attachment: {exc}") from exc
+
+    safe_filename = filename or attachment_meta.get("filename") or "attachment"
+    media_type = attachment_meta.get("mime_type") or mimetypes.guess_type(safe_filename)[0] or "application/octet-stream"
+    encoded = quote(safe_filename)
+
+    return Response(
+        content=data,
+        media_type=media_type,
+        headers={
+            "Content-Disposition": f"inline; filename*=UTF-8''{encoded}",
+            "Cache-Control": "no-store",
+        },
+    )
 
 
 if __name__ == "__main__":
