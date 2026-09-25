@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import base64
 import re
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 from email.utils import parseaddr
 from pathlib import Path
@@ -157,7 +158,8 @@ def normalize_message(message: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def fetch_latest_messages(limit: int = 25, query: str = "in:inbox") -> list[dict[str, Any]]:
+def list_message_ids(limit: int = 25, query: str = "in:inbox") -> list[str]:
+    """List message IDs matching the query without fetching full bodies."""
     service = get_service()
     response = (
         service.users()
@@ -165,17 +167,66 @@ def fetch_latest_messages(limit: int = 25, query: str = "in:inbox") -> list[dict
         .list(userId="me", maxResults=max(1, min(limit, 100)), q=query)
         .execute()
     )
+    return [item["id"] for item in (response.get("messages", []) or []) if item.get("id")]
 
-    messages: list[dict[str, Any]] = []
-    for item in response.get("messages", []) or []:
-        full = (
+
+def fetch_latest_messages(
+    limit: int = 25,
+    query: str = "in:inbox",
+    skip_ids: set[str] | None = None,
+    max_workers: int = 8,
+    message_ids: list[str] | None = None,
+) -> list[dict[str, Any]]:
+    """Fetch messages matching query.
+
+    - Lists message IDs (one cheap call) unless message_ids is provided.
+    - Skips IDs already stored (skip_ids) so repeat syncs only pull new mail.
+    - Fetches the remaining full messages concurrently with a thread pool,
+      instead of one slow serial round-trip per message.
+    """
+    if message_ids is None:
+        service = get_service()
+        response = (
             service.users()
             .messages()
-            .get(userId="me", id=item["id"], format="full")
+            .list(userId="me", maxResults=max(1, min(limit, 100)), q=query)
             .execute()
         )
-        messages.append(normalize_message(full))
-    return messages
+        listed = [item["id"] for item in (response.get("messages", []) or []) if item.get("id")]
+    else:
+        listed = [mid for mid in message_ids if mid]
+
+    skip = skip_ids or set()
+    to_fetch = [mid for mid in listed if mid not in skip]
+    if not to_fetch:
+        return []
+
+    def _get_full(message_id: str) -> dict[str, Any] | None:
+        try:
+            # Each thread needs its own service/http object; httplib2 is not
+            # thread-safe when shared. Build a fresh service per call.
+            local_service = get_service()
+            full = (
+                local_service.users()
+                .messages()
+                .get(userId="me", id=message_id, format="full")
+                .execute()
+            )
+            return normalize_message(full)
+        except Exception:
+            return None
+
+    workers = max(1, min(max_workers, len(to_fetch)))
+    results_by_id: dict[str, dict[str, Any]] = {}
+    with ThreadPoolExecutor(max_workers=workers) as executor:
+        future_map = {executor.submit(_get_full, mid): mid for mid in to_fetch}
+        for future in as_completed(future_map):
+            normalized = future.result()
+            if normalized:
+                results_by_id[future_map[future]] = normalized
+
+    # Preserve the Gmail list order (newest first).
+    return [results_by_id[mid] for mid in to_fetch if mid in results_by_id]
 
 
 def fetch_attachment(gmail_message_id: str, attachment_id: str) -> bytes:

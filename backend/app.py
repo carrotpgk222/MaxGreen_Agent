@@ -8,6 +8,7 @@ from urllib.parse import quote
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Query
+from fastapi import Body
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
 import uvicorn
@@ -26,11 +27,13 @@ from services.database_service import (
     list_supplier_payable_messages,
     list_unclassified_messages,
     update_message_classification,
+    set_message_category,
 )
 from services.gmail_service import fetch_attachment, get_profile, is_connected
 from services.sync_service import sync_gmail
-from services.classification_service import classify_message
+from services.classification_service import classify_message, VALID_CATEGORIES
 from services.llm_service import configured_model, is_configured as llm_is_configured, test_connection
+from services.scheduler_service import start_scheduler, stop_scheduler
 
 app = FastAPI(
     title="MaxGreen Agent Local Backend",
@@ -49,8 +52,14 @@ app.add_middleware(
 
 
 @app.on_event("startup")
-def startup() -> None:
+async def startup() -> None:
     init_db()
+    start_scheduler()
+
+
+@app.on_event("shutdown")
+async def shutdown() -> None:
+    await stop_scheduler()
 
 
 @app.get("/")
@@ -145,6 +154,27 @@ def classify_unclassified(limit: int = Query(default=10, ge=1, le=25)) -> dict:
         except Exception as exc:
             results.append({"gmail_message_id": message_id, "ok": False, "error": str(exc)})
     return {"ok": True, "processed": len(results), "results": results}
+
+
+@app.post("/api/gmail/messages/{gmail_message_id}/category")
+def set_gmail_message_category(
+    gmail_message_id: str,
+    category: str = Body(..., embed=True),
+) -> dict:
+    """Manually override a message's category from the Inbox dropdown."""
+    allowed = VALID_CATEGORIES | {"Unclassified"}
+    if category not in allowed:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid category. Allowed: {sorted(allowed)}",
+        )
+
+    updated = set_message_category(gmail_message_id, category)
+    if not updated:
+        raise HTTPException(status_code=404, detail="Stored Gmail message not found.")
+
+    message = get_message(gmail_message_id)
+    return {"ok": True, "gmail_message_id": gmail_message_id, "message": message}
 
 
 

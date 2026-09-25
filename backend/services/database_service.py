@@ -220,6 +220,57 @@ def update_message_classification(gmail_message_id: str, result: dict[str, Any])
         )
 
 
+def existing_message_ids(candidate_ids: Iterable[str]) -> set[str]:
+    """Return the subset of candidate_ids already stored in the database.
+
+    Used to skip re-fetching full message bodies for mail we already have.
+    """
+    ids = [mid for mid in candidate_ids if mid]
+    if not ids:
+        return set()
+    init_db()
+    found: set[str] = set()
+    with get_connection() as conn:
+        # Chunk to stay well under SQLite's variable limit.
+        for start in range(0, len(ids), 500):
+            chunk = ids[start:start + 500]
+            placeholders = ",".join("?" for _ in chunk)
+            rows = conn.execute(
+                f"SELECT gmail_message_id FROM gmail_messages WHERE gmail_message_id IN ({placeholders})",
+                chunk,
+            ).fetchall()
+            found.update(row["gmail_message_id"] for row in rows)
+    return found
+
+
+def set_message_category(gmail_message_id: str, category: str) -> bool:
+    """Manually override the category for a single message.
+
+    Marks the message as manually classified. Party type is inferred from the
+    category so routing stays consistent (Supplier Payable -> Supplier).
+    Returns False if no row matched the id.
+    """
+    init_db()
+    party_type = "Supplier" if category == "Supplier Payable" else "Customer"
+    if category == "Unclassified":
+        party_type = "Unknown"
+
+    with get_connection() as conn:
+        cursor = conn.execute(
+            """
+            UPDATE gmail_messages
+            SET ai_category = ?,
+                ai_party_type = ?,
+                ai_reason = 'Manually classified by user',
+                ai_model = 'manual',
+                ai_classified_at = CASE WHEN ? = 'Unclassified' THEN NULL ELSE CURRENT_TIMESTAMP END
+            WHERE gmail_message_id = ?
+            """,
+            (category, party_type, category, gmail_message_id),
+        )
+        return cursor.rowcount > 0
+
+
 def list_unclassified_messages(limit: int = 10) -> list[dict[str, Any]]:
     init_db()
     with get_connection() as conn:

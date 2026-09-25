@@ -5,11 +5,12 @@ from typing import Any
 
 from services.classification_service import classify_message
 from services.database_service import (
+    existing_message_ids,
     get_message,
     update_message_classification,
     upsert_messages,
 )
-from services.gmail_service import fetch_latest_messages
+from services.gmail_service import fetch_latest_messages, list_message_ids
 from services.llm_service import is_configured as llm_is_configured
 
 
@@ -85,7 +86,17 @@ def _auto_classify_synced_messages(messages: list[dict[str, Any]]) -> dict[str, 
 def sync_gmail(limit: int | None = None, query: str | None = None) -> dict:
     effective_limit = limit or int(os.getenv("GMAIL_SYNC_LIMIT", "25"))
     effective_query = query or os.getenv("GMAIL_SYNC_QUERY", "in:inbox")
-    messages = fetch_latest_messages(limit=effective_limit, query=effective_query)
+
+    # Skip messages we already stored so repeat syncs only fetch new mail.
+    listed_ids = list_message_ids(limit=effective_limit, query=effective_query)
+    already_stored = existing_message_ids(listed_ids)
+
+    messages = fetch_latest_messages(
+        limit=effective_limit,
+        query=effective_query,
+        skip_ids=already_stored,
+        message_ids=listed_ids,
+    )
     upsert_messages(messages)
     ai = _auto_classify_synced_messages(messages)
     return {

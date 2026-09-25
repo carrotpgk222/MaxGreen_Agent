@@ -9,8 +9,7 @@ const categoryFilter = document.getElementById('category-filter')
 const dateFilter = document.getElementById('date-filter')
 const tableBody = document.getElementById('inbox-body')
 const tabs = [...document.querySelectorAll('[data-party]')]
-const syncButton = document.getElementById('sync-inbox')
-const classifyButton = document.getElementById('classify-inbox')
+const refreshButton = document.getElementById('refresh-inbox')
 const syncStatus = document.getElementById('sync-status')
 
 let messages = []
@@ -153,6 +152,95 @@ function categoryChip(item) {
   return `<span class="chip ${cls}" title="${escapeHtml(item.ai_reason || '')}">${escapeHtml(category + suffix)}</span>`
 }
 
+const MANUAL_CATEGORY_OPTIONS = ['Unclassified', 'Quotation', 'Invoice & DO', 'Supplier Payable', 'Others']
+
+function categoryCell(item) {
+  const current = item.ai_category || 'Unclassified'
+  const messageId = escapeHtml(item.gmail_message_id)
+  const options = MANUAL_CATEGORY_OPTIONS.map(value => {
+    const selected = value === current ? ' selected' : ''
+    return `<option value="${escapeHtml(value)}"${selected}>${escapeHtml(value)}</option>`
+  }).join('')
+
+  return `
+    <div class="category-cell" data-message-id="${messageId}">
+      <span class="category-view">
+        ${categoryChip(item)}
+        <button class="category-edit" type="button" title="Edit category" aria-label="Edit category">✏️</button>
+      </span>
+      <span class="category-edit-controls" hidden>
+        <select class="category-select" data-message-id="${messageId}" title="Choose category">
+          ${options}
+        </select>
+        <button class="category-cancel" type="button" title="Cancel" aria-label="Cancel">✕</button>
+      </span>
+    </div>
+  `
+}
+
+function toggleCategoryEditor(cell, editing) {
+  const view = cell.querySelector('.category-view')
+  const controls = cell.querySelector('.category-edit-controls')
+  if (!view || !controls) return
+  view.hidden = editing
+  controls.hidden = !editing
+  if (editing) {
+    const select = controls.querySelector('.category-select')
+    if (select) {
+      select.dataset.previous = select.value
+      select.focus()
+    }
+  }
+}
+
+async function updateMessageCategory(select) {
+  const messageId = select.dataset.messageId
+  const category = select.value
+  const previous = select.dataset.previous || ''
+
+  select.disabled = true
+  syncStatus.textContent = `Setting category to ${category}…`
+  syncStatus.className = 'sync-status'
+
+  try {
+    const result = await apiJson(`/api/gmail/messages/${encodeURIComponent(messageId)}/category`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ category }),
+    })
+
+    const updated = result.message
+    const index = messages.findIndex(message => message.gmail_message_id === messageId)
+    if (index >= 0 && updated) messages[index] = updated
+
+    syncStatus.textContent = `Category set to ${category}`
+    syncStatus.className = 'sync-status ok'
+
+    populateDates()
+
+    // If the message still belongs in the current view, update only its cell in
+    // place so the page does not scroll. If the new category removes it from the
+    // current filter/tab (e.g. Supplier Payable leaves the customer Inbox), we
+    // must re-render the whole table, but we restore the scroll position after.
+    const stillVisible = updated && filteredRows().some(row => row.gmail_message_id === messageId)
+    const cell = select.closest('.category-cell')
+
+    if (stillVisible && cell && updated) {
+      cell.outerHTML = categoryCell(updated)
+      bindCategoryHandlers()
+    } else {
+      const scrollY = window.scrollY
+      renderRows()
+      requestAnimationFrame(() => window.scrollTo(window.scrollX, scrollY))
+    }
+  } catch (error) {
+    syncStatus.textContent = `Could not set category: ${error.message}`
+    syncStatus.className = 'sync-status bad'
+    if (previous) select.value = previous
+    select.disabled = false
+  }
+}
+
 function renderRows() {
   const rows = filteredRows()
 
@@ -173,7 +261,7 @@ function renderRows() {
           ${senderName ? `<div class="sender-name">${escapeHtml(senderName)}</div>` : ''}
         </td>
         <td>${escapeHtml(item.subject || '(No subject)')}</td>
-        <td>${categoryChip(item)}</td>
+        <td>${categoryCell(item)}</td>
         <td>${escapeHtml(formatDateTimeSGT(item.received_at))}</td>
         <td class="view-cell"><a class="view-link" data-message-id="${escapeHtml(item.gmail_message_id)}" href="${href}">View</a></td>
       </tr>
@@ -186,19 +274,58 @@ function renderRows() {
       if (item) prepareWorkflowAndNavigate(event, item)
     })
   })
+
+  bindCategoryHandlers()
 }
 
-async function loadStoredMessages() {
-  setLoading()
+function bindCategoryHandlers() {
+  tableBody.querySelectorAll('.category-edit').forEach(button => {
+    if (button.dataset.bound) return
+    button.dataset.bound = '1'
+    button.addEventListener('click', () => {
+      const cell = button.closest('.category-cell')
+      if (cell) toggleCategoryEditor(cell, true)
+    })
+  })
+
+  tableBody.querySelectorAll('.category-cancel').forEach(button => {
+    if (button.dataset.bound) return
+    button.dataset.bound = '1'
+    button.addEventListener('click', () => {
+      const cell = button.closest('.category-cell')
+      if (cell) toggleCategoryEditor(cell, false)
+    })
+  })
+
+  tableBody.querySelectorAll('select.category-select').forEach(select => {
+    if (select.dataset.bound) return
+    select.dataset.bound = '1'
+    select.addEventListener('change', () => updateMessageCategory(select))
+  })
+}
+
+async function loadStoredMessages({ background = false } = {}) {
+  // Preserve scroll during a background refresh so the list does not jump.
+  const scrollY = window.scrollY
+  if (!background) setLoading()
   try {
-    const data = await apiJson('/api/gmail/messages?limit=100')
+    const data = await apiJson('/api/gmail/messages?limit=10')
     messages = data.messages || []
     prepareLocalWorkflowDrafts()
     populateDates()
     renderRows()
-    syncStatus.textContent = `${messages.length} stored Gmail message${messages.length === 1 ? '' : 's'}`
-    syncStatus.className = 'sync-status ok'
+    if (background) requestAnimationFrame(() => window.scrollTo(window.scrollX, scrollY))
+    if (!background) {
+      syncStatus.textContent = `${messages.length} stored Gmail message${messages.length === 1 ? '' : 's'}`
+      syncStatus.className = 'sync-status ok'
+    }
   } catch (error) {
+    if (background) {
+      // Keep whatever is already shown; just note the problem.
+      syncStatus.textContent = `Could not refresh from backend: ${error.message}`
+      syncStatus.className = 'sync-status bad'
+      return
+    }
     messages = []
     tableBody.innerHTML = `<tr><td colspan="5" class="empty-state error-state">Could not reach the local backend: ${escapeHtml(error.message)}</td></tr>`
     syncStatus.textContent = 'Backend not reachable'
@@ -206,66 +333,9 @@ async function loadStoredMessages() {
   }
 }
 
-async function syncGmail() {
-  syncButton.disabled = true
-  syncButton.textContent = 'Syncing…'
-  syncStatus.textContent = 'Checking Gmail…'
-  syncStatus.className = 'sync-status'
-
-  try {
-    const result = await apiJson(`/api/gmail/sync?limit=100&query=${encodeURIComponent('in:inbox')}`, { method: 'POST' })
-    await loadStoredMessages()
-
-    const ai = result.ai || {}
-    const processed = Number(ai.processed || 0)
-    const failed = Number(ai.failed || 0)
-    if (ai.skipped_reason) {
-      syncStatus.textContent = `Fetched ${result.fetched}. AI skipped: ${ai.skipped_reason}`
-      syncStatus.className = 'sync-status bad'
-    } else if (failed) {
-      syncStatus.textContent = `Fetched ${result.fetched}. AI prepared ${processed - failed}; ${failed} need retry.`
-      syncStatus.className = 'sync-status bad'
-    } else {
-      syncStatus.textContent = `Fetched ${result.fetched}. AI automatically prepared ${processed} message${processed === 1 ? '' : 's'}.`
-      syncStatus.className = 'sync-status ok'
-    }
-  } catch (error) {
-    syncStatus.textContent = `Sync failed: ${error.message}`
-    syncStatus.className = 'sync-status bad'
-  } finally {
-    syncButton.disabled = false
-    syncButton.textContent = 'Sync Gmail'
-  }
-}
-
-async function classifyUnclassified() {
-  classifyButton.disabled = true
-  classifyButton.textContent = 'Classifying…'
-  syncStatus.textContent = 'Sending unclassified messages to Claude…'
-  syncStatus.className = 'sync-status'
-
-  try {
-    const result = await apiJson('/api/ai/classify-unclassified?limit=10', { method: 'POST' })
-    const failures = (result.results || []).filter(item => !item.ok).length
-    syncStatus.textContent = failures
-      ? `Classified ${result.processed - failures}; ${failures} failed`
-      : `Classified ${result.processed} message${result.processed === 1 ? '' : 's'}`
-    syncStatus.className = failures ? 'sync-status bad' : 'sync-status ok'
-    await loadStoredMessages()
-  } catch (error) {
-    syncStatus.textContent = `Classification failed: ${error.message}`
-    syncStatus.className = 'sync-status bad'
-  } finally {
-    classifyButton.disabled = false
-    classifyButton.textContent = 'Classify Unclassified'
-  }
-}
-
 searchInput.addEventListener('input', renderRows)
 categoryFilter.addEventListener('change', renderRows)
 dateFilter.addEventListener('change', renderRows)
-syncButton.addEventListener('click', syncGmail)
-classifyButton.addEventListener('click', classifyUnclassified)
 
 tabs.forEach(tab => {
   tab.addEventListener('click', () => {
@@ -278,4 +348,21 @@ tabs.forEach(tab => {
   })
 })
 
+// The frontend never triggers a Gmail sync. A backend scheduler owns Gmail
+// polling and writes new mail to the database. The Inbox page only reads from
+// the database: it loads on open and re-reads when the user clicks Refresh.
 loadStoredMessages()
+
+if (refreshButton) {
+  refreshButton.addEventListener('click', async () => {
+    refreshButton.disabled = true
+    const originalText = refreshButton.textContent
+    refreshButton.textContent = 'Refreshing…'
+    try {
+      await loadStoredMessages({ background: true })
+    } finally {
+      refreshButton.disabled = false
+      refreshButton.textContent = originalText
+    }
+  })
+}
