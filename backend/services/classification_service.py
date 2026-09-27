@@ -19,7 +19,7 @@ logger = logging.getLogger("maxgreen.classification")
 VALID_CATEGORIES = {"Quotation", "Invoice & DO", "Supplier Payable", "Others"}
 VALID_PARTIES = {"Customer", "Supplier", "Unknown"}
 VALID_SECURITY = {"Safe", "Spam", "Prompt Injection", "Suspicious"}
-QUOTATION_EXTRACTION_VERSION = 4
+QUOTATION_EXTRACTION_VERSION = 5
 
 #: Total characters of attachment text handed to the model, across all attachments.
 MAX_ATTACHMENT_PROMPT_CHARS = 12000
@@ -238,6 +238,7 @@ def _normalize_quotation_details(raw: Any, subject: str) -> dict[str, Any]:
         "subject_title": text("subject_title") or str(subject or "").strip(),
         "items": items,
         "extraction_version": extraction_version,
+        "extraction_source": text("extraction_source"),
     }
 
 
@@ -363,6 +364,43 @@ def _heuristic_scope_items(
             continue
 
         # -----------------------------------------------------
+        # DESCRIPTION - QUANTITY UNIT STYLE
+        #
+        # Examples:
+        # Whiteboard Marker Sets - 20 sets
+        # A3 Laminating Pouches (100 pcs) - 12 boxes
+        # A4 Document Files - 50 units
+        # -----------------------------------------------------
+
+        description_qty_match = re.match(
+            r"^\s*(.+?)\s*[-–—:]\s*"
+            r"(\d+(?:\.\d+)?)\s*"
+            r"(pcs?|pieces?|boxes?|units?|sets?|packs?)?"
+            r"\s*$",
+            line,
+            flags=re.IGNORECASE,
+        )
+
+        if description_qty_match:
+            description = (description_qty_match.group(1) or "").strip()
+            qty_raw = description_qty_match.group(2)
+            uom = (description_qty_match.group(3) or "").strip()
+
+            qty = float(qty_raw)
+            if qty.is_integer():
+                qty = int(qty)
+
+            if description:
+                items.append({
+                    "description": description,
+                    "qty": qty,
+                    "uom": uom,
+                    "unit_price": None,
+                    "tax_rate": None,
+                })
+                continue
+
+        # -----------------------------------------------------
         # QUANTITY / PRODUCT STYLE
         #
         # 20 exercise books
@@ -475,16 +513,35 @@ def _description_looks_like_email_dump(value: str) -> bool:
 
 
 def _ensure_scope_items(items: list[dict[str, Any]], message: dict[str, Any]) -> list[dict[str, Any]]:
-    """Keep concise AI scope rows; otherwise rebuild rows from the source scope section."""
+    """Keep real quotation rows; reject email-subject/generic rows and email dumps."""
+
+    subject = str(message.get("subject") or "").strip()
+
+    def comparable(value: str) -> str:
+        value = re.sub(r"^\s*(?:re|fw|fwd)\s*:\s*", "", str(value or ""), flags=re.IGNORECASE)
+        return re.sub(r"[^a-z0-9]+", " ", value.lower()).strip()
+
+    subject_key = comparable(subject)
     clean: list[dict[str, Any]] = []
+
     for item in items or []:
         description = str(item.get("description") or "").strip()
         if not description or _description_looks_like_email_dump(description):
             continue
+
+        description_key = comparable(description)
+
+        # Claude sometimes returns the email subject itself as the only quotation row.
+        # A subject such as "Quotation Request - Classroom Supplies" is a title, not a billable item.
+        if subject_key and description_key == subject_key:
+            continue
+
+        if re.match(r"^(quotation|quote)\s+(request|enquiry|inquiry)\b", description_key):
+            continue
+
         clean.append(item)
 
-    # If every AI row was rejected, or a single suspiciously long row remains,
-    # derive deterministic task rows from Scope of Work / action verbs.
+    # If AI rows were unusable, rebuild them deterministically from the actual email body.
     if not clean:
         return _heuristic_scope_items(message)
 
@@ -492,6 +549,7 @@ def _ensure_scope_items(items: list[dict[str, Any]], message: dict[str, Any]) ->
         heuristic = _heuristic_scope_items(message)
         if heuristic:
             return heuristic
+
     return clean[:12]
 
 def _quotation_fallback(message: dict[str, Any]) -> dict[str, Any]:
@@ -515,8 +573,10 @@ def _quotation_fallback(message: dict[str, Any]) -> dict[str, Any]:
         # and require human review.
         "items": items,
 
-        "extraction_version": 0,
-        "extraction_source": "fallback",
+        # A successful deterministic parse can be reused without spending more LLM tokens.
+        # If nothing was extracted, keep version 0 so a later retry can attempt AI again.
+        "extraction_version": QUOTATION_EXTRACTION_VERSION if items else 0,
+        "extraction_source": "heuristic" if items else "fallback",
     }
 
 def _extract_quotation_details(message_data: dict[str, Any], message: dict[str, Any]) -> tuple[dict[str, Any], str, str]:
@@ -535,10 +595,10 @@ IMPORTANT: The quotation Description column must contain WHAT THE CUSTOMER WANTS
 - DO NOT put greetings, background narrative, email addresses, signatures, submission deadlines, quotation validity, cost-breakdown instructions, GST instructions, password/site-plan notes, or general 'please submit a quotation' wording into items.
 - If the same service applies to several named sites, combine the sites into one concise item unless the requested work differs.
 - unit_price/tax_rate must be null unless explicitly stated by the customer.
-- extraction_version must be 4.
+- extraction_version must be 5.
 
 Return exactly one JSON object and no other text using this schema:
-{"company":"","attn":"","customer_address":"","customer_postal":"","external_reference":"","currency":"","subject_title":"","items":[{"description":"","qty":null,"uom":"","unit_price":null,"tax_rate":null}],"extraction_version":4}
+{"company":"","attn":"","customer_address":"","customer_postal":"","external_reference":"","currency":"","subject_title":"","items":[{"description":"","qty":null,"uom":"","unit_price":null,"tax_rate":null}],"extraction_version":5}
 
 EMAIL DATA:
 """ + _fence_untrusted(message_data)
@@ -561,7 +621,10 @@ EMAIL DATA:
             fallback = _quotation_fallback(message)
             normalized["items"] = fallback["items"]
 
-            if not normalized["items"]:
+            if normalized["items"]:
+                normalized["extraction_version"] = QUOTATION_EXTRACTION_VERSION
+                normalized["extraction_source"] = "heuristic"
+            else:
                 normalized["extraction_version"] = 0
                 normalized["extraction_source"] = "fallback"
                 return (
@@ -693,7 +756,7 @@ def classify_message(message: dict[str, Any]) -> dict[str, Any]:
         if (
             has_existing_details
             and existing_version >= QUOTATION_EXTRACTION_VERSION
-            and existing_source == "ai"
+            and existing_source in {"ai", "heuristic"}
         ):
             quotation_details = _normalize_quotation_details(existing_draft, message.get("subject") or "")
         else:

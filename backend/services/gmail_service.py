@@ -6,7 +6,7 @@ import mimetypes
 import re
 import webbrowser
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from email.message import EmailMessage
 from email.utils import parseaddr
 from pathlib import Path
@@ -248,10 +248,36 @@ def _decode_b64url(data: str | None) -> str:
 
 
 def _strip_html(html: str) -> str:
-    text = re.sub(r"(?is)<(script|style).*?>.*?</\\1>", " ", html)
-    text = re.sub(r"(?s)<[^>]+>", " ", text)
-    return re.sub(r"\\s+", " ", text).strip()
+    """Convert Gmail HTML into readable plain text while preserving item line breaks."""
+    if not html:
+        return ""
 
+    import html as html_lib
+
+    text = html
+
+    # Remove active/non-content blocks completely.
+    text = re.sub(r"(?is)<(script|style).*?>.*?</\1>", "", text)
+
+    # Preserve common block boundaries before stripping tags.
+    text = re.sub(r"(?i)<br\s*/?>", "\n", text)
+    text = re.sub(r"(?i)</p\s*>", "\n", text)
+    text = re.sub(r"(?i)</div\s*>", "\n", text)
+    text = re.sub(r"(?i)</li\s*>", "\n", text)
+    text = re.sub(r"(?i)</tr\s*>", "\n", text)
+    text = re.sub(r"(?i)</t[dh]\s*>", " | ", text)
+
+    # Remove all remaining tags and decode HTML entities.
+    text = re.sub(r"(?s)<[^>]+>", "", text)
+    text = html_lib.unescape(text)
+
+    lines: list[str] = []
+    for line in text.splitlines():
+        cleaned = re.sub(r"[ \t]+", " ", line).strip()
+        if cleaned:
+            lines.append(cleaned)
+
+    return "\n".join(lines)
 
 def _walk_parts(part: dict[str, Any], attachments: list[dict[str, Any]]) -> tuple[str, str]:
     mime_type = part.get("mimeType", "")
@@ -302,7 +328,7 @@ def normalize_message(message: dict[str, Any]) -> dict[str, Any]:
     received_at = ""
     if internal_date:
         received_at = datetime.fromtimestamp(
-            int(internal_date) / 1000, tz=UTC
+            int(internal_date) / 1000, tz=timezone.utc
         ).isoformat()
 
     return {
