@@ -8,6 +8,16 @@
 backend/secrets/*
 !backend/secrets/README.txt
 
+# ...and the same artefacts by name, wherever they land. A credentials.json
+# downloaded to the repo root, or a token.json left behind in deploy/, is just
+# as sensitive as the copy in backend/secrets/. Matches on name rather than
+# location on purpose: the failure being guarded against is a real email
+# account's refresh token entering git history, and that outweighs the mild
+# surprise of a fixture such as test_credentials.json being silently skipped.
+*credentials*.json
+*client_secret*.json
+*token*.json
+
 # Environment variables (holds LLM_GATEWAY_API_KEY).
 .env
 .env.*
@@ -35,6 +45,9 @@ backend/data/*.db-wal
 backend/data/*.db-journal
 backend/data/*.sqlite
 backend/data/*.sqlite3
+backend/data/*.sqlite3-shm
+backend/data/*.sqlite3-wal
+backend/data/*.sqlite3-journal
 
 # ---------------------------------------------------------------------------
 # Python
