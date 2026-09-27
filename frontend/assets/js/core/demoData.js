@@ -35,9 +35,11 @@ function writeSeed(seed) {
 export function ensureDemoData() {
   const seed = readSeedFile()
   const currentVersion = localStorage.getItem(DATA_VERSION_KEY)
+  const hasStoredEmails = localStorage.getItem(EMAILS_KEY) != null
 
-  // A new project version deliberately resets old/corrupted browser data once.
-  if (currentVersion !== seed.version) {
+  // Seed only on a true first run. A missing or evicted version key must never
+  // be read as an upgrade, or every getEmails()/saveEmails() wipes live workflow data.
+  if (!hasStoredEmails && currentVersion !== seed.version) {
     writeSeed(seed)
   }
 
