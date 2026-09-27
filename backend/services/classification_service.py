@@ -250,7 +250,6 @@ def _clean_scope_line(value: str) -> str:
 def _heuristic_scope_items(
     message: dict[str, Any]
 ) -> list[dict[str, Any]]:
-
     """
     Best-effort fallback.
 
@@ -266,7 +265,6 @@ def _heuristic_scope_items(
 
     if not body.strip():
         return []
-
 
     # ---------------------------------------------------------
     # TRY TO LOCATE A SCOPE / REQUEST SECTION
@@ -286,12 +284,7 @@ def _heuristic_scope_items(
         body,
     )
 
-    scope = (
-        scope_match.group(1)
-        if scope_match
-        else body
-    )
-
+    scope = scope_match.group(1) if scope_match else body
 
     # ---------------------------------------------------------
     # STOP BEFORE EMAIL / COMMERCIAL INSTRUCTIONS
@@ -312,21 +305,11 @@ def _heuristic_scope_items(
     stop = len(scope)
 
     for marker in stop_markers:
-
-        match = re.search(
-            marker,
-            scope,
-            flags=re.IGNORECASE
-        )
-
+        match = re.search(marker, scope, flags=re.IGNORECASE)
         if match:
-            stop = min(
-                stop,
-                match.start()
-            )
+            stop = min(stop, match.start())
 
     scope = scope[:stop]
-
 
     # ---------------------------------------------------------
     # EXTRACT ITEMS
@@ -334,17 +317,13 @@ def _heuristic_scope_items(
 
     items: list[dict[str, Any]] = []
 
-
     for raw in scope.split("\n"):
-
         line = _clean_scope_line(raw)
 
         if not line:
             continue
 
-
         lower = line.lower()
-
 
         # Ignore obvious email text
         if lower in {
@@ -353,7 +332,6 @@ def _heuristic_scope_items(
             "services required",
         }:
             continue
-
 
         if lower.startswith((
             "dear ",
@@ -365,7 +343,6 @@ def _heuristic_scope_items(
             "please find",
         )):
             continue
-
 
         if any(
             token in lower
@@ -384,7 +361,6 @@ def _heuristic_scope_items(
             )
         ):
             continue
-
 
         # -----------------------------------------------------
         # QUANTITY / PRODUCT STYLE
@@ -406,30 +382,16 @@ def _heuristic_scope_items(
             flags=re.IGNORECASE,
         )
 
-
         if quantity_match:
-
             qty_raw = quantity_match.group(1)
-
-            uom = (
-                quantity_match.group(2)
-                or ""
-            )
-
-            description = (
-                quantity_match.group(3)
-                or ""
-            ).strip()
-
+            uom = quantity_match.group(2) or ""
+            description = (quantity_match.group(3) or "").strip()
 
             qty = float(qty_raw)
-
             if qty.is_integer():
                 qty = int(qty)
 
-
             if description:
-
                 items.append({
                     "description": description,
                     "qty": qty,
@@ -437,9 +399,7 @@ def _heuristic_scope_items(
                     "unit_price": None,
                     "tax_rate": None,
                 })
-
                 continue
-
 
         # -----------------------------------------------------
         # SERVICE / WORK STYLE
@@ -454,7 +414,6 @@ def _heuristic_scope_items(
             r")\b",
             lower,
         ):
-
             items.append({
                 "description": line,
                 "qty": None,
@@ -463,40 +422,25 @@ def _heuristic_scope_items(
                 "tax_rate": None,
             })
 
-
     # ---------------------------------------------------------
     # REMOVE DUPLICATES
     # ---------------------------------------------------------
 
     deduped: list[dict[str, Any]] = []
-
     seen = set()
 
-
     for item in items:
-
         key = re.sub(
             r"[^a-z0-9]+",
             "",
-            str(
-                item.get("description")
-                or ""
-            ).lower()
+            str(item.get("description") or "").lower(),
         )
 
-
-        if (
-            key
-            and key not in seen
-        ):
-
+        if key and key not in seen:
             seen.add(key)
-
             deduped.append(item)
 
-
     return deduped[:12]
-
 
 def _description_looks_like_email_dump(value: str) -> bool:
     """Reject AI item descriptions that are really the whole source email."""
@@ -557,21 +501,6 @@ def _quotation_fallback(message: dict[str, Any]) -> dict[str, Any]:
         message.get("subject") or ""
     ).strip()
 
-    if not items and subject:
-        concise = re.sub(
-            r"^\s*\[[^\]]+\]\s*",
-            "",
-            subject
-        ).strip()
-
-        items = [{
-            "description": concise or subject,
-            "qty": None,
-            "uom": "",
-            "unit_price": None,
-            "tax_rate": None,
-        }]
-
     return {
         "company": "",
         "attn": "",
@@ -580,15 +509,15 @@ def _quotation_fallback(message: dict[str, Any]) -> dict[str, Any]:
         "external_reference": "",
         "currency": "SGD",
         "subject_title": subject,
+
+        # Never use the email subject as a quotation line item.
+        # If no actual products/services were found, leave items empty
+        # and require human review.
         "items": items,
 
-        # IMPORTANT:
-        # This is only a fallback.
-        # Do not mark it as a successful AI extraction.
         "extraction_version": 0,
         "extraction_source": "fallback",
     }
-
 
 def _extract_quotation_details(message_data: dict[str, Any], message: dict[str, Any]) -> tuple[dict[str, Any], str, str]:
     prompt = """You are preparing a FIRST-DRAFT quotation from a customer email for MaxGreen Contractor Pte Ltd.
@@ -617,19 +546,31 @@ EMAIL DATA:
     try:
         with timed("llm.quotation_extract"):
             parsed, model = chat_json(prompt, retry_label="extract quotation fields from the customer email")
-        normalized = _normalize_quotation_details(
-            parsed,
-            message.get("subject") or ""
-        )
-
+        normalized = _normalize_quotation_details(parsed, message.get("subject") or "")
         normalized["extraction_version"] = QUOTATION_EXTRACTION_VERSION
         normalized["extraction_source"] = "ai"
+
         # Claude may occasionally copy the entire email into one Description field.
         # Validate the rows and, when needed, deterministically rebuild them from the
         # actual Scope of Work / action-oriented lines in the source email.
         normalized["items"] = _ensure_scope_items(normalized["items"], message)
+
+        # If Claude could not identify actual requested items, try the
+        # deterministic fallback. Do not treat an empty fallback as successful AI.
         if not normalized["items"]:
-            normalized["items"] = _quotation_fallback(message)["items"]
+            fallback = _quotation_fallback(message)
+            normalized["items"] = fallback["items"]
+
+            if not normalized["items"]:
+                normalized["extraction_version"] = 0
+                normalized["extraction_source"] = "fallback"
+                return (
+                    normalized,
+                    model,
+                    "The requested quotation items could not be identified automatically. "
+                    "Review the original email and enter the required items manually.",
+                )
+
         return normalized, model, ""
     except Exception as exc:
         # A deterministic fallback keeps the draft usable, but the caller must be told the
@@ -728,16 +669,12 @@ def classify_message(message: dict[str, Any]) -> dict[str, Any]:
 
     if category == "Quotation":
         existing_draft = message.get("ai_quotation_draft")
-
         existing_version = 0
         existing_source = ""
 
         if isinstance(existing_draft, dict):
-
             try:
-                existing_version = int(
-                    existing_draft.get("extraction_version") or 0
-                )
+                existing_version = int(existing_draft.get("extraction_version") or 0)
             except (TypeError, ValueError):
                 existing_version = 0
 
@@ -754,10 +691,10 @@ def classify_message(message: dict[str, Any]) -> dict[str, Any]:
         # v33 changes the semantic meaning of items: concise billable/requested scope
         # lines, never the whole email. Upgrade old AI drafts once on View/classify.
         if (
-                has_existing_details
-                and existing_version >= QUOTATION_EXTRACTION_VERSION
-                and existing_source == "ai"
-            ):
+            has_existing_details
+            and existing_version >= QUOTATION_EXTRACTION_VERSION
+            and existing_source == "ai"
+        ):
             quotation_details = _normalize_quotation_details(existing_draft, message.get("subject") or "")
         else:
             quotation_details, extract_model, preparation_warning = _extract_quotation_details(data, message)
