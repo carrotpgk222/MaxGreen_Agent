@@ -2081,25 +2081,34 @@ if (
           'Invoice & DO'
         ) {
 
-          splitCompletedInvoiceDo(
-            email.id,
-            {
-              to,
-              subject,
-              body,
-              sentAt
-            }
-          )
+          const split =
+            splitCompletedInvoiceDo(
+              email.id,
+              {
+                to,
+                subject,
+                body,
+                sentAt
+              }
+            )
 
 
-          closeEmailModal()
+          // The split needs BOTH the invoice and the delivery-order draft. If either
+          // one is missing it returns null, and the bundle would be left sitting at
+          // 'Pending' for ever - in neither Pending nor Completed. The email really
+          // was sent, so fall through and complete the bundle itself instead.
+          if (split) {
+
+            closeEmailModal()
 
 
-          window.location.href =
-            './completed.html'
+            window.location.href =
+              './completed.html'
 
 
-          return
+            return
+
+          }
 
         }
 
