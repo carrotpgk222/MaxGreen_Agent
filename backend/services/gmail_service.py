@@ -8,6 +8,8 @@ from email.utils import parseaddr
 from pathlib import Path
 from typing import Any
 
+import mimetypes
+from email.message import EmailMessage
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -19,7 +21,10 @@ CREDENTIALS_PATH = SECRETS_DIR / "credentials.json"
 TOKEN_PATH = SECRETS_DIR / "token.json"
 
 # Read-only first. We will add gmail.send later when the app's sending flow is ready.
-SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
+SCOPES = [
+    "https://www.googleapis.com/auth/gmail.readonly",
+    "https://www.googleapis.com/auth/gmail.send",
+]
 
 
 def _load_credentials() -> Credentials | None:
@@ -243,3 +248,102 @@ def fetch_attachment(gmail_message_id: str, attachment_id: str) -> bytes:
         return b""
     padding = "=" * (-len(data) % 4)
     return base64.urlsafe_b64decode((data + padding).encode("ascii"))
+
+def send_email(
+    to: str,
+    subject: str,
+    body: str,
+    attachments: list[dict[str, Any]] | None = None,
+) -> dict[str, Any]:
+    """
+    Send an email using the connected Gmail account.
+
+    attachments format:
+
+    [
+        {
+            "filename": "INV-001.pdf",
+            "data": b"...pdf bytes...",
+            "mime_type": "application/pdf"
+        }
+    ]
+    """
+
+    if not to:
+        raise ValueError("Recipient email is required.")
+
+    if not subject:
+        raise ValueError("Email subject is required.")
+
+    service = get_service()
+
+    message = EmailMessage()
+
+    message["To"] = to
+    message["Subject"] = subject
+
+    message.set_content(body or "")
+
+    # --------------------------------------------------------
+    # ATTACHMENTS
+    # --------------------------------------------------------
+
+    for attachment in attachments or []:
+
+        filename = str(
+            attachment.get("filename") or "attachment"
+        )
+
+        data = attachment.get("data")
+
+        if not isinstance(data, bytes):
+            continue
+
+        mime_type = (
+            attachment.get("mime_type")
+            or mimetypes.guess_type(filename)[0]
+            or "application/octet-stream"
+        )
+
+        if "/" in mime_type:
+            maintype, subtype = mime_type.split("/", 1)
+        else:
+            maintype = "application"
+            subtype = "octet-stream"
+
+        message.add_attachment(
+            data,
+            maintype=maintype,
+            subtype=subtype,
+            filename=filename,
+        )
+
+    # --------------------------------------------------------
+    # ENCODE FOR GMAIL API
+    # --------------------------------------------------------
+
+    encoded_message = base64.urlsafe_b64encode(
+        message.as_bytes()
+    ).decode("ascii")
+
+    # --------------------------------------------------------
+    # SEND
+    # --------------------------------------------------------
+
+    sent = (
+        service.users()
+        .messages()
+        .send(
+            userId="me",
+            body={
+                "raw": encoded_message
+            },
+        )
+        .execute()
+    )
+
+    return {
+        "id": sent.get("id", ""),
+        "thread_id": sent.get("threadId", ""),
+        "label_ids": sent.get("labelIds", []),
+    }

@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -8,6 +9,7 @@
   <link rel="stylesheet" href="./assets/css/base.css" />
   <link rel="stylesheet" href="./assets/css/inbox.css" />
 </head>
+
 <body>
   <main class="page">
     <a class="back-link" href="./index.html">← Back to Dashboard</a>
@@ -16,7 +18,8 @@
       <div>
         <p class="eyebrow">Email Processing</p>
         <h1 class="page-title">Inbox</h1>
-        <p class="page-description">Real Gmail routed by Claude. Quotation, Invoice & DO, and Others stay here; Supplier Payable is routed to its dashboard page.</p>
+        <p class="page-description">Real Gmail routed by Claude. Quotation, Invoice & DO, and Others stay here; Supplier
+          Payable is routed to its dashboard page.</p>
       </div>
     </header>
 
@@ -27,7 +30,8 @@
           <span class="sync-status" id="sync-status">Loading stored Gmail messages…</span>
         </div>
         <div class="inbox-actions">
-          <button class="btn btn-primary" id="refresh-inbox" type="button">Refresh</button>
+          <button class="btn" id="classify-inbox" type="button">Classify Unclassified</button>
+          <button class="btn btn-primary" id="sync-inbox" type="button">Sync Gmail</button>
         </div>
       </div>
 
@@ -80,4 +84,5 @@
 
   <script type="module" src="./assets/js/pages/inbox.js"></script>
 </body>
+
 </html>

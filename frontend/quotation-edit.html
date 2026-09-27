@@ -1,94 +1,1379 @@
 <!doctype html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
   <title>MaxGreen Agent — Edit Construction Quotation</title>
+
   <link rel="icon" href="data:," />
   <link rel="stylesheet" href="./assets/css/base.css" />
-  <link rel="stylesheet" href="./assets/css/quotation-edit.css" />
+
+  <style>
+    /* =========================================================
+           BASE
+        ========================================================= */
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+    }
+
+    body {
+      min-height: 100vh;
+
+      font-family:
+        Inter,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+
+      color: #1e1b4b;
+
+      background:
+        linear-gradient(225deg,
+          #e0e7ff 0%,
+          #ede9fe 50%,
+          #faf5ff 100%);
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+
+    /* =========================================================
+           PAGE
+        ========================================================= */
+
+    .quotation-edit-page {
+      width: 100%;
+      max-width: 1440px;
+      min-height: 100vh;
+
+      margin: 0 auto;
+      padding: 40px 48px 70px;
+    }
+
+
+    /* =========================================================
+           BACK
+        ========================================================= */
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+
+      margin-bottom: 22px;
+
+      color: #6366f1;
+
+      font-size: 13px;
+      font-weight: 600;
+
+      text-decoration: none;
+
+      transition:
+        color 0.2s ease,
+        transform 0.2s ease;
+    }
+
+    .back-link:hover {
+      color: #4338ca;
+      transform: translateX(-3px);
+    }
+
+
+    /* =========================================================
+           TOP PAGE HEADER
+        ========================================================= */
+
+    .editor-page-header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 40px;
+
+      margin-bottom: 28px;
+    }
+
+    .editor-page-header>div {
+      min-width: 0;
+    }
+
+    .eyebrow {
+      margin: 0 0 5px;
+
+      color: #6366f1;
+
+      font-size: 11px;
+      line-height: 1.2;
+      font-weight: 700;
+
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .editor-page-header h1 {
+      margin: 0;
+
+      color: #1e1b4b;
+
+      font-size: 32px;
+      line-height: 1.2;
+      font-weight: 700;
+
+      letter-spacing: -0.7px;
+    }
+
+    .manual-rule {
+      max-width: 510px;
+
+      margin: 0 0 3px;
+
+      color: #7c789a;
+
+      font-size: 12px;
+      line-height: 1.55;
+
+      text-align: right;
+    }
+
+
+    /* =========================================================
+           BUTTONS
+        ========================================================= */
+
+    .btn {
+      min-height: 42px;
+
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+
+      padding: 0 20px;
+
+      color: #6366f1;
+      background: #ffffff;
+
+      border: 1px solid #c7d2fe;
+      border-radius: 10px;
+
+      font-size: 14px;
+      font-weight: 600;
+
+      box-shadow:
+        0 2px 8px rgba(99, 102, 241, 0.08);
+
+      transition:
+        transform 0.18s ease,
+        box-shadow 0.18s ease,
+        border-color 0.18s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+
+      border-color: #a5b4fc;
+
+      box-shadow:
+        0 6px 16px rgba(99, 102, 241, 0.14);
+    }
+
+    .btn-primary {
+      color: #ffffff;
+
+      background:
+        linear-gradient(180deg,
+          #6c63ff 0%,
+          #a855f7 100%);
+
+      border: 0;
+
+      box-shadow:
+        0 4px 16px rgba(108, 99, 255, 0.25);
+    }
+
+    .btn-primary:hover {
+      box-shadow:
+        0 8px 22px rgba(108, 99, 255, 0.30);
+    }
+
+
+    /* =========================================================
+           MAIN EDITOR CARD
+        ========================================================= */
+
+    .quotation-editor-card {
+      position: relative;
+
+      padding: 40px;
+
+      background: #ffffff;
+
+      border-radius: 20px;
+
+      box-shadow:
+        0 8px 48px rgba(99, 102, 241, 0.09);
+    }
+
+    .quotation-editor-card::before {
+      content: "";
+
+      position: absolute;
+
+      top: 0;
+      left: 40px;
+
+      width: 20px;
+      height: 4px;
+
+      background:
+        linear-gradient(180deg,
+          #6c63ff 0%,
+          #4f46e5 100%);
+
+      border-radius: 0 0 4px 4px;
+    }
+
+
+    /* =========================================================
+           INTERNAL TOOLBAR
+        ========================================================= */
+
+    .editor-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 30px;
+
+      margin-bottom: 28px;
+    }
+
+    .editor-toolbar h2 {
+      margin: 0;
+
+      color: #1e1b4b;
+
+      font-size: 21px;
+      font-weight: 700;
+
+      letter-spacing: -0.3px;
+    }
+
+    #source-summary {
+      margin: 5px 0 0;
+
+      color: #9ca3af;
+
+      font-size: 12px;
+    }
+
+    .editor-toolbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    #save-quotation {
+      min-width: 118px;
+      height: 44px;
+
+      padding: 0 32px;
+
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+
+    /* =========================================================
+           FORM
+        ========================================================= */
+
+    #quotation-form {
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+    }
+
+
+    /* =========================================================
+           TOP FORM
+        ========================================================= */
+
+    .form-section {
+      display: flex;
+      flex-direction: column;
+      gap: 26px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns:
+        minmax(180px, 1.1fr) minmax(160px, .9fr) minmax(170px, 1fr) minmax(170px, 1fr) minmax(180px, 1fr) 120px;
+
+      gap: 16px;
+
+      align-items: end;
+    }
+
+
+    /* =========================================================
+           FIELDS
+        ========================================================= */
+
+    .field {
+      min-width: 0;
+
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .field label {
+      color: #1e1b4b;
+
+      font-size: 13px;
+      line-height: 1.2;
+      font-weight: 700;
+    }
+
+    .field input,
+    .field select {
+      width: 100%;
+      height: 44px;
+
+      padding: 0 14px;
+
+      color: #374151;
+      background: #f8f7ff;
+
+      border: 1px solid #c7d2fe;
+      border-radius: 10px;
+
+      outline: none;
+
+      font-size: 14px;
+
+      transition:
+        border-color 0.18s ease,
+        background 0.18s ease,
+        box-shadow 0.18s ease;
+    }
+
+    .field input::placeholder {
+      color: #c4b5fd;
+    }
+
+    .field input:hover,
+    .field select:hover {
+      border-color: #a5b4fc;
+    }
+
+    .field input:focus,
+    .field select:focus {
+      background: #ffffff;
+      border-color: #818cf8;
+
+      box-shadow:
+        0 0 0 3px rgba(99, 102, 241, 0.08);
+    }
+
+    .field input[readonly] {
+      color: #8b86a7;
+      background: #f8f7ff;
+    }
+
+
+    /* =========================================================
+           COMPANY PICKER
+        ========================================================= */
+
+    .company-picker-field {
+      position: relative;
+      z-index: 20;
+    }
+
+    .company-combobox {
+      position: relative;
+    }
+
+    .company-suggestions {
+      position: absolute;
+      z-index: 200;
+
+      top: calc(100% + 6px);
+      left: 0;
+      right: 0;
+
+      max-height: 250px;
+
+      padding: 6px;
+
+      background: #ffffff;
+
+      border: 1px solid #c7d2fe;
+      border-radius: 10px;
+
+      box-shadow:
+        0 15px 35px rgba(79, 70, 229, 0.14);
+
+      overflow-y: auto;
+    }
+
+    .company-suggestions[hidden] {
+      display: none;
+    }
+
+    .company-suggestions>* {
+      padding: 10px 11px;
+
+      color: #4b5563;
+
+      border-radius: 7px;
+
+      font-size: 13px;
+
+      cursor: pointer;
+    }
+
+    .company-suggestions>*:hover {
+      color: #4f46e5;
+      background: #eef2ff;
+    }
+
+
+    /* =========================================================
+           SUBJECT
+        ========================================================= */
+
+    .subject-field {
+      padding-top: 24px;
+
+      border-top: 1px solid #e0e7ff;
+    }
+
+    .subject-field label {
+      font-size: 15px;
+    }
+
+    .subject-field input {
+      height: 48px;
+
+      padding: 0 16px;
+
+      font-size: 15px;
+    }
+
+
+    /* =========================================================
+           ITEMS SECTION
+        ========================================================= */
+
+    .quotation-items-section {
+      border: 1px solid #e0e7ff;
+      border-radius: 12px;
+
+      overflow: hidden;
+    }
+
+    .table-scroll {
+      width: 100%;
+
+      overflow-x: auto;
+    }
+
+    .quotation-items-table {
+      width: 100%;
+      min-width: 1120px;
+
+      border-collapse: collapse;
+      table-layout: fixed;
+
+      background: #ffffff;
+    }
+
+
+    /* =========================================================
+           TABLE HEADER
+        ========================================================= */
+
+    .quotation-items-table thead {
+      background:
+        linear-gradient(180deg,
+          #4f46e5 0%,
+          #6c63ff 100%);
+    }
+
+    .quotation-items-table th {
+      height: 52px;
+
+      padding: 0 10px;
+
+      color: #ffffff;
+
+      border: 0;
+
+      font-size: 12px;
+      line-height: 1.2;
+      font-weight: 700;
+
+      text-align: left;
+      white-space: nowrap;
+    }
+
+    .quotation-items-table th:nth-child(1) {
+      width: 140px;
+    }
+
+    .quotation-items-table th:nth-child(2) {
+      width: auto;
+    }
+
+    .quotation-items-table th:nth-child(3) {
+      width: 80px;
+    }
+
+    .quotation-items-table th:nth-child(4) {
+      width: 80px;
+    }
+
+    .quotation-items-table th:nth-child(5) {
+      width: 110px;
+    }
+
+    .quotation-items-table th:nth-child(6) {
+      width: 100px;
+    }
+
+    .quotation-items-table th:nth-child(7) {
+      width: 110px;
+    }
+
+    .quotation-items-table th:nth-child(8) {
+      width: 120px;
+    }
+
+    .quotation-items-table th:nth-child(9) {
+      width: 45px;
+    }
+
+    .quotation-items-table th:nth-child(n+3):nth-child(-n+8) {
+      text-align: center;
+    }
+
+    .quotation-items-table th:nth-child(8) {
+      text-align: right;
+    }
+
+
+    /* =========================================================
+           GENERATED TABLE ROWS
+        ========================================================= */
+
+    .quotation-items-table tbody tr {
+      background: #fafafe;
+
+      transition: background 0.15s ease;
+    }
+
+    .quotation-items-table tbody tr:nth-child(even) {
+      background: #ffffff;
+    }
+
+    .quotation-items-table tbody tr:hover {
+      background: #f8f7ff;
+    }
+
+    .quotation-items-table td {
+      min-height: 58px;
+
+      padding: 11px 8px;
+
+      color: #374151;
+
+      border-bottom: 1px solid #e0e7ff;
+
+      font-size: 13px;
+      vertical-align: middle;
+    }
+
+    .quotation-items-table tbody tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .quotation-items-table td input,
+    .quotation-items-table td select,
+    .quotation-items-table td textarea {
+      width: 100%;
+      min-height: 38px;
+
+      padding: 7px 8px;
+
+      color: #374151;
+      background: transparent;
+
+      border: 1px solid transparent;
+      border-radius: 7px;
+
+      outline: none;
+
+      font-size: 13px;
+    }
+
+    .quotation-items-table td textarea {
+      resize: vertical;
+    }
+
+    .quotation-items-table td input:hover,
+    .quotation-items-table td select:hover,
+    .quotation-items-table td textarea:hover {
+      background: #ffffff;
+
+      border-color: #e0e7ff;
+    }
+
+    .quotation-items-table td input:focus,
+    .quotation-items-table td select:focus,
+    .quotation-items-table td textarea:focus {
+      background: #ffffff;
+
+      border-color: #a5b4fc;
+
+      box-shadow:
+        0 0 0 2px rgba(99, 102, 241, 0.07);
+    }
+
+    .quotation-items-table td:nth-child(n+3):nth-child(-n+7) {
+      text-align: center;
+    }
+
+    .quotation-items-table td:nth-child(8) {
+      text-align: right;
+    }
+
+
+    /* Delete button from JS */
+
+    .quotation-items-table td:last-child button {
+      width: 32px;
+      height: 32px;
+
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+
+      padding: 0;
+
+      color: #f87171;
+      background: transparent;
+
+      border: 1px solid transparent;
+      border-radius: 7px;
+
+      cursor: pointer;
+
+      transition:
+        background 0.18s ease,
+        border-color 0.18s ease;
+    }
+
+    .quotation-items-table td:last-child button:hover {
+      background: #fef2f2;
+      border-color: #fecaca;
+    }
+
+
+    /* =========================================================
+           ADD ROW FOOTER
+        ========================================================= */
+
+    .items-footer {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+
+      padding: 12px 20px;
+
+      background: #f5f3ff;
+    }
+
+    #add-row {
+      min-height: 34px;
+
+      padding: 0 16px;
+
+      color: #6366f1;
+      background: #eef2ff;
+
+      border: 1px solid #c7d2fe;
+      border-radius: 8px;
+
+      box-shadow: none;
+
+      font-size: 13px;
+    }
+
+    #add-row::before {
+      content: "+";
+
+      font-size: 17px;
+      font-weight: 500;
+    }
+
+    #add-row:hover {
+      color: #4f46e5;
+      background: #e0e7ff;
+    }
+
+
+    /* =========================================================
+           ATTACHMENT
+        ========================================================= */
+
+    .quotation-actions-row {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    #attach-files {
+      min-height: 42px;
+
+      padding: 0 20px;
+    }
+
+    #attach-files::before {
+      content: "⌕";
+
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+
+      width: 17px;
+      height: 17px;
+
+      color: #6366f1;
+
+      font-size: 15px;
+    }
+
+    .subtle-note {
+      color: #9ca3af;
+
+      font-size: 12px;
+    }
+
+
+    /* =========================================================
+           SUMMARY
+        ========================================================= */
+
+    .quotation-summary {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 280px;
+      gap: 40px;
+
+      padding: 32px;
+
+      background: #f8f7ff;
+
+      border: 1px solid #e0e7ff;
+      border-radius: 16px;
+    }
+
+    .amount-in-words {
+      min-width: 0;
+    }
+
+    #amount-words {
+      display: block;
+
+      max-width: 800px;
+
+      color: #1e1b4b;
+
+      font-size: 28px;
+      line-height: 1.2;
+      font-weight: 700;
+
+      letter-spacing: -0.4px;
+    }
+
+    .amount-in-words p {
+      margin: 12px 0 0;
+
+      color: #9ca3af;
+
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+
+    /* =========================================================
+           TOTALS
+        ========================================================= */
+
+    .totals {
+      width: 100%;
+
+      margin: 0;
+    }
+
+    .totals>div {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+
+      padding: 6px 0;
+    }
+
+    .totals dt,
+    .totals dd {
+      margin: 0;
+
+      font-size: 14px;
+    }
+
+    .totals dt {
+      color: #6b7280;
+
+      font-weight: 500;
+    }
+
+    .totals dd {
+      color: #374151;
+
+      font-weight: 500;
+    }
+
+    .totals .grand-total {
+      margin-top: 7px;
+      padding-top: 13px;
+
+      border-top: 1px solid #4f46e5;
+    }
+
+    .totals .grand-total dt,
+    .totals .grand-total dd {
+      color: #4f46e5;
+
+      font-size: 17px;
+      font-weight: 800;
+    }
+
+    .totals .grand-total dt::after {
+      content: " SGD";
+    }
+
+
+    /* =========================================================
+           CONTACT MODAL
+        ========================================================= */
+
+    .contact-modal {
+      position: fixed;
+      z-index: 2000;
+
+      inset: 0;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      padding: 24px;
+    }
+
+    .contact-modal[hidden] {
+      display: none;
+    }
+
+    .contact-modal-backdrop {
+      position: absolute;
+
+      inset: 0;
+
+      background: rgba(30, 27, 75, 0.42);
+
+      backdrop-filter: blur(5px);
+    }
+
+    .contact-modal-card {
+      position: relative;
+      z-index: 1;
+
+      width: min(620px, 100%);
+
+      padding: 28px;
+
+      background: #ffffff;
+
+      border: 1px solid #e0e7ff;
+      border-radius: 20px;
+
+      box-shadow:
+        0 30px 80px rgba(30, 27, 75, 0.22);
+    }
+
+    .contact-modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+
+      margin-bottom: 24px;
+      padding-bottom: 18px;
+
+      border-bottom: 1px solid #e0e7ff;
+    }
+
+    .contact-modal-header h2 {
+      margin: 0;
+
+      color: #1e1b4b;
+
+      font-size: 21px;
+      font-weight: 700;
+    }
+
+    .contact-modal-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .company-popup-button {
+      min-height: 38px;
+
+      padding: 0 17px;
+
+      color: #6366f1;
+      background: #ffffff;
+
+      border: 1px solid #c7d2fe;
+      border-radius: 9px;
+
+      font-size: 13px;
+      font-weight: 600;
+
+      cursor: pointer;
+    }
+
+    #save-new-company {
+      color: #ffffff;
+
+      background:
+        linear-gradient(180deg,
+          #6c63ff,
+          #a855f7);
+
+      border: 0;
+
+      box-shadow:
+        0 3px 12px rgba(108, 99, 255, 0.20);
+    }
+
+
+    /* =========================================================
+           MODAL FIELDS
+        ========================================================= */
+
+    .contact-modal-fields {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .popup-field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .popup-field label {
+      color: #1e1b4b;
+
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .popup-field input {
+      width: 100%;
+      height: 44px;
+
+      padding: 0 14px;
+
+      color: #374151;
+      background: #f8f7ff;
+
+      border: 1px solid #c7d2fe;
+      border-radius: 10px;
+
+      outline: none;
+
+      font-size: 14px;
+    }
+
+    .popup-field input:focus {
+      background: #ffffff;
+      border-color: #818cf8;
+
+      box-shadow:
+        0 0 0 3px rgba(99, 102, 241, 0.08);
+    }
+
+    .popup-two-column {
+      display: grid;
+      grid-template-columns: 1fr 160px;
+      gap: 14px;
+    }
+
+
+    /* =========================================================
+           RESPONSIVE
+        ========================================================= */
+
+    @media (max-width: 1200px) {
+
+      .form-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+
+    @media (max-width: 850px) {
+
+      .quotation-edit-page {
+        padding: 30px 24px 50px;
+      }
+
+      .editor-page-header {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .manual-rule {
+        max-width: none;
+
+        text-align: left;
+      }
+
+      .quotation-editor-card {
+        padding: 28px 24px;
+      }
+
+      .quotation-editor-card::before {
+        left: 24px;
+      }
+
+      .editor-toolbar {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .editor-toolbar-actions,
+      #save-quotation {
+        width: 100%;
+      }
+
+      .form-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .quotation-summary {
+        grid-template-columns: 1fr;
+      }
+    }
+
+
+    @media (max-width: 560px) {
+
+      .quotation-edit-page {
+        padding: 22px 14px 40px;
+      }
+
+      .editor-page-header h1 {
+        font-size: 26px;
+      }
+
+      .quotation-editor-card {
+        padding: 24px 16px;
+      }
+
+      .quotation-editor-card::before {
+        left: 16px;
+      }
+
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .quotation-summary {
+        padding: 24px 20px;
+      }
+
+      #amount-words {
+        font-size: 22px;
+      }
+
+      .quotation-actions-row {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      #attach-files {
+        width: 100%;
+      }
+
+      .popup-two-column {
+        grid-template-columns: 1fr;
+      }
+
+      .contact-modal-header {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .contact-modal-actions {
+        width: 100%;
+      }
+
+      .company-popup-button {
+        flex: 1;
+      }
+    }
+  </style>
 </head>
+
+
 <body>
+
   <main class="quotation-edit-page">
-    <a id="back-to-quotation" class="back-link" href="./quotation.html">← Back to QUOTATION.pdf</a>
+
+    <a id="back-to-quotation" class="back-link" href="./quotation.html">
+      ← Back to QUOTATION.pdf
+    </a>
+
+
+    <!-- =====================================================
+             PAGE HEADER
+        ====================================================== -->
 
     <header class="editor-page-header">
+
       <div>
-        <p class="eyebrow">Quotation</p>
-        <h1>Construction Quotation.pdf</h1>
+
+        <p class="eyebrow">
+          Quotation
+        </p>
+
+        <h1>
+          Construction Quotation.pdf
+        </h1>
+
       </div>
-      <p class="manual-rule">Quotation requires manual entry. If a previous completed quotation has a similar subject title, TallyAI can suggest it as a reference.</p>
+
+
+      <p class="manual-rule">
+        Quotation requires manual entry. If a previous completed
+        quotation has a similar subject title, TallyAI can suggest
+        it as a reference.
+      </p>
+
     </header>
 
-    <section class="quotation-editor-card">
-      <div class="editor-toolbar">
-        <div>
-          <h2>Construction Quotation.pdf</h2>
-          <p id="source-summary">Editing quotation draft</p>
-        </div>
-        <div class="editor-toolbar-actions">
-          <button class="btn btn-primary" id="save-quotation" type="button">Save</button>
-        </div>
-      </div>
 
+    <!-- =====================================================
+             EDITOR
+        ====================================================== -->
+
+    <section class="quotation-editor-card">
+
+
+      <div class="editor-toolbar">
+
+        <div>
+
+          <h2>
+            Construction Quotation.pdf
+          </h2>
+
+          <p id="source-summary">
+            Editing quotation draft
+          </p>
+
+        </div>
+
+
+        <div class="editor-toolbar-actions">
+
+          <button class="btn btn-primary" id="save-quotation" type="button">
+            Save
+          </button>
+
+        </div>
+
+      </div>
 
 
       <form id="quotation-form" autocomplete="off">
+
+
+        <!-- =================================================
+                     DETAILS
+                ================================================== -->
+
         <section class="form-section">
+
+
           <div class="form-grid top-fields">
+
+
+            <!-- COMPANY -->
+
             <div class="field company-picker-field">
-              <label for="company">Company</label>
+
+              <label for="company">
+                Company
+              </label>
+
               <div class="company-combobox">
-                <input
-                  id="company"
-                  name="company"
-                  type="text"
-                  autocomplete="off"
-                  role="combobox"
-                  aria-autocomplete="list"
-                  aria-expanded="false"
-                  aria-controls="company-suggestions"
-                  placeholder="Search existing customer"
-                />
+
+                <input id="company" name="company" type="text" autocomplete="off" role="combobox"
+                  aria-autocomplete="list" aria-expanded="false" aria-controls="company-suggestions"
+                  placeholder="Search existing customer" />
+
                 <div id="company-suggestions" class="company-suggestions" role="listbox" hidden></div>
+
               </div>
+
             </div>
+
+
+            <!-- ATTN -->
+
             <div class="field">
-              <label for="attn">Attn</label>
+
+              <label for="attn">
+                Attn
+              </label>
+
               <select id="attn" name="attn">
-                <option value="">Select company first</option>
+                <option value="">
+                  Select company first
+                </option>
               </select>
+
             </div>
+
+
+            <!-- ISSUE DATE -->
+
             <div class="field">
-              <label for="issue-date">Issue date</label>
+
+              <label for="issue-date">
+                Issue date
+              </label>
+
               <input id="issue-date" name="issueDate" type="date" />
+
             </div>
+
+
+            <!-- DUE DATE -->
+
             <div class="field">
-              <label for="due-date">Due date</label>
+
+              <label for="due-date">
+                Due date
+              </label>
+
               <input id="due-date" name="dueDate" type="date" />
+
             </div>
+
+
+            <!-- QUOTATION NUMBER -->
+
             <div class="field">
-              <label for="quotation-number">Quotation reference</label>
+
+              <label for="quotation-number">
+                Quotation number
+              </label>
+
               <input id="quotation-number" name="quotationNumber" type="text" readonly />
+
             </div>
+
+
+            <!-- CURRENCY -->
+
             <div class="field currency-field">
-              <label for="currency">Currency</label>
+
+              <label for="currency">
+                Currency
+              </label>
+
               <select id="currency" name="currency">
-                <option value="SGD">SGD</option>
+                <option value="SGD">
+                  SGD
+                </option>
               </select>
+
             </div>
+
+
           </div>
+
+
+          <!-- SUBJECT -->
 
           <div class="field subject-field">
-            <label for="subject-title">Subject Title</label>
+
+            <label for="subject-title">
+              Subject Title
+            </label>
+
             <input id="subject-title" name="subjectTitle" type="text" placeholder="Enter quotation subject" />
+
           </div>
+
+
         </section>
 
+
+        <!-- =================================================
+                     ITEMS
+                ================================================== -->
+
         <section class="quotation-items-section">
+
+
           <div class="table-scroll">
+
+
             <table class="quotation-items-table">
+
+
               <thead>
+
                 <tr>
                   <th>Item</th>
                   <th>Description</th>
@@ -100,82 +1385,255 @@
                   <th>Amount SGD</th>
                   <th aria-label="Delete"></th>
                 </tr>
+
               </thead>
+
+
               <tbody id="quotation-items"></tbody>
+
+
             </table>
+
+
           </div>
+
+
           <div class="items-footer">
-            <button class="btn btn-small" id="add-row" type="button">Add Row</button>
+
+            <button class="btn btn-small" id="add-row" type="button">
+              Add Row
+            </button>
+
           </div>
+
+
         </section>
+
+
+        <!-- =================================================
+                     ATTACHMENTS
+                ================================================== -->
 
         <section class="quotation-actions-row">
-          <button class="btn" id="attach-files" type="button">Attach files</button>
+
+
+          <button class="btn" id="attach-files" type="button">
+            Attach files &amp; note
+          </button>
+
+
           <span id="attachment-note" class="subtle-note"></span>
+
+
         </section>
 
+
+        <!-- =================================================
+                     SUMMARY
+                ================================================== -->
+
         <section class="quotation-summary">
+
+
           <div class="amount-in-words">
-            <strong id="amount-words">Sum of Singapore Zero Dollars Only</strong>
-            <p>This is a computer generated document, no signature is required.</p>
+
+            <strong id="amount-words">
+              Sum of Singapore Zero Dollars Only
+            </strong>
+
+            <p>
+              This is a computer generated document,
+              no signature is required.
+            </p>
+
           </div>
+
+
           <dl class="totals">
-            <div><dt>Subtotal</dt><dd id="subtotal">0.00</dd></div>
-            <div><dt id="tax-summary-label">GST (9%)</dt><dd id="gst-total">0.00</dd></div>
-            <div class="grand-total"><dt>Total</dt><dd id="grand-total">0.00</dd></div>
+
+
+            <div>
+
+              <dt>
+                Subtotal
+              </dt>
+
+              <dd id="subtotal">
+                0.00
+              </dd>
+
+            </div>
+
+
+            <div>
+
+              <dt id="tax-summary-label">
+                GST (9%)
+              </dt>
+
+              <dd id="gst-total">
+                0.00
+              </dd>
+
+            </div>
+
+
+            <div class="grand-total">
+
+              <dt>
+                Total
+              </dt>
+
+              <dd id="grand-total">
+                0.00
+              </dd>
+
+            </div>
+
+
           </dl>
+
+
         </section>
+
+
       </form>
+
     </section>
+
   </main>
 
 
+  <!-- =========================================================
+         COMPANY MODAL
+    ========================================================== -->
+
   <div id="new-company-modal" class="contact-modal" hidden>
+
+
     <div class="contact-modal-backdrop" data-close-company-modal></div>
+
+
     <section class="contact-modal-card" role="dialog" aria-modal="true" aria-labelledby="new-company-modal-title">
+
+
       <header class="contact-modal-header">
-        <h2 id="new-company-modal-title">Update contact detail</h2>
+
+
+        <h2 id="new-company-modal-title">
+          Update contact detail
+        </h2>
+
+
         <div class="contact-modal-actions">
-          <button class="company-popup-button" id="cancel-new-company" type="button">Cancel</button>
-          <button class="company-popup-button" id="save-new-company" type="button">Save</button>
+
+
+          <button class="company-popup-button" id="cancel-new-company" type="button">
+            Cancel
+          </button>
+
+
+          <button class="company-popup-button" id="save-new-company" type="button">
+            Save
+          </button>
+
+
         </div>
+
+
       </header>
 
+
       <div class="contact-modal-fields">
+
+
         <div class="popup-field">
-          <label for="new-company-name">Company Name</label>
+
+          <label for="new-company-name">
+            Company Name
+          </label>
+
           <input id="new-company-name" type="text" autocomplete="organization" />
+
         </div>
 
+
         <div class="popup-field">
-          <label for="new-company-attn">Name (Attn)</label>
+
+          <label for="new-company-attn">
+            Name (Attn)
+          </label>
+
           <input id="new-company-attn" type="text" autocomplete="name" />
+
         </div>
 
+
         <div class="popup-field">
-          <label for="new-company-email">Email</label>
+
+          <label for="new-company-email">
+            Email
+          </label>
+
           <input id="new-company-email" type="email" autocomplete="email" />
+
         </div>
+
 
         <div class="popup-two-column">
+
+
           <div class="popup-field">
-            <label for="new-company-address">Address</label>
+
+            <label for="new-company-address">
+              Address
+            </label>
+
             <input id="new-company-address" type="text" autocomplete="street-address" />
+
           </div>
+
+
           <div class="popup-field">
-            <label for="new-company-postal">Postal</label>
-            <input id="new-company-postal" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="postal-code" />
+
+            <label for="new-company-postal">
+              Postal
+            </label>
+
+            <input id="new-company-postal" type="text" inputmode="numeric" pattern="[0-9]*"
+              autocomplete="postal-code" />
+
           </div>
+
+
         </div>
+
 
         <div class="popup-field">
-          <label for="new-company-contact">Contact Number</label>
+
+          <label for="new-company-contact">
+            Contact Number
+          </label>
+
           <input id="new-company-contact" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="tel" />
+
         </div>
+
+
       </div>
+
+
     </section>
+
   </div>
 
+
+  <!-- =========================================================
+         EXISTING JS
+    ========================================================== -->
+
   <script type="module" src="./assets/js/pages/quotationEdit.js"></script>
+
 </body>
+
 </html>

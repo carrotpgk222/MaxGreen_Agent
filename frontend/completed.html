@@ -1,66 +1,956 @@
 <!doctype html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
   <title>MaxGreen Agent — Completed</title>
+
   <link rel="icon" href="data:," />
   <link rel="stylesheet" href="./assets/css/base.css" />
-  <link rel="stylesheet" href="./assets/css/completed.css" />
+
+  <style>
+    /* =========================================================
+           BASE
+        ========================================================= */
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+    }
+
+    body {
+      min-height: 100vh;
+
+      font-family:
+        Inter,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+
+      color: #0f172a;
+
+      background:
+        radial-gradient(circle at 90% 5%,
+          rgba(124, 58, 237, 0.08),
+          transparent 30%),
+        radial-gradient(circle at 5% 90%,
+          rgba(59, 130, 246, 0.07),
+          transparent 35%),
+        linear-gradient(235deg,
+          #e8eeff 0%,
+          #f0eeff 50%,
+          #fafafa 100%);
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+
+
+    /* =========================================================
+           PAGE
+        ========================================================= */
+
+    .completed-page {
+      width: 100%;
+      max-width: 1500px;
+      min-height: 100vh;
+
+      margin: 0 auto;
+      padding: 40px 48px;
+
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+    }
+
+
+    /* =========================================================
+           BACK
+        ========================================================= */
+
+    .back-link {
+      width: fit-content;
+
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+
+      color: #64748b;
+
+      font-size: 13px;
+      font-weight: 600;
+      text-decoration: none;
+
+      transition:
+        color 0.2s ease,
+        transform 0.2s ease;
+    }
+
+    .back-link:hover {
+      color: #4f46e5;
+      transform: translateX(-3px);
+    }
+
+
+    /* =========================================================
+           HEADER
+        ========================================================= */
+
+    .completed-header {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+
+      margin-top: -5px;
+    }
+
+    .page-title {
+      margin: 0;
+
+      color: #0f172a;
+
+      font-size: 34px;
+      line-height: 1.2;
+      font-weight: 800;
+      letter-spacing: -1.2px;
+    }
+
+    .page-title::after {
+      content: "All processed and sent documents";
+
+      display: block;
+
+      margin-top: 5px;
+
+      color: #64748b;
+
+      font-size: 13px;
+      line-height: 1.4;
+      font-weight: 400;
+      letter-spacing: 0;
+    }
+
+
+    /* =========================================================
+           CONTROLS
+        ========================================================= */
+
+    .completed-controls {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 12px;
+
+      margin-top: -76px;
+    }
+
+    .completed-controls .field {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .completed-controls label {
+      display: none;
+    }
+
+
+    /* =========================================================
+           SEARCH
+        ========================================================= */
+
+    .completed-search-field {
+      position: relative;
+
+      width: 360px;
+    }
+
+    .completed-search-field::before {
+      content: "";
+
+      position: absolute;
+      z-index: 2;
+
+      left: 17px;
+      top: 50%;
+
+      width: 13px;
+      height: 13px;
+
+      border: 1.6px solid #94a3b8;
+      border-radius: 50%;
+
+      transform: translateY(-58%);
+
+      pointer-events: none;
+    }
+
+    .completed-search-field::after {
+      content: "";
+
+      position: absolute;
+      z-index: 2;
+
+      left: 28px;
+      top: 27px;
+
+      width: 6px;
+      height: 1.6px;
+
+      background: #94a3b8;
+      border-radius: 10px;
+
+      transform: rotate(45deg);
+
+      pointer-events: none;
+    }
+
+    #completed-search {
+      width: 100%;
+      height: 46px;
+
+      padding: 0 16px 0 44px;
+
+      color: #0f172a;
+      background: rgba(255, 255, 255, 0.96);
+
+      border: 1px solid #e2e8f0;
+      border-radius: 999px;
+      outline: none;
+
+      font-size: 14px;
+
+      box-shadow:
+        0 2px 12px rgba(15, 23, 42, 0.03);
+
+      transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+    }
+
+    #completed-search::placeholder {
+      color: #94a3b8;
+    }
+
+    #completed-search:hover {
+      border-color: #cbd5e1;
+    }
+
+    #completed-search:focus {
+      border-color: #a5b4fc;
+
+      box-shadow:
+        0 0 0 4px rgba(99, 102, 241, 0.08),
+        0 5px 16px rgba(15, 23, 42, 0.05);
+    }
+
+
+    /* =========================================================
+           FILTER SELECTS
+        ========================================================= */
+
+    #completed-category,
+    #completed-date {
+      height: 46px;
+
+      padding: 0 40px 0 16px;
+
+      color: #0f172a;
+      background-color: rgba(255, 255, 255, 0.96);
+
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      outline: none;
+
+      font-size: 14px;
+      font-weight: 600;
+
+      cursor: pointer;
+
+      appearance: none;
+
+      background-image:
+        linear-gradient(45deg,
+          transparent 50%,
+          #94a3b8 50%),
+        linear-gradient(135deg,
+          #94a3b8 50%,
+          transparent 50%);
+
+      background-position:
+        calc(100% - 17px) 20px,
+        calc(100% - 13px) 20px;
+
+      background-size:
+        4px 4px,
+        4px 4px;
+
+      background-repeat: no-repeat;
+
+      transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+    }
+
+    #completed-category {
+      min-width: 150px;
+    }
+
+    #completed-date {
+      min-width: 130px;
+    }
+
+    #completed-category:hover,
+    #completed-date:hover {
+      border-color: #c7d2fe;
+    }
+
+    #completed-category:focus,
+    #completed-date:focus {
+      border-color: #a5b4fc;
+
+      box-shadow:
+        0 0 0 4px rgba(99, 102, 241, 0.07);
+    }
+
+
+    /* =========================================================
+           TABS
+        ========================================================= */
+
+    .completed-tabs {
+      display: flex;
+      align-items: flex-start;
+      gap: 32px;
+
+      margin-top: 8px;
+    }
+
+    .completed-tab {
+      position: relative;
+
+      min-width: 100px;
+
+      padding: 0 0 11px;
+
+      color: #94a3b8;
+      background: transparent;
+
+      border: 0;
+
+      font-size: 15px;
+      line-height: 18px;
+      font-weight: 500;
+
+      cursor: pointer;
+
+      transition:
+        color 0.2s ease,
+        transform 0.2s ease;
+    }
+
+    .completed-tab::after {
+      content: "";
+
+      position: absolute;
+
+      right: 0;
+      bottom: 0;
+      left: 0;
+
+      height: 3px;
+
+      background: #e2e8f0;
+
+      border-radius: 999px;
+
+      transition:
+        background 0.25s ease,
+        transform 0.25s ease;
+    }
+
+    .completed-tab:hover {
+      color: #6366f1;
+    }
+
+    .completed-tab.active {
+      color: #0f172a;
+      font-weight: 700;
+    }
+
+    .completed-tab.active::after {
+      background:
+        linear-gradient(90deg,
+          #3b82f6 0%,
+          #6366f1 50%,
+          #7c3aed 100%);
+
+      box-shadow:
+        0 2px 8px rgba(99, 102, 241, 0.22);
+    }
+
+
+    /* =========================================================
+           TABLE CARD
+        ========================================================= */
+
+    .completed-table-card {
+      width: 100%;
+
+      background: rgba(255, 255, 255, 0.97);
+
+      border: 1px solid #e2e8f0;
+      border-radius: 20px;
+
+      box-shadow:
+        0 5px 24px rgba(15, 23, 42, 0.06),
+        inset 0 1px 0 rgba(255, 255, 255, 0.8);
+
+      overflow: hidden;
+    }
+
+    .table-wrap {
+      width: 100%;
+      overflow-x: auto;
+    }
+
+
+    /* =========================================================
+           TABLE
+        ========================================================= */
+
+    .completed-table {
+      width: 100%;
+
+      border-collapse: collapse;
+      border-spacing: 0;
+
+      table-layout: fixed;
+    }
+
+    .completed-table th,
+    .completed-table td {
+      text-align: left;
+      vertical-align: middle;
+    }
+
+
+    /* =========================================================
+           COLUMN WIDTHS
+        ========================================================= */
+
+    .completed-table th:nth-child(1),
+    .completed-table td:nth-child(1) {
+      width: 35%;
+    }
+
+    .completed-table th:nth-child(2),
+    .completed-table td:nth-child(2) {
+      width: 20%;
+    }
+
+    .completed-table th:nth-child(3),
+    .completed-table td:nth-child(3) {
+      width: 25%;
+    }
+
+    .completed-table th:nth-child(4),
+    .completed-table td:nth-child(4) {
+      width: 20%;
+    }
+
+
+    /* =========================================================
+           TABLE HEADER
+        ========================================================= */
+
+    .completed-table thead {
+      background: #f8fafc;
+    }
+
+    .completed-table thead tr {
+      height: 52px;
+    }
+
+    .completed-table th {
+      padding: 0 24px;
+
+      color: #64748b;
+
+      border-bottom: 1px solid #e2e8f0;
+
+      font-size: 13px;
+      line-height: 1.2;
+      font-weight: 700;
+    }
+
+
+    /* =========================================================
+           TABLE ROWS
+        ========================================================= */
+
+    .completed-table tbody tr {
+      height: 64px;
+
+      background: #ffffff;
+
+      border-bottom: 1px solid #f1f5f9;
+
+      transition:
+        background 0.18s ease,
+        box-shadow 0.18s ease;
+    }
+
+    .completed-table tbody tr:nth-child(even) {
+      background: #f8fafc;
+    }
+
+    .completed-table tbody tr:last-child {
+      border-bottom: 0;
+    }
+
+    .completed-table tbody tr:hover {
+      background: #f5f3ff;
+
+      box-shadow:
+        inset 4px 0 0 #7c3aed;
+    }
+
+    .completed-table td {
+      padding: 14px 24px;
+
+      color: #0f172a;
+
+      font-size: 14px;
+      line-height: 1.4;
+      font-weight: 400;
+
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+
+    /* Reference */
+
+    .completed-table td:nth-child(2) {
+      color: #64748b;
+    }
+
+
+    /* Date */
+
+    .completed-table td:nth-child(4) {
+      color: #94a3b8;
+    }
+
+
+    /* =========================================================
+           DOCUMENT NAME
+        ========================================================= */
+
+    .completed-name,
+    .document-name,
+    .file-name {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+    }
+
+    .completed-name::before,
+    .document-name::before,
+    .file-name::before {
+      content: "";
+
+      width: 30px;
+      height: 30px;
+
+      flex: 0 0 30px;
+
+      display: inline-block;
+
+      background:
+        linear-gradient(135deg,
+          #ede9fe,
+          #ddd6fe);
+
+      border-radius: 8px;
+    }
+
+
+    /* =========================================================
+           CATEGORY BADGES
+        ========================================================= */
+
+    .category,
+    .category-badge,
+    .completed-category-badge {
+      width: fit-content;
+
+      display: inline-flex;
+      align-items: center;
+
+      padding: 5px 11px;
+
+      border-radius: 999px;
+
+      font-size: 12px;
+      line-height: 1.2;
+      font-weight: 600;
+    }
+
+
+    /* Invoice */
+
+    .category-invoice,
+    .invoice {
+      color: #3b82f6 !important;
+
+      background: #dbeafe !important;
+    }
+
+
+    /* Quotation */
+
+    .category-quotation,
+    .quotation {
+      color: #9333ea !important;
+
+      background: #f3e8ff !important;
+    }
+
+
+    /* Delivery Order */
+
+    .category-delivery-order,
+    .delivery-order {
+      color: #d97706 !important;
+
+      background: #fef3c7 !important;
+    }
+
+
+    /* Statement of Account */
+
+    .category-statement-of-account,
+    .statement-of-account,
+    .category-soa,
+    .soa {
+      color: #16a34a !important;
+
+      background: #dcfce7 !important;
+    }
+
+
+    /* =========================================================
+           LINKS GENERATED BY JS
+        ========================================================= */
+
+    .completed-table a {
+      color: inherit;
+      text-decoration: none;
+
+      transition: color 0.18s ease;
+    }
+
+    .completed-table a:hover {
+      color: #6366f1;
+    }
+
+
+    /* =========================================================
+           BUTTONS GENERATED INSIDE TABLE
+        ========================================================= */
+
+    .completed-table button {
+      color: #4f46e5;
+
+      background: #eef2ff;
+
+      border: 1px solid #c7d2fe;
+      border-radius: 8px;
+
+      padding: 6px 10px;
+
+      font-size: 12px;
+      font-weight: 600;
+
+      cursor: pointer;
+
+      transition:
+        background 0.2s ease,
+        transform 0.2s ease;
+    }
+
+    .completed-table button:hover {
+      background: #e0e7ff;
+      transform: translateY(-1px);
+    }
+
+
+    /* =========================================================
+           EMPTY STATE
+        ========================================================= */
+
+    #completed-body:empty::after {
+      content: "No completed documents found.";
+
+      display: table-cell;
+
+      height: 140px;
+
+      padding: 30px;
+
+      color: #94a3b8;
+
+      text-align: center;
+      vertical-align: middle;
+
+      font-size: 13px;
+
+      background: #ffffff;
+    }
+
+
+    /* =========================================================
+           RESPONSIVE
+        ========================================================= */
+
+    @media (max-width: 1100px) {
+
+      .completed-page {
+        padding: 32px;
+      }
+
+      .completed-controls {
+        margin-top: 0;
+
+        justify-content: flex-start;
+        flex-wrap: wrap;
+      }
+
+      .completed-search-field {
+        flex: 1;
+
+        width: auto;
+        min-width: 280px;
+      }
+
+      .completed-table {
+        min-width: 850px;
+      }
+    }
+
+
+    @media (max-width: 700px) {
+
+      .completed-page {
+        padding: 24px 18px 32px;
+        gap: 22px;
+      }
+
+      .page-title {
+        font-size: 29px;
+      }
+
+      .completed-controls {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .completed-controls .field,
+      .completed-search-field {
+        width: 100%;
+        min-width: 0;
+      }
+
+      #completed-category,
+      #completed-date {
+        width: 100%;
+      }
+
+      .completed-tabs {
+        width: 100%;
+      }
+
+      .completed-tab {
+        flex: 1;
+      }
+    }
+  </style>
 </head>
+
+
 <body>
+
   <main class="page completed-page">
-    <a class="back-link" href="./index.html">← Back to Dashboard</a>
+
+
+    <!-- =====================================================
+             BACK
+        ====================================================== -->
+
+    <a class="back-link" href="./index.html">
+      ← Back to Dashboard
+    </a>
+
+
+    <!-- =====================================================
+             HEADER
+        ====================================================== -->
 
     <header class="completed-header">
-      <h1 class="page-title">Completed</h1>
+
+      <h1 class="page-title">
+        Completed
+      </h1>
+
     </header>
 
+
+    <!-- =====================================================
+             FILTERS
+        ====================================================== -->
+
     <section class="completed-controls" aria-label="Completed filters">
+
+
+      <!-- SEARCH -->
+
       <div class="field completed-search-field">
-        <label for="completed-search">Search</label>
-        <input id="completed-search" type="search" placeholder="Search" autocomplete="off" />
+
+        <label for="completed-search">
+          Search
+        </label>
+
+        <input id="completed-search" type="search" placeholder="Search..." autocomplete="off" />
+
       </div>
+
+
+      <!-- CATEGORY -->
+
       <div class="field">
-        <label for="completed-category">Category</label>
+
+        <label for="completed-category">
+          Category
+        </label>
+
         <select id="completed-category">
-          <option value="All">ALL</option>
-          <option value="Quotation">Quotation</option>
-          <option value="Delivery Order">Delivery Order</option>
-          <option value="Invoice">Invoice</option>
-          <option value="Statement of Account">SOA</option>
+
+          <option value="All">
+            ALL
+          </option>
+
+          <option value="Quotation">
+            Quotation
+          </option>
+
+          <option value="Delivery Order">
+            Delivery Order
+          </option>
+
+          <option value="Invoice">
+            Invoice
+          </option>
+
+          <option value="Statement of Account">
+            SOA
+          </option>
+
         </select>
+
       </div>
+
+
+      <!-- DATE -->
+
       <div class="field">
-        <label for="completed-date">Date</label>
+
+        <label for="completed-date">
+          Date
+        </label>
+
         <select id="completed-date">
-          <option value="All">All dates</option>
+
+          <option value="All">
+            All dates
+          </option>
+
         </select>
+
       </div>
+
     </section>
 
+
+    <!-- =====================================================
+             CUSTOMER / SUPPLIER TABS
+        ====================================================== -->
+
     <div class="completed-tabs" role="tablist" aria-label="Party type">
-      <button class="completed-tab active" type="button" data-party="customer" role="tab" aria-selected="true">Customers</button>
-      <button class="completed-tab" type="button" data-party="supplier" role="tab" aria-selected="false">Suppliers</button>
+
+      <button class="completed-tab active" type="button" data-party="customer" role="tab" aria-selected="true">
+        Customers
+      </button>
+
+      <button class="completed-tab" type="button" data-party="supplier" role="tab" aria-selected="false">
+        Suppliers
+      </button>
+
     </div>
 
+
+    <!-- =====================================================
+             TABLE
+        ====================================================== -->
+
     <section class="completed-table-card">
+
       <div class="table-wrap">
+
         <table class="completed-table">
+
           <thead>
+
             <tr>
               <th>Name</th>
               <th>Reference No.</th>
               <th>Category</th>
               <th>Sent Email on</th>
             </tr>
+
           </thead>
+
+
+          <!-- Existing completed.js populates this -->
+
           <tbody id="completed-body"></tbody>
+
         </table>
+
       </div>
+
     </section>
+
   </main>
 
+
+  <!-- =========================================================
+         EXISTING JAVASCRIPT
+    ========================================================== -->
+
   <script type="module" src="./assets/js/pages/completed.js"></script>
+
 </body>
+
 </html>

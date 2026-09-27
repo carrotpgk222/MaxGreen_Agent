@@ -1,60 +1,435 @@
 <!doctype html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>MaxGreen Agent — Gmail Message</title>
   <link rel="icon" href="data:," />
-  <link rel="stylesheet" href="./assets/css/base.css" />
-  <link rel="stylesheet" href="./assets/css/gmail-message.css" />
-</head>
-<body>
-  <main class="page gmail-message-page">
-    <a class="back-link" href="./inbox.html">← Back to Inbox</a>
 
-    <header class="page-header gmail-message-header">
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #1e293b;
+      background:
+        radial-gradient(circle at 90% 5%, rgba(139, 92, 246, 0.14), transparent 28%),
+        linear-gradient(225deg, #e0e7ff 0%, #ede9fe 50%, #faf5ff 100%);
+    }
+
+    .gmail-message-page {
+      width: min(1200px, calc(100% - 48px));
+      margin: 0 auto;
+      padding: 42px 0 70px;
+    }
+
+    /* Back */
+    .back-link {
+      display: inline-block;
+      margin-bottom: 25px;
+      color: #6366f1;
+      font-size: 13px;
+      font-weight: 600;
+      text-decoration: none;
+    }
+
+    .back-link:hover {
+      color: #4338ca;
+    }
+
+    /* Header */
+    .gmail-message-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 25px;
+      margin-bottom: 25px;
+    }
+
+    .eyebrow {
+      margin: 0 0 8px;
+      color: #6366f1;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .page-title {
+      margin: 0;
+      color: #1e1b4b;
+      font-size: clamp(28px, 4vw, 36px);
+      line-height: 1.15;
+      font-weight: 800;
+      letter-spacing: -0.8px;
+    }
+
+    .page-description {
+      margin: 9px 0 0;
+      color: #64748b;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    #open-gmail {
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px 19px;
+      color: white;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      border-radius: 10px;
+      box-shadow: 0 5px 16px rgba(99, 102, 241, 0.25);
+      font-size: 12px;
+      font-weight: 700;
+      text-decoration: none;
+      transition: 0.2s ease;
+    }
+
+    #open-gmail:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 22px rgba(99, 102, 241, 0.3);
+    }
+
+    /* Main email card */
+    .gmail-message-card {
+      position: relative;
+      background: rgba(255, 255, 255, 0.96);
+      border: 1px solid #e0e7ff;
+      border-radius: 18px;
+      box-shadow: 0 16px 50px rgba(99, 102, 241, 0.11);
+      overflow: hidden;
+    }
+
+    .gmail-message-card::before {
+      content: "";
+      display: block;
+      height: 5px;
+      background: linear-gradient(90deg, #6366f1, #8b5cf6, #a855f7);
+    }
+
+    /* Email information */
+    .message-meta-grid {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr 1fr;
+      padding: 26px 30px;
+      background: linear-gradient(135deg, #fafaff, #f8f7ff);
+      border-bottom: 1px solid #eef2ff;
+    }
+
+    .message-meta-grid>div {
+      min-width: 0;
+      padding: 0 25px;
+      border-right: 1px solid #e0e7ff;
+    }
+
+    .message-meta-grid>div:first-child {
+      padding-left: 0;
+    }
+
+    .message-meta-grid>div:last-child {
+      padding-right: 0;
+      border-right: 0;
+    }
+
+    .meta-label {
+      display: block;
+      margin-bottom: 7px;
+      color: #94a3b8;
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .message-meta-grid strong {
+      display: block;
+      color: #1e1b4b;
+      font-size: 13px;
+      line-height: 1.4;
+      overflow-wrap: anywhere;
+    }
+
+    .meta-secondary {
+      display: block;
+      margin-top: 4px;
+      color: #94a3b8;
+      font-size: 10px;
+      line-height: 1.4;
+      overflow-wrap: anywhere;
+    }
+
+    /* Category */
+    .chip {
+      width: fit-content;
+      padding: 5px 10px;
+      color: #7c3aed !important;
+      background: #f5f3ff;
+      border: 1px solid #ddd6fe;
+      border-radius: 999px;
+      font-size: 10px !important;
+    }
+
+    /* Sections */
+    .message-section {
+      padding: 25px 30px;
+    }
+
+    .message-section+.message-section {
+      border-top: 1px solid #eef2ff;
+    }
+
+    .message-section h2 {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0;
+      color: #1e1b4b;
+      font-size: 14px;
+      font-weight: 750;
+    }
+
+    .message-section h2::before {
+      content: "";
+      width: 4px;
+      height: 15px;
+      background: linear-gradient(#6366f1, #a855f7);
+      border-radius: 10px;
+    }
+
+    /* Email body */
+    .message-body {
+      width: 100%;
+      max-height: 260px;
+      margin: 16px 0 0;
+      padding: 20px 22px;
+
+      color: #374151;
+      background: #fafaff;
+
+      border: 1px solid #e0e7ff;
+      border-radius: 10px;
+
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 12px;
+      line-height: 1.65;
+
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      overflow-y: auto;
+    }
+
+    /* Scrollbar */
+    .message-body::-webkit-scrollbar {
+      width: 7px;
+    }
+
+    .message-body::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .message-body::-webkit-scrollbar-thumb {
+      background: #c7d2fe;
+      border-radius: 20px;
+    }
+
+    /* Attachments */
+    .attachment-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .attachment-list:empty::after {
+      content: "No attachments";
+      grid-column: 1 / -1;
+      padding: 18px;
+      color: #94a3b8;
+      background: #fafaff;
+      border: 1px dashed #c7d2fe;
+      border-radius: 10px;
+      font-size: 11px;
+      text-align: center;
+    }
+
+    .attachment-list>* {
+      min-width: 0;
+      padding: 12px 14px;
+      color: #475569;
+      background: white;
+      border: 1px solid #e0e7ff;
+      border-radius: 9px;
+      font-size: 11px;
+      font-weight: 600;
+      text-decoration: none;
+      overflow-wrap: anywhere;
+    }
+
+    .attachment-list>*:hover {
+      border-color: #a5b4fc;
+      background: #fafaff;
+    }
+
+    /* Responsive */
+    @media (max-width: 750px) {
+      .gmail-message-page {
+        width: min(100% - 28px, 1200px);
+        padding-top: 25px;
+      }
+
+      .gmail-message-header {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      #open-gmail {
+        width: 100%;
+      }
+
+      .message-meta-grid {
+        grid-template-columns: 1fr;
+        padding: 20px 22px;
+      }
+
+      .message-meta-grid>div,
+      .message-meta-grid>div:first-child,
+      .message-meta-grid>div:last-child {
+        padding: 14px 0;
+        border-right: 0;
+        border-bottom: 1px solid #e0e7ff;
+      }
+
+      .message-meta-grid>div:first-child {
+        padding-top: 0;
+      }
+
+      .message-meta-grid>div:last-child {
+        padding-bottom: 0;
+        border-bottom: 0;
+      }
+
+      .message-section {
+        padding: 22px;
+      }
+
+      .message-body {
+        max-height: 220px;
+        padding: 17px;
+      }
+
+      .attachment-list {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <main class="gmail-message-page">
+
+    <a class="back-link" href="./supplier-payable.html">
+      ← Back to Supplier Payable
+    </a>
+
+    <header class="gmail-message-header">
+
       <div>
-        <p class="eyebrow">Real Gmail Message</p>
-        <h1 class="page-title" id="message-title">Loading…</h1>
-        <p class="page-description">This email was synced from Gmail and stored in the local SQLite database.</p>
+        <p class="eyebrow">Gmail Message</p>
+
+        <h1 class="page-title" id="message-title">
+          Loading…
+        </h1>
+
+        <p class="page-description">
+          Synced from Gmail
+        </p>
       </div>
-      <a class="btn btn-soft" id="open-gmail" href="#" target="_blank" rel="noopener">Open in Gmail ↗</a>
+
+      <a id="open-gmail" href="#" target="_blank" rel="noopener">
+        Open in Gmail ↗
+      </a>
+
     </header>
 
-    <section class="card gmail-message-card" id="message-card">
+
+    <section class="gmail-message-card" id="message-card">
+
+      <!-- Email information -->
       <div class="message-meta-grid">
+
         <div>
           <span class="meta-label">From</span>
-          <strong id="message-from">—</strong>
+
+          <strong id="message-from">
+            —
+          </strong>
+
           <span class="meta-secondary" id="message-from-email"></span>
         </div>
+
+
         <div>
           <span class="meta-label">Received</span>
-          <strong id="message-received">—</strong>
-          <span class="meta-secondary">Singapore Time (SGT)</span>
+
+          <strong id="message-received">
+            —
+          </strong>
+
+          <span class="meta-secondary">
+            Singapore Time (SGT)
+          </span>
         </div>
+
+
         <div>
           <span class="meta-label">Category</span>
-          <strong class="chip chip-unclassified">Unclassified</strong>
-          <span class="meta-secondary">Claude classification is the next step.</span>
+
+          <strong class="chip chip-unclassified">
+            Unclassified
+          </strong>
+
+          <span class="meta-secondary">
+            Awaiting classification
+          </span>
         </div>
+
       </div>
 
+
+      <!-- Email body -->
       <div class="message-section">
-        <div class="message-section-heading">
-          <h2>Email body</h2>
-          <button class="btn btn-soft" id="toggle-message-body" type="button" aria-expanded="false">Show email body</button>
-        </div>
-        <pre class="message-body" id="message-body" hidden>Loading…</pre>
+
+        <h2>Email body</h2>
+
+        <pre class="message-body" id="message-body">Loading…</pre>
+
       </div>
 
+
+      <!-- Attachments -->
       <div class="message-section">
+
         <h2>Attachments</h2>
+
         <div class="attachment-list" id="message-attachments"></div>
+
       </div>
+
     </section>
+
   </main>
 
+
   <script type="module" src="./assets/js/pages/gmailMessage.js"></script>
+
 </body>
+
 </html>

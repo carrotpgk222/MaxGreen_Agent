@@ -1,75 +1,1692 @@
 <!doctype html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
   <title>MaxGreen Agent — Completed Document</title>
+
   <link rel="icon" href="data:," />
+
   <link rel="stylesheet" href="./assets/css/base.css" />
   <link rel="stylesheet" href="./assets/css/quotation.css" />
   <link rel="stylesheet" href="./assets/css/delivery-order.css" />
   <link rel="stylesheet" href="./assets/css/invoice.css" />
   <link rel="stylesheet" href="./assets/css/pending-view.css" />
   <link rel="stylesheet" href="./assets/css/soa.css" />
+
+  <style>
+    /* =========================================================
+       RESET / BASE
+    ========================================================= */
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+    }
+
+    body {
+      min-height: 100vh;
+
+      font-family:
+        Inter,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+
+      color: #0f172a;
+
+      background:
+        radial-gradient(circle at 92% 5%,
+          rgba(139, 92, 246, 0.13),
+          transparent 30%),
+        radial-gradient(circle at 4% 92%,
+          rgba(99, 102, 241, 0.10),
+          transparent 34%),
+        linear-gradient(225deg,
+          #e0e7ff 0%,
+          #ede9fe 50%,
+          #faf5ff 100%);
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit;
+    }
+
+
+    /* =========================================================
+       PAGE
+    ========================================================= */
+
+    .pending-view-page {
+      width: 100%;
+      max-width: 1500px;
+      min-height: 100vh;
+
+      margin: 0 auto;
+      padding: 40px 48px 80px;
+    }
+
+
+    /* =========================================================
+       BACK LINK
+    ========================================================= */
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+
+      margin-bottom: 28px;
+
+      color: #6366f1;
+
+      font-size: 13px;
+      font-weight: 600;
+
+      text-decoration: none;
+
+      transition:
+        color 0.18s ease,
+        transform 0.18s ease;
+    }
+
+    .back-link:hover {
+      color: #4338ca;
+      transform: translateX(-3px);
+    }
+
+
+    /* =========================================================
+       COMPLETED HEADER
+    ========================================================= */
+
+    .pending-view-header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+
+      gap: 30px;
+
+      margin-bottom: 38px;
+    }
+
+    .review-context {
+      width: fit-content;
+
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+
+      margin: 0 0 8px;
+      padding: 6px 11px;
+
+      color: #15803d;
+      background: rgba(220, 252, 231, 0.85);
+
+      border: 1px solid #bbf7d0;
+      border-radius: 999px;
+
+      font-size: 10px;
+      line-height: 1;
+      font-weight: 800;
+
+      letter-spacing: 0.9px;
+    }
+
+    .review-context::before {
+      content: "✓";
+
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+
+      width: 15px;
+      height: 15px;
+
+      color: #ffffff;
+      background: #22c55e;
+
+      border-radius: 50%;
+
+      font-size: 9px;
+    }
+
+    #pending-file-name {
+      margin: 0;
+
+      color: #1e1b4b;
+
+      font-size: 36px;
+      line-height: 1.15;
+      font-weight: 800;
+
+      letter-spacing: -1px;
+    }
+
+    .pending-document-meta {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+
+      margin-top: 12px;
+    }
+
+    .pending-document-meta span {
+      display: inline-flex;
+      align-items: center;
+
+      min-height: 28px;
+
+      padding: 0 11px;
+
+      color: #6366f1;
+      background: rgba(255, 255, 255, 0.70);
+
+      border: 1px solid #c7d2fe;
+      border-radius: 999px;
+
+      font-size: 11px;
+      font-weight: 650;
+    }
+
+    #pending-category {
+      color: #7c3aed;
+      background: #f5f3ff;
+
+      border-color: #ddd6fe;
+    }
+
+
+    /* =========================================================
+       ACTIONS
+    ========================================================= */
+
+    .pending-action-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn {
+      min-height: 42px;
+
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+
+      padding: 0 18px;
+
+      color: #475569;
+      background: #ffffff;
+
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+
+      font-size: 12px;
+      font-weight: 650;
+
+      cursor: pointer;
+
+      transition:
+        transform 0.18s ease,
+        box-shadow 0.18s ease,
+        border-color 0.18s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+    }
+
+    .btn-danger {
+      min-width: 100px;
+
+      color: #dc2626;
+      background: rgba(255, 255, 255, 0.88);
+
+      border-color: #fecaca;
+
+      box-shadow:
+        0 4px 14px rgba(220, 38, 38, 0.06);
+    }
+
+    .btn-danger::before {
+      content: "×";
+
+      font-size: 17px;
+      line-height: 1;
+    }
+
+    .btn-danger:hover {
+      color: #ffffff;
+      background: #ef4444;
+
+      border-color: #ef4444;
+
+      box-shadow:
+        0 7px 18px rgba(239, 68, 68, 0.20);
+    }
+
+
+    /* =========================================================
+       COMMON DOCUMENT SHELL
+    ========================================================= */
+
+    .quotation-pdf-shell,
+    .delivery-pdf-shell,
+    .invoice-pdf-shell,
+    .soa-pdf-shell {
+      position: relative;
+
+      width: 100%;
+
+      padding-top: 62px;
+    }
+
+    .quotation-pdf-shell[hidden],
+    .delivery-pdf-shell[hidden],
+    .invoice-pdf-shell[hidden],
+    .soa-pdf-shell[hidden],
+    .generic-pending-preview[hidden],
+    .sent-summary[hidden] {
+      display: none !important;
+    }
+
+
+    /* =========================================================
+       GENERATED DOCUMENT LABEL
+    ========================================================= */
+
+    .quotation-pdf-shell::before,
+    .delivery-pdf-shell::before,
+    .invoice-pdf-shell::before,
+    .soa-pdf-shell::before {
+      content: "COMPLETED DOCUMENT";
+
+      position: absolute;
+
+      top: 0;
+      left: 0;
+
+      color: #6366f1;
+
+      font-size: 10px;
+      font-weight: 800;
+
+      letter-spacing: 1.2px;
+    }
+
+    .quotation-pdf-shell::after,
+    .delivery-pdf-shell::after,
+    .invoice-pdf-shell::after,
+    .soa-pdf-shell::after {
+      position: absolute;
+
+      top: 18px;
+      left: 0;
+      right: 0;
+
+      padding-bottom: 15px;
+
+      color: #1e1b4b;
+
+      border-bottom: 1px solid #c7d2fe;
+
+      font-size: 20px;
+      font-weight: 750;
+    }
+
+    .quotation-pdf-shell::after {
+      content: "Quotation";
+    }
+
+    .delivery-pdf-shell::after {
+      content: "Delivery Order";
+    }
+
+    .invoice-pdf-shell::after {
+      content: "Tax Invoice";
+    }
+
+    .soa-pdf-shell::after {
+      content: "Statement of Account";
+    }
+
+
+    /* =========================================================
+       COMMON DOCUMENT PAPER
+    ========================================================= */
+
+    .quotation-paper,
+    .delivery-paper,
+    .invoice-paper,
+    .soa-paper {
+      position: relative;
+
+      width: 100%;
+
+      margin: 0;
+      padding: 52px;
+
+      color: #111827;
+      background: #ffffff;
+
+      border: 1px solid #e0e7ff;
+      border-radius: 20px;
+
+      box-shadow:
+        0 16px 60px rgba(99, 102, 241, 0.13);
+
+      overflow: hidden;
+    }
+
+    .quotation-paper,
+    .delivery-paper,
+    .invoice-paper {
+      min-height: 900px;
+    }
+
+    .soa-paper {
+      min-height: 760px;
+    }
+
+    .quotation-paper::before,
+    .delivery-paper::before,
+    .invoice-paper::before,
+    .soa-paper::before {
+      content: "";
+
+      position: absolute;
+
+      top: 0;
+      left: 0;
+      right: 0;
+
+      height: 6px;
+
+      background:
+        linear-gradient(90deg,
+          #6c63ff,
+          #4f46e5,
+          #8b5cf6);
+    }
+
+
+    /* =========================================================
+       COMMON COMPANY HEADERS
+    ========================================================= */
+
+    .paper-header,
+    .delivery-paper-header,
+    .invoice-paper-header,
+    .soa-paper-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+
+      gap: 40px;
+
+      padding-bottom: 28px;
+
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    .paper-header>div:first-child,
+    .delivery-paper-header>div:first-child,
+    .invoice-paper-header>div:first-child,
+    .soa-paper-header>div:first-child {
+      flex: 1;
+    }
+
+    .paper-header h2,
+    .delivery-paper-header h2,
+    .invoice-paper-header h2,
+    .soa-paper-header h2 {
+      position: relative;
+
+      margin: 0 0 19px;
+
+      color: #111827;
+
+      font-family: inherit;
+      font-size: 26px;
+      line-height: 1.2;
+      font-weight: 800;
+
+      letter-spacing: -0.6px;
+    }
+
+    .paper-header h2::after,
+    .delivery-paper-header h2::after,
+    .invoice-paper-header h2::after,
+    .soa-paper-header h2::after {
+      content: "";
+
+      position: absolute;
+
+      left: 0;
+      bottom: -10px;
+
+      width: 48px;
+      height: 3px;
+
+      background: #6c63ff;
+
+      border-radius: 999px;
+    }
+
+    .paper-header p,
+    .delivery-paper-header p,
+    .invoice-paper-header p,
+    .soa-paper-header p {
+      margin: 2px 0;
+
+      color: #6b7280;
+
+      font-family: inherit;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .paper-register img,
+    .delivery-register img,
+    .invoice-register img,
+    .soa-paper-header>img {
+      display: block;
+
+      max-width: 120px;
+      max-height: 65px;
+
+      object-fit: contain;
+    }
+
+
+    /* =========================================================
+       TITLES
+    ========================================================= */
+
+    .paper-title-row,
+    .delivery-title-row,
+    .invoice-title-row {
+      display: flex;
+      justify-content: flex-end;
+
+      margin: 28px 0 6px;
+    }
+
+    .paper-title-row h3,
+    .delivery-title-row h3,
+    .invoice-title-row h3 {
+      margin: 0;
+
+      color: #4f46e5;
+
+      font-family: inherit;
+      font-size: 24px;
+      line-height: 1.2;
+      font-weight: 800;
+
+      text-transform: none;
+
+      border: 0;
+    }
+
+
+    /* =========================================================
+       INFO ROWS
+    ========================================================= */
+
+    .paper-info-row,
+    .delivery-info-row,
+    .invoice-info-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 310px;
+
+      gap: 50px;
+
+      min-height: 0;
+
+      margin-bottom: 28px;
+      padding: 0;
+    }
+
+
+    /* =========================================================
+       CUSTOMER
+    ========================================================= */
+
+    .paper-customer,
+    .delivery-customer,
+    .invoice-customer {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+
+      gap: 4px;
+
+      font-family: inherit;
+    }
+
+    .paper-customer::before,
+    .invoice-customer::before {
+      content: "BILL TO";
+    }
+
+    .delivery-customer::before {
+      content: "DELIVER TO";
+    }
+
+    .paper-customer::before,
+    .delivery-customer::before,
+    .invoice-customer::before {
+      width: fit-content;
+
+      margin-bottom: 5px;
+      padding: 4px 12px;
+
+      color: #6c63ff;
+      background: #eef2ff;
+
+      border-radius: 6px;
+
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .paper-customer strong,
+    .delivery-customer strong,
+    .invoice-customer strong {
+      color: #111827;
+
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .paper-customer span,
+    .delivery-customer span,
+    .invoice-customer span {
+      color: #6b7280;
+
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+
+    /* =========================================================
+       META
+    ========================================================= */
+
+    .paper-meta,
+    .delivery-meta,
+    .invoice-meta {
+      width: 100%;
+
+      margin: 0;
+
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .paper-meta>div,
+    .delivery-meta>div,
+    .invoice-meta>div {
+      display: grid;
+      grid-template-columns: 105px minmax(0, 1fr);
+
+      gap: 14px;
+    }
+
+    .paper-meta dt,
+    .paper-meta dd,
+    .delivery-meta dt,
+    .delivery-meta dd,
+    .invoice-meta dt,
+    .invoice-meta dd {
+      margin: 0;
+
+      font-family: inherit;
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    .paper-meta dt,
+    .delivery-meta dt,
+    .invoice-meta dt {
+      color: #9ca3af;
+    }
+
+    .paper-meta dd,
+    .delivery-meta dd,
+    .invoice-meta dd {
+      color: #111827;
+
+      font-weight: 500;
+    }
+
+
+    /* =========================================================
+       SUBJECT BANNERS
+    ========================================================= */
+
+    #preview-subject,
+    #do-preview-subject,
+    #inv-preview-subject {
+      width: 100%;
+
+      margin: 0 0 26px;
+      padding: 12px 18px;
+
+      color: #4f46e5;
+      background: #f5f3ff;
+
+      border: 1px solid #ddd6fe;
+      border-radius: 8px;
+
+      font-family: inherit;
+      font-size: 13px;
+      line-height: 1.45;
+      font-weight: 700;
+
+      text-transform: none;
+    }
+
+    #preview-subject::before,
+    #do-preview-subject::before,
+    #inv-preview-subject::before {
+      content: "✦";
+
+      margin-right: 9px;
+
+      color: #8b5cf6;
+    }
+
+
+    /* =========================================================
+       COMMON TABLES
+    ========================================================= */
+
+    .paper-table,
+    .delivery-table,
+    .invoice-table {
+      width: 100%;
+
+      border-collapse: separate;
+      border-spacing: 0;
+
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+
+      overflow: hidden;
+
+      font-family: inherit;
+      font-size: 12px;
+    }
+
+    .paper-table thead,
+    .delivery-table thead,
+    .invoice-table thead {
+      background:
+        linear-gradient(110deg,
+          #4f46e5,
+          #6c63ff);
+    }
+
+    .paper-table th,
+    .delivery-table th,
+    .invoice-table th {
+      padding: 13px 16px;
+
+      color: #ffffff;
+      background: transparent;
+
+      border: 0;
+
+      font-size: 12px;
+      font-weight: 700;
+
+      text-align: left;
+    }
+
+    .paper-table td,
+    .delivery-table td,
+    .invoice-table td {
+      padding: 18px 16px;
+
+      color: #374151;
+      background: #ffffff;
+
+      border: 0;
+      border-bottom: 1px solid #f1f5f9;
+
+      font-size: 12px;
+      line-height: 1.55;
+
+      vertical-align: top;
+    }
+
+    .paper-table tbody tr:last-child td,
+    .delivery-table tbody tr:last-child td,
+    .invoice-table tbody tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .paper-table tbody tr:hover td,
+    .delivery-table tbody tr:hover td,
+    .invoice-table tbody tr:hover td {
+      background: #fafaff;
+    }
+
+    .paper-table th:first-child,
+    .paper-table td:first-child,
+    .delivery-table th:first-child,
+    .delivery-table td:first-child,
+    .invoice-table th:first-child,
+    .invoice-table td:first-child {
+      width: 70px;
+
+      text-align: center;
+    }
+
+    .paper-table td:first-child,
+    .delivery-table td:first-child,
+    .invoice-table td:first-child {
+      color: #4f46e5;
+
+      font-weight: 650;
+    }
+
+
+    /* =========================================================
+       QUOTATION / INVOICE TOTALS
+    ========================================================= */
+
+    .paper-total-row,
+    .invoice-total-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 320px;
+
+      gap: 40px;
+
+      margin-top: 0;
+      padding: 24px 20px;
+
+      background: #fafafa;
+
+      border: 1px solid #e5e7eb;
+      border-top: 0;
+      border-radius: 0 0 10px 10px;
+    }
+
+    #preview-amount-words,
+    #inv-preview-amount-words {
+      align-self: start;
+
+      width: fit-content;
+
+      padding: 8px 12px;
+
+      color: #6b7280;
+      background: #f3f4f6;
+
+      border-radius: 7px;
+
+      font-size: 11px;
+      line-height: 1.5;
+      font-weight: 600;
+    }
+
+    #preview-amount-words::before,
+    #inv-preview-amount-words::before {
+      content: "AMOUNT IN WORDS";
+
+      display: block;
+
+      margin-bottom: 4px;
+
+      color: #9ca3af;
+
+      font-size: 9px;
+      font-weight: 700;
+
+      letter-spacing: 0.6px;
+    }
+
+    .paper-totals,
+    .invoice-totals {
+      width: 100%;
+    }
+
+    .paper-totals>div,
+    .invoice-totals>div {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      gap: 30px;
+
+      padding: 7px 0;
+
+      color: #6b7280;
+
+      border: 0;
+
+      font-size: 12px;
+    }
+
+    .paper-totals strong,
+    .invoice-totals strong {
+      color: #111827;
+    }
+
+    .paper-totals>div:last-child,
+    .invoice-totals>div:last-child {
+      margin-top: 6px;
+      padding-top: 12px;
+
+      color: #4f46e5;
+
+      border-top: 1px solid #c7d2fe;
+
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .paper-totals>div:last-child strong,
+    .invoice-totals>div:last-child strong {
+      color: #4f46e5;
+
+      font-size: 15px;
+      font-weight: 800;
+    }
+
+
+    /* =========================================================
+       INVOICE PAYMENT
+    ========================================================= */
+
+    .invoice-payment {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      gap: 30px;
+
+      margin-top: 28px;
+      padding: 20px 22px;
+
+      background:
+        linear-gradient(135deg,
+          #f8f7ff,
+          #fafaff);
+
+      border: 1px solid #e0e7ff;
+      border-radius: 12px;
+    }
+
+    .invoice-payment strong {
+      display: block;
+
+      margin-bottom: 8px;
+
+      color: #4f46e5;
+
+      font-size: 11px;
+      font-weight: 800;
+
+      letter-spacing: 0.5px;
+    }
+
+    .invoice-payment p {
+      margin: 3px 0;
+
+      color: #6b7280;
+
+      font-size: 11px;
+      line-height: 1.5;
+    }
+
+    #pending-invoice-paynow {
+      width: 105px;
+      height: 105px;
+
+      padding: 6px;
+
+      background: #ffffff;
+
+      border: 1px solid #e0e7ff;
+      border-radius: 10px;
+
+      object-fit: contain;
+    }
+
+
+    /* =========================================================
+       FOOTERS
+    ========================================================= */
+
+    .paper-footer,
+    .delivery-footer,
+    .invoice-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      gap: 20px;
+
+      margin-top: 70px;
+      padding-top: 16px;
+
+      color: #9ca3af;
+
+      border-top: 1px solid #e5e7eb;
+
+      font-size: 10px;
+    }
+
+    .computer-generated-note {
+      text-align: right;
+    }
+
+    .computer-generated-note::before {
+      content: "✓";
+
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+
+      width: 17px;
+      height: 17px;
+
+      margin-right: 6px;
+
+      color: #8b5cf6;
+      background: #f5f3ff;
+
+      border-radius: 50%;
+
+      font-size: 9px;
+      font-weight: 700;
+    }
+
+
+    /* =========================================================
+       STATEMENT OF ACCOUNT
+    ========================================================= */
+
+    .soa-title {
+      margin: 28px 0 26px;
+
+      color: #4f46e5;
+
+      font-size: 24px;
+      font-weight: 800;
+
+      text-align: right;
+    }
+
+    .soa-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+
+      gap: 30px;
+
+      margin-bottom: 26px;
+      padding: 18px 20px;
+
+      background: #f5f3ff;
+
+      border: 1px solid #ddd6fe;
+      border-radius: 9px;
+    }
+
+    .soa-to-line {
+      color: #6b7280;
+
+      font-size: 12px;
+    }
+
+    .soa-to-line strong {
+      color: #111827;
+
+      font-size: 14px;
+    }
+
+    .soa-head-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+
+      color: #6b7280;
+
+      font-size: 12px;
+
+      text-align: right;
+    }
+
+    .soa-head-meta span {
+      color: #111827;
+
+      font-weight: 600;
+    }
+
+
+    /* =========================================================
+       SOA MAIN TABLE
+    ========================================================= */
+
+    .soa-table,
+    .soa-ageing {
+      width: 100%;
+
+      border-collapse: separate;
+      border-spacing: 0;
+
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+
+      overflow: hidden;
+
+      font-size: 12px;
+    }
+
+    .soa-table thead,
+    .soa-ageing thead {
+      background:
+        linear-gradient(110deg,
+          #4f46e5,
+          #6c63ff);
+    }
+
+    .soa-table th,
+    .soa-ageing th {
+      padding: 12px 14px;
+
+      color: #ffffff;
+      background: transparent;
+
+      border: 0;
+
+      font-size: 11px;
+      font-weight: 700;
+
+      text-align: left;
+    }
+
+    .soa-table td,
+    .soa-ageing td {
+      padding: 14px;
+
+      color: #374151;
+      background: #ffffff;
+
+      border: 0;
+      border-bottom: 1px solid #f1f5f9;
+
+      font-size: 11px;
+    }
+
+    .soa-table tfoot td {
+      color: #4f46e5;
+      background: #f8f7ff;
+
+      border-top: 1px solid #ddd6fe;
+
+      font-weight: 800;
+    }
+
+    .soa-table tfoot td:last-child {
+      text-align: right;
+    }
+
+
+    /* =========================================================
+       SOA AGEING
+    ========================================================= */
+
+    .soa-ageing-title {
+      margin: 32px 0 10px;
+
+      color: #1e1b4b;
+
+      font-size: 13px;
+      font-weight: 750;
+    }
+
+    .soa-ageing th,
+    .soa-ageing td {
+      text-align: center;
+    }
+
+    .soa-ageing-total td {
+      color: #4f46e5;
+      background: #f5f3ff;
+
+      font-weight: 800;
+    }
+
+    .soa-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      gap: 20px;
+
+      margin-top: 60px;
+      padding-top: 16px;
+
+      color: #9ca3af;
+
+      border-top: 1px solid #e5e7eb;
+
+      font-size: 10px;
+    }
+
+
+    /* =========================================================
+       GENERIC DOCUMENT
+    ========================================================= */
+
+    .generic-pending-preview {
+      position: relative;
+
+      padding-top: 62px;
+    }
+
+    .generic-pending-preview::before {
+      content: "COMPLETED DOCUMENT";
+
+      position: absolute;
+
+      top: 0;
+      left: 0;
+
+      color: #6366f1;
+
+      font-size: 10px;
+      font-weight: 800;
+
+      letter-spacing: 1.2px;
+    }
+
+    .generic-preview-paper {
+      position: relative;
+
+      min-height: 500px;
+
+      padding: 45px;
+
+      background: #ffffff;
+
+      border: 1px solid #e0e7ff;
+      border-radius: 20px;
+
+      box-shadow:
+        0 16px 60px rgba(99, 102, 241, 0.13);
+
+      overflow: hidden;
+    }
+
+    .generic-preview-paper::before {
+      content: "";
+
+      position: absolute;
+
+      top: 0;
+      left: 0;
+      right: 0;
+
+      height: 6px;
+
+      background:
+        linear-gradient(90deg,
+          #6c63ff,
+          #4f46e5,
+          #8b5cf6);
+    }
+
+    .generic-preview-paper .eyebrow {
+      margin: 0 0 8px;
+
+      color: #6366f1;
+
+      font-size: 10px;
+      font-weight: 800;
+
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .generic-preview-paper h2 {
+      margin: 0 0 30px;
+
+      color: #1e1b4b;
+
+      font-size: 28px;
+      font-weight: 800;
+    }
+
+    .generic-preview-paper dl {
+      display: grid;
+      grid-template-columns: 130px minmax(0, 1fr);
+
+      gap: 0;
+
+      margin: 0;
+
+      border: 1px solid #e0e7ff;
+      border-radius: 10px;
+
+      overflow: hidden;
+    }
+
+    .generic-preview-paper dt,
+    .generic-preview-paper dd {
+      margin: 0;
+      padding: 14px 16px;
+
+      border-bottom: 1px solid #eef2ff;
+
+      font-size: 12px;
+    }
+
+    .generic-preview-paper dt {
+      color: #6366f1;
+      background: #f8f7ff;
+
+      font-weight: 700;
+    }
+
+    .generic-preview-paper dd {
+      color: #374151;
+      background: #ffffff;
+    }
+
+    .generic-preview-paper dt:nth-last-of-type(1),
+    .generic-preview-paper dd:last-of-type {
+      border-bottom: 0;
+    }
+
+    .generic-note {
+      margin: 25px 0 0;
+      padding: 14px 16px;
+
+      color: #6b7280;
+      background: #f8fafc;
+
+      border: 1px solid #e2e8f0;
+      border-radius: 9px;
+
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+
+    /* =========================================================
+       SENT SUMMARY
+    ========================================================= */
+
+    .sent-summary {
+      display: flex;
+      align-items: center;
+      gap: 13px;
+
+      margin-top: 24px;
+      padding: 17px 20px;
+
+      color: #166534;
+      background: #f0fdf4;
+
+      border: 1px solid #bbf7d0;
+      border-radius: 12px;
+
+      box-shadow:
+        0 5px 18px rgba(34, 197, 94, 0.06);
+    }
+
+    .sent-summary::before {
+      content: "✓";
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      width: 28px;
+      height: 28px;
+
+      color: #ffffff;
+      background: #22c55e;
+
+      border-radius: 50%;
+
+      font-size: 13px;
+      font-weight: 800;
+
+      flex-shrink: 0;
+    }
+
+    .sent-summary strong {
+      font-size: 13px;
+    }
+
+    .sent-summary span {
+      color: #4b5563;
+
+      font-size: 12px;
+    }
+
+
+    /* =========================================================
+       RESPONSIVE
+    ========================================================= */
+
+    @media (max-width: 1000px) {
+
+      .pending-view-page {
+        padding: 32px 28px 60px;
+      }
+
+      .paper-info-row,
+      .delivery-info-row,
+      .invoice-info-row {
+        grid-template-columns: 1fr;
+
+        gap: 25px;
+      }
+
+      .paper-meta,
+      .delivery-meta,
+      .invoice-meta {
+        max-width: 430px;
+      }
+
+      .paper-total-row,
+      .invoice-total-row {
+        grid-template-columns: 1fr;
+      }
+
+    }
+
+
+    @media (max-width: 720px) {
+
+      .pending-view-page {
+        padding: 24px 16px 50px;
+      }
+
+      .pending-view-header {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      #pending-file-name {
+        font-size: 29px;
+      }
+
+      .pending-action-row,
+      #delete-completed {
+        width: 100%;
+      }
+
+      .quotation-pdf-shell,
+      .delivery-pdf-shell,
+      .invoice-pdf-shell,
+      .soa-pdf-shell {
+        overflow-x: auto;
+      }
+
+      .quotation-paper,
+      .delivery-paper,
+      .invoice-paper,
+      .soa-paper {
+        min-width: 720px;
+
+        padding: 35px 28px;
+
+        border-radius: 14px;
+      }
+
+      .paper-header,
+      .delivery-paper-header,
+      .invoice-paper-header,
+      .soa-paper-header {
+        flex-direction: column;
+      }
+
+      .paper-title-row,
+      .delivery-title-row,
+      .invoice-title-row {
+        justify-content: flex-start;
+      }
+
+      .invoice-payment {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .paper-footer,
+      .delivery-footer,
+      .invoice-footer,
+      .soa-footer {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .computer-generated-note {
+        text-align: left;
+      }
+
+      .generic-preview-paper {
+        padding: 30px 22px;
+      }
+
+      .generic-preview-paper dl {
+        grid-template-columns: 1fr;
+      }
+
+      .generic-preview-paper dt {
+        border-bottom: 0;
+      }
+
+      .sent-summary {
+        align-items: flex-start;
+        flex-wrap: wrap;
+      }
+
+    }
+  </style>
 </head>
+
+
 <body data-view-mode="completed">
+
   <main class="pending-view-page">
-    <a class="back-link" id="back-link" href="./completed.html">← Back to Completed</a>
+
+    <!-- =====================================================
+         BACK
+    ====================================================== -->
+
+    <a class="back-link" id="back-link" href="./completed.html">
+      ← Back to Completed
+    </a>
+
+
+    <!-- =====================================================
+         COMPLETED HEADER
+    ====================================================== -->
 
     <header class="pending-view-header">
+
       <div>
-        <p class="review-context" id="view-context">COMPLETED</p>
-        <h1 id="pending-file-name">Document.pdf</h1>
+
+        <p class="review-context" id="view-context">
+          COMPLETED
+        </p>
+
+        <h1 id="pending-file-name">
+          Document.pdf
+        </h1>
+
         <div class="pending-document-meta">
-          <span id="pending-reference">—</span>
-          <span id="pending-category">—</span>
+
+          <span id="pending-reference">
+            —
+          </span>
+
+          <span id="pending-category">
+            —
+          </span>
+
         </div>
+
       </div>
+
 
       <div class="pending-action-row" id="pending-actions">
-        <button class="btn btn-danger" id="delete-completed" type="button">Delete</button>
+
+        <button class="btn btn-danger" id="delete-completed" type="button">
+          Delete
+        </button>
+
       </div>
+
     </header>
 
+
+    <!-- =====================================================
+         QUOTATION
+    ====================================================== -->
+
     <section id="quotation-document" class="quotation-pdf-shell" aria-label="Saved quotation PDF preview" hidden>
+
       <article class="quotation-paper" id="quotation-preview">
+
         <header class="paper-header">
+
           <div>
-            <h2>MAXGREEN CONTRACTOR PTE LTD</h2>
-            <p>71 Woodlands Ave 10 #06-18 Woodlands Industrial Xchange Singapore 737743</p>
-            <p>Tel/Fax: 69097551/7552 &nbsp; HP: 91998892 &nbsp; Email: green_01kat@yahoo.com</p>
-            <p>Co Reg No./ GST Reg. No: 200915795C</p>
+
+            <h2>
+              MAXGREEN CONTRACTOR PTE LTD
+            </h2>
+
+            <p>
+              71 Woodlands Ave 10 #06-18
+              Woodlands Industrial Xchange
+              Singapore 737743
+            </p>
+
+            <p>
+              Tel/Fax: 69097551/7552
+              &nbsp; HP: 91998892
+              &nbsp; Email: green_01kat@yahoo.com
+            </p>
+
+            <p>
+              Co Reg No./ GST Reg. No:
+              200915795C
+            </p>
+
           </div>
-          <div class="paper-register"><img src="./assets/images/bizsafe-logo.png" alt="Registered with bizSAFE" /></div>
+
+          <div class="paper-register">
+
+            <img src="./assets/images/bizsafe-logo.png" alt="Registered with bizSAFE" />
+
+          </div>
+
         </header>
 
+
         <div class="paper-title-row">
-          <h3>Quotation</h3>
+
+          <h3>
+            Quotation
+          </h3>
+
         </div>
 
+
         <section class="paper-info-row">
+
           <div class="paper-customer">
-            <strong id="preview-company">Customer / Company</strong>
+
+            <strong id="preview-company">
+              Customer / Company
+            </strong>
+
             <span id="preview-address"></span>
+
             <span id="preview-postal"></span>
+
             <span id="preview-attn"></span>
+
           </div>
 
+
           <dl class="paper-meta">
-            <div><dt>No.</dt><dd id="preview-number">:</dd></div>
-            <div><dt>Date</dt><dd id="preview-date">:</dd></div>
-            <div><dt>Ref.</dt><dd id="preview-ref">:</dd></div>
-            <div><dt>External Ref.</dt><dd id="preview-external-ref">:</dd></div>
-            <div><dt>Staff</dt><dd>:</dd></div>
-            <div><dt>Terms</dt><dd>:</dd></div>
-            <div><dt>Job</dt><dd>:</dd></div>
+
+            <div>
+              <dt>No.</dt>
+              <dd id="preview-number">:</dd>
+            </div>
+
+            <div>
+              <dt>Date</dt>
+              <dd id="preview-date">:</dd>
+            </div>
+
+            <div>
+              <dt>Ref.</dt>
+              <dd id="preview-ref">:</dd>
+            </div>
+
+            <div>
+              <dt>External Ref.</dt>
+              <dd id="preview-external-ref">:</dd>
+            </div>
+
+            <div>
+              <dt>Staff</dt>
+              <dd>:</dd>
+            </div>
+
+            <div>
+              <dt>Terms</dt>
+              <dd>:</dd>
+            </div>
+
+            <div>
+              <dt>Job</dt>
+              <dd>:</dd>
+            </div>
+
           </dl>
+
         </section>
 
-        <h4 id="preview-subject">QUOTATION SUBJECT</h4>
+
+        <h4 id="preview-subject">
+          QUOTATION SUBJECT
+        </h4>
+
 
         <table class="paper-table">
+
           <thead>
+
             <tr>
               <th>SNo</th>
               <th>Description</th>
@@ -77,201 +1694,725 @@
               <th>Unit Price</th>
               <th>Amount</th>
             </tr>
+
           </thead>
+
           <tbody id="preview-items"></tbody>
+
         </table>
+
 
         <section class="paper-total-row">
-          <div id="preview-amount-words">Sum of Singapore Zero Dollars Only</div>
-          <div class="paper-totals">
-            <div><span>Amt S$</span><strong id="preview-subtotal">0.00</strong></div>
-            <div><span id="preview-tax-label">9% GST</span><strong id="preview-gst">0.00</strong></div>
-            <div><span>Total S$</span><strong id="preview-total">0.00</strong></div>
+
+          <div id="preview-amount-words">
+            Sum of Singapore Zero Dollars Only
           </div>
+
+          <div class="paper-totals">
+
+            <div>
+              <span>Amt S$</span>
+              <strong id="preview-subtotal">0.00</strong>
+            </div>
+
+            <div>
+              <span id="preview-tax-label">9% GST</span>
+              <strong id="preview-gst">0.00</strong>
+            </div>
+
+            <div>
+              <span>Total S$</span>
+              <strong id="preview-total">0.00</strong>
+            </div>
+
+          </div>
+
         </section>
+
 
         <footer class="paper-footer paper-footer-generated">
-          <span>Page 1 of 1 - E. &amp; O.E.</span>
-          <span class="computer-generated-note">This is a computer generated document, no signature is required.</span>
+
+          <span>
+            Page 1 of 1 - E. &amp; O.E.
+          </span>
+
+          <span class="computer-generated-note">
+            This is a computer generated document,
+            no signature is required.
+          </span>
+
         </footer>
+
       </article>
+
     </section>
 
 
-    <section id="delivery-order-document" class="delivery-pdf-shell" aria-label="Saved Delivery Order PDF preview" hidden>
+    <!-- =====================================================
+         DELIVERY ORDER
+    ====================================================== -->
+
+    <section id="delivery-order-document" class="delivery-pdf-shell" aria-label="Saved Delivery Order PDF preview"
+      hidden>
+
       <article class="delivery-paper">
+
         <header class="delivery-paper-header">
+
           <div>
-            <h2>MAXGREEN CONTRACTOR PTE LTD</h2>
-            <p>71 Woodlands Ave 10 #06-18 Woodlands Industrial Xchange Singapore 737743</p>
-            <p>Tel/Fax: 69097551/7552 &nbsp; HP: 91998892 &nbsp; Email: green_01kat@yahoo.com</p>
-            <p>Co Reg No./ GST Reg. No: 200915795C</p>
+
+            <h2>
+              MAXGREEN CONTRACTOR PTE LTD
+            </h2>
+
+            <p>
+              71 Woodlands Ave 10 #06-18
+              Woodlands Industrial Xchange
+              Singapore 737743
+            </p>
+
+            <p>
+              Tel/Fax: 69097551/7552
+              &nbsp; HP: 91998892
+              &nbsp; Email: green_01kat@yahoo.com
+            </p>
+
+            <p>
+              Co Reg No./ GST Reg. No:
+              200915795C
+            </p>
+
           </div>
-          <div class="delivery-register"><img src="./assets/images/bizsafe-logo.png" alt="Registered with bizSAFE" /></div>
+
+
+          <div class="delivery-register">
+
+            <img src="./assets/images/bizsafe-logo.png" alt="Registered with bizSAFE" />
+
+          </div>
+
         </header>
 
-        <div class="delivery-title-row"><h3>Delivery Order</h3></div>
+
+        <div class="delivery-title-row">
+
+          <h3>
+            Delivery Order
+          </h3>
+
+        </div>
+
 
         <section class="delivery-info-row">
+
           <div class="delivery-customer">
-            <strong id="do-preview-company">Customer / Company</strong>
+
+            <strong id="do-preview-company">
+              Customer / Company
+            </strong>
+
             <span id="do-preview-address"></span>
+
             <span id="do-preview-postal"></span>
+
             <span id="do-preview-attn"></span>
+
           </div>
+
+
           <dl class="delivery-meta">
-            <div><dt>No.</dt><dd id="do-preview-number">:</dd></div>
-            <div><dt>Date</dt><dd id="do-preview-date">:</dd></div>
-            <div><dt>Ref.</dt><dd id="do-preview-reference">:</dd></div>
-            <div><dt>External Ref.</dt><dd id="do-preview-external-reference">:</dd></div>
-            <div><dt>Staff</dt><dd id="do-preview-staff">:</dd></div>
-            <div><dt>Terms</dt><dd id="do-preview-terms">:</dd></div>
-            <div><dt>Job</dt><dd id="do-preview-job">:</dd></div>
+
+            <div>
+              <dt>No.</dt>
+              <dd id="do-preview-number">:</dd>
+            </div>
+
+            <div>
+              <dt>Date</dt>
+              <dd id="do-preview-date">:</dd>
+            </div>
+
+            <div>
+              <dt>Ref.</dt>
+              <dd id="do-preview-reference">:</dd>
+            </div>
+
+            <div>
+              <dt>External Ref.</dt>
+              <dd id="do-preview-external-reference">:</dd>
+            </div>
+
+            <div>
+              <dt>Staff</dt>
+              <dd id="do-preview-staff">:</dd>
+            </div>
+
+            <div>
+              <dt>Terms</dt>
+              <dd id="do-preview-terms">:</dd>
+            </div>
+
+            <div>
+              <dt>Job</dt>
+              <dd id="do-preview-job">:</dd>
+            </div>
+
           </dl>
+
         </section>
 
-        <h4 id="do-preview-subject">DELIVERY ORDER SUBJECT</h4>
+
+        <h4 id="do-preview-subject">
+          DELIVERY ORDER SUBJECT
+        </h4>
+
 
         <table class="delivery-table">
+
           <thead>
-            <tr><th>SNo</th><th>Description</th><th>Quantity</th></tr>
+
+            <tr>
+              <th>SNo</th>
+              <th>Description</th>
+              <th>Quantity</th>
+            </tr>
+
           </thead>
+
           <tbody id="do-preview-items"></tbody>
+
         </table>
+
 
         <footer class="delivery-footer delivery-footer-generated">
-          <div class="delivery-page-mark">Page 1 of 1 - E. &amp; O.E.</div>
-          <div class="computer-generated-note">This is a computer generated document, no signature is required.</div>
+
+          <div class="delivery-page-mark">
+            Page 1 of 1 - E. &amp; O.E.
+          </div>
+
+          <div class="computer-generated-note">
+            This is a computer generated document,
+            no signature is required.
+          </div>
+
         </footer>
+
       </article>
+
     </section>
 
+
+    <!-- =====================================================
+         INVOICE
+    ====================================================== -->
 
     <section id="invoice-document" class="invoice-pdf-shell" aria-label="Saved Tax Invoice PDF preview" hidden>
+
       <article class="invoice-paper">
+
         <header class="invoice-paper-header">
+
           <div>
-            <h2>MAXGREEN CONTRACTOR PTE LTD</h2>
-            <p>71 Woodlands Ave 10 #06-18 Woodlands Industrial Xchange Singapore 737743</p>
-            <p>Tel/Fax: 69097551/7552 &nbsp; HP: 91998892 &nbsp; Email: green_01kat@yahoo.com</p>
-            <p>Co Reg No./ GST Reg. No: 200915795C</p>
+
+            <h2>
+              MAXGREEN CONTRACTOR PTE LTD
+            </h2>
+
+            <p>
+              71 Woodlands Ave 10 #06-18
+              Woodlands Industrial Xchange
+              Singapore 737743
+            </p>
+
+            <p>
+              Tel/Fax: 69097551/7552
+              &nbsp; HP: 91998892
+              &nbsp; Email: green_01kat@yahoo.com
+            </p>
+
+            <p>
+              Co Reg No./ GST Reg. No:
+              200915795C
+            </p>
+
           </div>
-          <div class="invoice-register"><img src="./assets/images/bizsafe-logo.png" alt="Registered with bizSAFE" /></div>
+
+
+          <div class="invoice-register">
+
+            <img src="./assets/images/bizsafe-logo.png" alt="Registered with bizSAFE" />
+
+          </div>
+
         </header>
-        <div class="invoice-title-row"><h3>Tax Invoice</h3></div>
+
+
+        <div class="invoice-title-row">
+
+          <h3>
+            Tax Invoice
+          </h3>
+
+        </div>
+
+
         <section class="invoice-info-row">
+
           <div class="invoice-customer">
-            <strong id="inv-preview-company">Customer / Company</strong>
+
+            <strong id="inv-preview-company">
+              Customer / Company
+            </strong>
+
             <span id="inv-preview-address"></span>
+
             <span id="inv-preview-postal"></span>
+
             <span id="inv-preview-attn"></span>
+
           </div>
+
+
           <dl class="invoice-meta">
-            <div><dt>No.</dt><dd id="inv-preview-number">:</dd></div>
-            <div><dt>Date</dt><dd id="inv-preview-date">:</dd></div>
-            <div><dt>Ref.</dt><dd id="inv-preview-reference">:</dd></div>
-            <div><dt>External Ref.</dt><dd id="inv-preview-external-reference">:</dd></div>
-            <div><dt>Staff</dt><dd id="inv-preview-staff">:</dd></div>
-            <div><dt>Terms</dt><dd id="inv-preview-terms">:</dd></div>
-            <div><dt>Job</dt><dd id="inv-preview-job">:</dd></div>
+
+            <div>
+              <dt>No.</dt>
+              <dd id="inv-preview-number">:</dd>
+            </div>
+
+            <div>
+              <dt>Date</dt>
+              <dd id="inv-preview-date">:</dd>
+            </div>
+
+            <div>
+              <dt>Ref.</dt>
+              <dd id="inv-preview-reference">:</dd>
+            </div>
+
+            <div>
+              <dt>External Ref.</dt>
+              <dd id="inv-preview-external-reference">:</dd>
+            </div>
+
+            <div>
+              <dt>Staff</dt>
+              <dd id="inv-preview-staff">:</dd>
+            </div>
+
+            <div>
+              <dt>Terms</dt>
+              <dd id="inv-preview-terms">:</dd>
+            </div>
+
+            <div>
+              <dt>Job</dt>
+              <dd id="inv-preview-job">:</dd>
+            </div>
+
           </dl>
+
         </section>
-        <h4 id="inv-preview-subject">INVOICE SUBJECT</h4>
+
+
+        <h4 id="inv-preview-subject">
+          INVOICE SUBJECT
+        </h4>
+
+
         <table class="invoice-table">
-          <thead><tr><th>SNo</th><th>Description</th><th>Quantity</th><th>Unit Price</th><th>Amount</th></tr></thead>
+
+          <thead>
+
+            <tr>
+              <th>SNo</th>
+              <th>Description</th>
+              <th>Quantity</th>
+              <th>Unit Price</th>
+              <th>Amount</th>
+            </tr>
+
+          </thead>
+
           <tbody id="inv-preview-items"></tbody>
+
         </table>
+
+
         <section class="invoice-total-row">
-          <div id="inv-preview-amount-words">Sum of Singapore Zero Dollars Only</div>
+
+          <div id="inv-preview-amount-words">
+            Sum of Singapore Zero Dollars Only
+          </div>
+
+
           <div class="invoice-totals">
-            <div><span>Amt S$</span><strong id="inv-preview-subtotal">0.00</strong></div>
-            <div><span id="inv-preview-tax-label">9% GST</span><strong id="inv-preview-gst">0.00</strong></div>
-            <div><span>Total S$</span><strong id="inv-preview-total">0.00</strong></div>
+
+            <div>
+              <span>Amt S$</span>
+              <strong id="inv-preview-subtotal">0.00</strong>
+            </div>
+
+            <div>
+              <span id="inv-preview-tax-label">9% GST</span>
+              <strong id="inv-preview-gst">0.00</strong>
+            </div>
+
+            <div>
+              <span>Total S$</span>
+              <strong id="inv-preview-total">0.00</strong>
+            </div>
+
           </div>
+
         </section>
+
+
         <section class="invoice-payment">
+
           <div>
-            <strong>MODE OF PAYMENT :</strong>
-            <p>Bank Transfer to DBS Current : 066-9036370</p>
-            <p>PAYNOW UEN : 200915795C &nbsp; PAYNOW QR</p>
-            <p>Cheque payable to:<br />MAXGREEN CONTRACTOR PTE LTD</p>
+
+            <strong>
+              MODE OF PAYMENT :
+            </strong>
+
+            <p>
+              Bank Transfer to DBS Current :
+              066-9036370
+            </p>
+
+            <p>
+              PAYNOW UEN :
+              200915795C
+              &nbsp; PAYNOW QR
+            </p>
+
+            <p>
+              Cheque payable to:
+              <br />
+              MAXGREEN CONTRACTOR PTE LTD
+            </p>
+
           </div>
+
+
           <img id="pending-invoice-paynow" src="./assets/images/paynow-qr.png" alt="PayNow QR" />
+
         </section>
+
+
         <footer class="invoice-footer">
-          <span>Page 1 of 1 - E. &amp; O.E.</span>
-          <span>This is a computer generated document, no signature is required.</span>
+
+          <span>
+            Page 1 of 1 - E. &amp; O.E.
+          </span>
+
+          <span>
+            This is a computer generated document,
+            no signature is required.
+          </span>
+
         </footer>
+
       </article>
+
     </section>
 
+
+    <!-- =====================================================
+         STATEMENT OF ACCOUNT
+    ====================================================== -->
 
     <section id="soa-document" class="soa-pdf-shell" aria-label="Saved Statement of Account preview" hidden>
+
       <article class="soa-paper">
+
         <header class="soa-paper-header">
+
           <div>
-            <h2>MAXGREEN CONTRACTOR PTE LTD</h2>
-            <p>71 Woodlands Ave 10 #06-18 Woodlands Industrial Xchange Singapore 737743</p>
-            <p>Tel/Fax: 69097551/7552 &nbsp; HP: 91998892 &nbsp; Email: green_01kat@yahoo.com</p>
-            <p>Co Reg No./ GST Reg. No: 200915795C</p>
+
+            <h2>
+              MAXGREEN CONTRACTOR PTE LTD
+            </h2>
+
+            <p>
+              71 Woodlands Ave 10 #06-18
+              Woodlands Industrial Xchange
+              Singapore 737743
+            </p>
+
+            <p>
+              Tel/Fax: 69097551/7552
+              &nbsp; HP: 91998892
+              &nbsp; Email: green_01kat@yahoo.com
+            </p>
+
+            <p>
+              Co Reg No./ GST Reg. No:
+              200915795C
+            </p>
+
           </div>
-          <img src="./assets/images/bizsafe-logo.png" alt="Registered with bizSAFE">
+
+
+          <img src="./assets/images/bizsafe-logo.png" alt="Registered with bizSAFE" />
+
         </header>
 
-        <div class="soa-title">Statement of Account</div>
+
+        <div class="soa-title">
+          Statement of Account
+        </div>
+
 
         <section class="soa-head">
-          <div class="soa-to-line">To : <strong id="soa-preview-to"></strong></div>
-          <div class="soa-head-meta">
-            <div>Date : <span id="soa-preview-date"></span></div>
-            <div>Currency : <span id="soa-preview-currency"></span></div>
+
+          <div class="soa-to-line">
+            To :
+            <strong id="soa-preview-to"></strong>
           </div>
+
+
+          <div class="soa-head-meta">
+
+            <div>
+              Date :
+              <span id="soa-preview-date"></span>
+            </div>
+
+            <div>
+              Currency :
+              <span id="soa-preview-currency"></span>
+            </div>
+
+          </div>
+
         </section>
 
+
         <table class="soa-table">
+
           <thead>
-            <tr><th class="soa-marker-col"></th><th>Date</th><th>Document</th><th>Debit</th><th>Credit</th><th>Balance</th></tr>
+
+            <tr>
+
+              <th class="soa-marker-col"></th>
+
+              <th>
+                Date
+              </th>
+
+              <th>
+                Document
+              </th>
+
+              <th>
+                Debit
+              </th>
+
+              <th>
+                Credit
+              </th>
+
+              <th>
+                Balance
+              </th>
+
+            </tr>
+
           </thead>
+
+
           <tbody id="soa-preview-rows"></tbody>
-          <tfoot><tr><td colspan="5">Balance C/F :</td><td id="soa-preview-balance">0.00</td></tr></tfoot>
+
+
+          <tfoot>
+
+            <tr>
+
+              <td colspan="5">
+                Balance C/F :
+              </td>
+
+              <td id="soa-preview-balance">
+                0.00
+              </td>
+
+            </tr>
+
+          </tfoot>
+
         </table>
 
-        <div class="soa-ageing-title">Ageing Analysis :</div>
+
+        <div class="soa-ageing-title">
+          Ageing Analysis :
+        </div>
+
+
         <table class="soa-ageing">
-          <thead><tr><th>Current</th><th>1 - 30 Days</th><th>31 - 60 Days</th><th>61 - 90 Days</th><th>91 - 120 Days</th><th>&gt; 120 Days</th></tr></thead>
+
+          <thead>
+
+            <tr>
+
+              <th>Current</th>
+
+              <th>1 - 30 Days</th>
+
+              <th>31 - 60 Days</th>
+
+              <th>61 - 90 Days</th>
+
+              <th>91 - 120 Days</th>
+
+              <th>&gt; 120 Days</th>
+
+            </tr>
+
+          </thead>
+
+
           <tbody>
-            <tr><td id="soa-age-current"></td><td id="soa-age-1-30"></td><td id="soa-age-31-60"></td><td id="soa-age-61-90"></td><td id="soa-age-91-120"></td><td id="soa-age-over-120"></td></tr>
-            <tr class="soa-ageing-total"><td colspan="6" id="soa-age-total">0.00</td></tr>
+
+            <tr>
+
+              <td id="soa-age-current"></td>
+
+              <td id="soa-age-1-30"></td>
+
+              <td id="soa-age-31-60"></td>
+
+              <td id="soa-age-61-90"></td>
+
+              <td id="soa-age-91-120"></td>
+
+              <td id="soa-age-over-120"></td>
+
+            </tr>
+
+
+            <tr class="soa-ageing-total">
+
+              <td colspan="6" id="soa-age-total">
+                0.00
+              </td>
+
+            </tr>
+
           </tbody>
+
         </table>
+
 
         <footer class="soa-footer">
-          <span>E. &amp; O.E.</span>
-          <span>This is a computer generated document, no signature is required.</span>
+
+          <span>
+            E. &amp; O.E.
+          </span>
+
+          <span>
+            This is a computer generated document,
+            no signature is required.
+          </span>
+
         </footer>
+
       </article>
+
     </section>
+
+
+    <!-- =====================================================
+         GENERIC FALLBACK
+    ====================================================== -->
 
     <section id="generic-document" class="generic-pending-preview" hidden>
+
       <div class="generic-preview-paper">
-        <p class="eyebrow">Saved document</p>
-        <h2 id="generic-title">Document</h2>
+
+        <p class="eyebrow">
+          Saved document
+        </p>
+
+        <h2 id="generic-title">
+          Document
+        </h2>
+
+
         <dl>
-          <dt>From</dt><dd id="generic-from">—</dd>
-          <dt>Subject</dt><dd id="generic-subject">—</dd>
-          <dt>Reference</dt><dd id="generic-reference">—</dd>
-          <dt>Category</dt><dd id="generic-category">—</dd>
+
+          <dt>
+            From
+          </dt>
+
+          <dd id="generic-from">
+            —
+          </dd>
+
+
+          <dt>
+            Subject
+          </dt>
+
+          <dd id="generic-subject">
+            —
+          </dd>
+
+
+          <dt>
+            Reference
+          </dt>
+
+          <dd id="generic-reference">
+            —
+          </dd>
+
+
+          <dt>
+            Category
+          </dt>
+
+          <dd id="generic-category">
+            —
+          </dd>
+
         </dl>
-        <p class="generic-note">The final PDF template for this category will be added when that workflow is built.</p>
+
+
+        <p class="generic-note">
+          The final PDF template for this category will be added
+          when that workflow is built.
+        </p>
+
       </div>
+
     </section>
+
+
+    <!-- =====================================================
+         SENT SUMMARY
+    ====================================================== -->
 
     <section class="sent-summary" id="sent-summary" hidden>
-      <strong>Sent successfully</strong>
+
+      <strong>
+        Sent successfully
+      </strong>
+
       <span id="sent-summary-text"></span>
+
     </section>
+
   </main>
 
+
+  <!-- =========================================================
+       KEEP EXISTING JS
+  ========================================================== -->
+
   <script type="module" src="./assets/js/pages/completedView.js"></script>
+
 </body>
+
 </html>

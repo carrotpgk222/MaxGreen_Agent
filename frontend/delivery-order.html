@@ -1,119 +1,1549 @@
 <!doctype html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
   <title>MaxGreen Agent — Delivery Order Review</title>
+
   <link rel="icon" href="data:," />
+
   <link rel="stylesheet" href="./assets/css/base.css" />
   <link rel="stylesheet" href="./assets/css/quotation.css" />
   <link rel="stylesheet" href="./assets/css/delivery-order.css" />
+
+  <style>
+    /* =========================================================
+       BASE
+    ========================================================= */
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+    }
+
+    body {
+      min-height: 100vh;
+
+      font-family:
+        Inter,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+
+      color: #0f172a;
+
+      background:
+        radial-gradient(circle at 92% 5%,
+          rgba(139, 92, 246, 0.12),
+          transparent 30%),
+        radial-gradient(circle at 5% 90%,
+          rgba(99, 102, 241, 0.09),
+          transparent 34%),
+        linear-gradient(225deg,
+          #e0e7ff 0%,
+          #ede9fe 50%,
+          #faf5ff 100%);
+    }
+
+    button,
+    select,
+    input,
+    textarea {
+      font: inherit;
+    }
+
+
+    /* =========================================================
+       PAGE
+    ========================================================= */
+
+    .quotation-review-page {
+      width: 100%;
+      max-width: 1500px;
+      min-height: 100vh;
+
+      margin: 0 auto;
+      padding: 40px 48px 80px;
+    }
+
+
+    /* =========================================================
+       BACK
+    ========================================================= */
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+
+      margin-bottom: 28px;
+
+      color: #6366f1;
+
+      font-size: 13px;
+      font-weight: 600;
+
+      text-decoration: none;
+
+      transition:
+        color 0.18s ease,
+        transform 0.18s ease;
+    }
+
+    .back-link:hover {
+      color: #4338ca;
+      transform: translateX(-3px);
+    }
+
+
+    /* =========================================================
+       HEADER
+    ========================================================= */
+
+    .review-header {
+      margin-bottom: 28px;
+    }
+
+    .review-context {
+      margin: 0 0 6px;
+
+      color: #6366f1;
+
+      font-size: 11px;
+      font-weight: 700;
+
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+    }
+
+    .review-header h1 {
+      margin: 0;
+
+      color: #1e1b4b;
+
+      font-size: 36px;
+      line-height: 1.2;
+      font-weight: 800;
+
+      letter-spacing: -1px;
+    }
+
+    .review-header h1::after {
+      content: "Review the source information and confirm the generated delivery order";
+
+      display: block;
+
+      margin-top: 7px;
+
+      color: #6366f1;
+
+      font-size: 14px;
+      line-height: 1.5;
+      font-weight: 400;
+
+      letter-spacing: 0;
+    }
+
+
+    /* =========================================================
+       BUTTONS
+    ========================================================= */
+
+    .btn {
+      min-height: 40px;
+
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+
+      padding: 0 17px;
+
+      color: #475569;
+      background: #ffffff;
+
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+
+      font-size: 12px;
+      font-weight: 650;
+
+      text-decoration: none;
+
+      cursor: pointer;
+
+      transition:
+        transform 0.18s ease,
+        border-color 0.18s ease,
+        box-shadow 0.18s ease;
+    }
+
+    .btn:hover:not(:disabled) {
+      transform: translateY(-1px);
+
+      border-color: #c7d2fe;
+
+      box-shadow:
+        0 5px 16px rgba(99, 102, 241, 0.11);
+    }
+
+    .btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .btn-muted {
+      color: #6366f1;
+      background: #ffffff;
+
+      border-color: #c7d2fe;
+    }
+
+    .btn-primary {
+      color: #ffffff;
+
+      background:
+        linear-gradient(135deg,
+          #4f46e5 0%,
+          #7c3aed 55%,
+          #a855f7 100%);
+
+      border: 0;
+
+      box-shadow:
+        0 4px 16px rgba(79, 70, 229, 0.24);
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      box-shadow:
+        0 8px 22px rgba(79, 70, 229, 0.30);
+    }
+
+
+    /* =========================================================
+       SOURCE EMAIL
+    ========================================================= */
+
+    .email-review-card {
+      position: relative;
+
+      margin-bottom: 20px;
+      padding: 25px 28px;
+
+      background:
+        linear-gradient(145deg,
+          rgba(255, 255, 255, 0.98),
+          rgba(250, 250, 255, 0.98));
+
+      border: 1px solid #e0e7ff;
+      border-radius: 18px;
+
+      box-shadow:
+        0 8px 30px rgba(99, 102, 241, 0.09);
+
+      overflow: hidden;
+    }
+
+    .email-review-card::before {
+      content: "";
+
+      position: absolute;
+
+      top: 0;
+      bottom: 0;
+      left: 0;
+
+      width: 4px;
+
+      background:
+        linear-gradient(180deg,
+          #6366f1,
+          #8b5cf6);
+    }
+
+
+    /* =========================================================
+       SUBJECT
+    ========================================================= */
+
+    .email-subject-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+
+      gap: 30px;
+    }
+
+    .email-subject-row>div:first-child {
+      min-width: 0;
+
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .mini-label {
+      display: block;
+
+      margin-bottom: 3px;
+
+      color: #94a3b8;
+
+      font-size: 10px;
+      font-weight: 700;
+
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+    }
+
+    #source-subject {
+      color: #1e1b4b;
+
+      font-size: 17px;
+      line-height: 1.4;
+      font-weight: 700;
+
+      overflow-wrap: anywhere;
+    }
+
+
+    /* =========================================================
+       EMAIL DETAILS
+    ========================================================= */
+
+    .email-details-row {
+      display: flex;
+      align-items: center;
+      gap: 50px;
+
+      margin-top: 20px;
+      padding-top: 18px;
+
+      border-top: 1px solid #eef2ff;
+    }
+
+    .email-details-row>div {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .email-details-row span:not(.mini-label) {
+      color: #475569;
+
+      font-size: 13px;
+    }
+
+    .email-body {
+      margin: 20px 0 0;
+      padding: 18px;
+
+      color: #475569;
+      background: #f8fafc;
+
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+
+      font-size: 13px;
+      line-height: 1.7;
+
+      white-space: pre-wrap;
+    }
+
+    .email-body:empty {
+      display: none;
+    }
+
+
+    /* =========================================================
+       ATTACHMENTS
+    ========================================================= */
+
+    .attachments {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+
+      margin-top: 16px;
+    }
+
+    .attachments:empty {
+      display: none;
+    }
+
+    .attachments>* {
+      display: inline-flex;
+      align-items: center;
+
+      padding: 8px 12px;
+
+      color: #6366f1;
+      background: #eef2ff;
+
+      border: 1px solid #c7d2fe;
+      border-radius: 8px;
+
+      font-size: 11px;
+      font-weight: 600;
+
+      text-decoration: none;
+    }
+
+
+    /* =========================================================
+       REVIEW TOOLBAR
+    ========================================================= */
+
+    .quotation-review-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      gap: 24px;
+
+      margin-bottom: 42px;
+      padding: 17px 20px;
+
+      background: rgba(255, 255, 255, 0.84);
+
+      border: 1px solid #e0e7ff;
+      border-radius: 14px;
+
+      box-shadow:
+        0 5px 20px rgba(99, 102, 241, 0.07);
+
+      backdrop-filter: blur(10px);
+    }
+
+    .detected-category {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+
+      color: #4338ca;
+
+      font-size: 13px;
+    }
+
+    .detected-category strong {
+      font-weight: 650;
+    }
+
+    #detected-category {
+      color: #7c3aed;
+    }
+
+    .ai-indicator {
+      position: relative;
+
+      width: 9px;
+      height: 9px;
+
+      background: #8b5cf6;
+
+      border-radius: 50%;
+
+      box-shadow:
+        0 0 0 4px rgba(139, 92, 246, 0.12);
+    }
+
+    .ai-indicator::after {
+      content: "";
+
+      position: absolute;
+
+      inset: -4px;
+
+      border: 1px solid rgba(139, 92, 246, 0.25);
+      border-radius: 50%;
+
+      animation: aiPulse 1.8s infinite;
+    }
+
+    @keyframes aiPulse {
+      0% {
+        opacity: 1;
+        transform: scale(0.7);
+      }
+
+      100% {
+        opacity: 0;
+        transform: scale(1.6);
+      }
+    }
+
+
+    /* =========================================================
+       REVIEW ACTIONS
+    ========================================================= */
+
+    .review-actions {
+      display: flex;
+      align-items: flex-end;
+      gap: 10px;
+    }
+
+    .compact-field {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .compact-field label {
+      color: #94a3b8;
+
+      font-size: 10px;
+      font-weight: 700;
+
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+    }
+
+    #category-select {
+      min-width: 180px;
+      height: 40px;
+
+      padding: 0 36px 0 12px;
+
+      color: #475569;
+      background: #ffffff;
+
+      border: 1px solid #dbeafe;
+      border-radius: 9px;
+
+      outline: none;
+
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    #category-select:focus {
+      border-color: #818cf8;
+
+      box-shadow:
+        0 0 0 3px rgba(99, 102, 241, 0.08);
+    }
+
+    #edit-delivery-order {
+      min-width: 84px;
+
+      color: #6366f1;
+
+      border-color: #c7d2fe;
+    }
+
+    #edit-delivery-order::before {
+      content: "✎";
+    }
+
+    #save-pending {
+      padding: 0 20px;
+    }
+
+    #save-pending::before {
+      content: "✓";
+    }
+
+
+    /* =========================================================
+       DELIVERY DOCUMENT SECTION
+    ========================================================= */
+
+    .delivery-pdf-shell {
+      position: relative;
+
+      padding-top: 62px;
+    }
+
+    .delivery-pdf-shell::before {
+      content: "GENERATED DOCUMENT";
+
+      position: absolute;
+
+      top: 0;
+      left: 0;
+
+      color: #6366f1;
+
+      font-size: 11px;
+      font-weight: 700;
+
+      letter-spacing: 1.2px;
+    }
+
+    .delivery-pdf-shell::after {
+      content: "Delivery Order.pdf";
+
+      position: absolute;
+
+      top: 19px;
+      left: 0;
+      right: 0;
+
+      padding-bottom: 15px;
+
+      color: #1e1b4b;
+
+      border-bottom: 1px solid #c7d2fe;
+
+      font-size: 20px;
+      font-weight: 750;
+    }
+
+
+    /* =========================================================
+       DELIVERY PAPER
+    ========================================================= */
+
+    .delivery-paper {
+      position: relative;
+
+      width: 100%;
+      min-height: 900px;
+
+      margin: 0;
+      padding: 52px;
+
+      color: #111827;
+      background: #ffffff;
+
+      border: 1px solid #e0e7ff;
+      border-radius: 20px;
+
+      box-shadow:
+        0 16px 60px rgba(99, 102, 241, 0.13);
+
+      overflow: hidden;
+    }
+
+    .delivery-paper::before {
+      content: "";
+
+      position: absolute;
+
+      top: 0;
+      left: 0;
+      right: 0;
+
+      height: 6px;
+
+      background:
+        linear-gradient(90deg,
+          #6c63ff,
+          #4f46e5,
+          #8b5cf6);
+    }
+
+
+    /* =========================================================
+       COMPANY HEADER
+    ========================================================= */
+
+    .delivery-paper-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+
+      gap: 40px;
+
+      padding-bottom: 28px;
+
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    .delivery-paper-header>div:first-child {
+      flex: 1;
+    }
+
+    .delivery-paper-header h2 {
+      position: relative;
+
+      margin: 0 0 19px;
+
+      color: #111827;
+
+      font-size: 26px;
+      line-height: 1.2;
+      font-weight: 800;
+
+      letter-spacing: -0.6px;
+    }
+
+    .delivery-paper-header h2::after {
+      content: "";
+
+      position: absolute;
+
+      left: 0;
+      bottom: -10px;
+
+      width: 48px;
+      height: 3px;
+
+      background: #6c63ff;
+
+      border-radius: 999px;
+    }
+
+    .delivery-paper-header p {
+      margin: 2px 0;
+
+      color: #6b7280;
+
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .delivery-register {
+      flex-shrink: 0;
+    }
+
+    .delivery-register img {
+      display: block;
+
+      max-width: 120px;
+      max-height: 65px;
+
+      object-fit: contain;
+    }
+
+
+    /* =========================================================
+       DELIVERY TITLE
+    ========================================================= */
+
+    .delivery-title-row {
+      display: flex;
+      justify-content: flex-end;
+
+      margin: 28px 0 6px;
+    }
+
+    .delivery-title-row h3 {
+      margin: 0;
+
+      color: #4f46e5;
+
+      font-size: 24px;
+      line-height: 1.2;
+      font-weight: 800;
+
+      text-transform: none;
+
+      border: 0;
+    }
+
+
+    /* =========================================================
+       CUSTOMER + META
+    ========================================================= */
+
+    .delivery-info-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 310px;
+
+      gap: 50px;
+
+      margin-bottom: 28px;
+    }
+
+    .delivery-customer {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+
+      gap: 4px;
+    }
+
+    .delivery-customer::before {
+      content: "DELIVER TO";
+
+      width: fit-content;
+
+      margin-bottom: 5px;
+      padding: 4px 12px;
+
+      color: #6c63ff;
+      background: #eef2ff;
+
+      border-radius: 6px;
+
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .delivery-customer strong {
+      color: #111827;
+
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .delivery-customer span {
+      color: #6b7280;
+
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+
+    /* =========================================================
+       META
+    ========================================================= */
+
+    .delivery-meta {
+      width: 100%;
+
+      margin: 0;
+
+      display: flex;
+      flex-direction: column;
+
+      gap: 5px;
+    }
+
+    .delivery-meta>div {
+      display: grid;
+      grid-template-columns: 105px minmax(0, 1fr);
+
+      gap: 14px;
+    }
+
+    .delivery-meta dt,
+    .delivery-meta dd {
+      margin: 0;
+
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    .delivery-meta dt {
+      color: #9ca3af;
+    }
+
+    .delivery-meta dd {
+      color: #111827;
+
+      font-weight: 500;
+    }
+
+
+    /* =========================================================
+       SUBJECT
+    ========================================================= */
+
+    #preview-subject {
+      width: 100%;
+
+      margin: 0 0 26px;
+      padding: 12px 18px;
+
+      color: #4f46e5;
+      background: #f5f3ff;
+
+      border: 1px solid #ddd6fe;
+      border-radius: 8px;
+
+      font-size: 13px;
+      line-height: 1.45;
+      font-weight: 700;
+
+      text-transform: none;
+    }
+
+    #preview-subject::before {
+      content: "✦";
+
+      margin-right: 9px;
+
+      color: #8b5cf6;
+    }
+
+
+    /* =========================================================
+       DELIVERY TABLE
+    ========================================================= */
+
+    .delivery-table {
+      width: 100%;
+
+      border-collapse: separate;
+      border-spacing: 0;
+
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+
+      overflow: hidden;
+
+      font-size: 12px;
+    }
+
+    .delivery-table thead {
+      background:
+        linear-gradient(110deg,
+          #4f46e5,
+          #6c63ff);
+    }
+
+    .delivery-table th {
+      padding: 13px 16px;
+
+      color: #ffffff;
+      background: transparent;
+
+      border: 0;
+
+      font-size: 12px;
+      font-weight: 700;
+
+      text-align: left;
+    }
+
+    .delivery-table td {
+      padding: 18px 16px;
+
+      color: #374151;
+      background: #ffffff;
+
+      border: 0;
+      border-bottom: 1px solid #f1f5f9;
+
+      font-size: 12px;
+      line-height: 1.55;
+
+      vertical-align: top;
+    }
+
+    .delivery-table tbody tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .delivery-table tbody tr:hover td {
+      background: #fafaff;
+    }
+
+    .delivery-table th:first-child,
+    .delivery-table td:first-child {
+      width: 70px;
+
+      text-align: center;
+    }
+
+    .delivery-table td:first-child {
+      color: #4f46e5;
+
+      font-weight: 650;
+    }
+
+    .delivery-table th:last-child,
+    .delivery-table td:last-child {
+      width: 130px;
+
+      text-align: center;
+    }
+
+
+    /* =========================================================
+       DOCUMENT FOOTER
+    ========================================================= */
+
+    .delivery-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      gap: 20px;
+
+      margin-top: 80px;
+      padding-top: 16px;
+
+      color: #9ca3af;
+
+      border-top: 1px solid #e5e7eb;
+
+      font-size: 10px;
+    }
+
+    .delivery-page-mark {
+      white-space: nowrap;
+    }
+
+    .computer-generated-note {
+      text-align: right;
+    }
+
+    .computer-generated-note::before {
+      content: "✓";
+
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+
+      width: 17px;
+      height: 17px;
+
+      margin-right: 6px;
+
+      color: #8b5cf6;
+      background: #f5f3ff;
+
+      border-radius: 50%;
+
+      font-size: 9px;
+      font-weight: 700;
+    }
+
+
+    /* =========================================================
+       TOAST
+    ========================================================= */
+
+    .save-toast {
+      position: fixed;
+      z-index: 500;
+
+      right: 28px;
+      bottom: 28px;
+
+      padding: 13px 18px;
+
+      color: #ffffff;
+
+      background:
+        linear-gradient(135deg,
+          #4f46e5,
+          #7c3aed);
+
+      border-radius: 11px;
+
+      box-shadow:
+        0 10px 30px rgba(79, 70, 229, 0.30);
+
+      font-size: 13px;
+      font-weight: 650;
+    }
+
+    .save-toast[hidden] {
+      display: none;
+    }
+
+
+    /* =========================================================
+       RESPONSIVE
+    ========================================================= */
+
+    @media (max-width: 1000px) {
+
+      .quotation-review-page {
+        padding: 32px 28px 60px;
+      }
+
+      .quotation-review-toolbar {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .review-actions {
+        width: 100%;
+        flex-wrap: wrap;
+      }
+
+      .delivery-info-row {
+        grid-template-columns: 1fr;
+        gap: 25px;
+      }
+
+      .delivery-meta {
+        max-width: 420px;
+      }
+
+    }
+
+
+    @media (max-width: 720px) {
+
+      .quotation-review-page {
+        padding: 24px 16px 50px;
+      }
+
+      .review-header h1 {
+        font-size: 29px;
+      }
+
+      .email-subject-row {
+        flex-direction: column;
+      }
+
+      .email-details-row {
+        align-items: flex-start;
+        flex-direction: column;
+
+        gap: 14px;
+      }
+
+      .review-actions {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .compact-field,
+      #category-select,
+      #edit-delivery-order,
+      #save-pending {
+        width: 100%;
+      }
+
+      .delivery-paper {
+        min-width: 700px;
+
+        padding: 35px 28px;
+
+        border-radius: 14px;
+      }
+
+      .delivery-pdf-shell {
+        overflow-x: auto;
+      }
+
+      .delivery-paper-header {
+        flex-direction: column;
+      }
+
+      .delivery-title-row {
+        justify-content: flex-start;
+      }
+
+      .delivery-footer {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .computer-generated-note {
+        text-align: left;
+      }
+
+    }
+  </style>
 </head>
+
+
 <body>
+
   <main class="quotation-review-page">
-    <a class="back-link" href="./inbox.html">← Back to Inbox</a>
+
+    <!-- =====================================================
+         BACK
+    ====================================================== -->
+
+    <a class="back-link" href="./inbox.html">
+      ← Back to Inbox
+    </a>
+
+
+    <!-- =====================================================
+         HEADER
+    ====================================================== -->
 
     <header class="review-header">
-      <p class="review-context">Inbox Edit (DELIVERY ORDER)</p>
-      <h1 id="delivery-file-name">Delivery Order.pdf</h1>
+
+      <p class="review-context">
+        Inbox Edit (DELIVERY ORDER)
+      </p>
+
+      <h1 id="delivery-file-name">
+        Delivery Order.pdf
+      </h1>
+
     </header>
 
+
+    <!-- =====================================================
+         SOURCE EMAIL / WORKFLOW
+    ====================================================== -->
+
     <section class="email-review-card" aria-label="Source email or generated workflow">
+
       <div class="email-subject-row">
+
         <div>
-          <span class="mini-label">Subject</span>
-          <strong id="source-subject">—</strong>
+
+          <span class="mini-label">
+            Subject
+          </span>
+
+          <strong id="source-subject">
+            —
+          </strong>
+
         </div>
-        <button class="btn btn-muted" type="button" disabled title="Gmail integration will be added later">Open in Gmail ↗</button>
+
+
+        <button class="btn btn-muted" type="button" disabled title="Gmail integration will be added later">
+          Open in Gmail ↗
+        </button>
+
       </div>
+
 
       <div class="email-details-row">
+
         <div>
-          <span class="mini-label">From</span>
-          <span id="source-from">—</span>
+
+          <span class="mini-label">
+            From
+          </span>
+
+          <span id="source-from">
+            —
+          </span>
+
         </div>
+
+
         <div>
-          <span class="mini-label">Received</span>
-          <span id="source-date">—</span>
+
+          <span class="mini-label">
+            Received
+          </span>
+
+          <span id="source-date">
+            —
+          </span>
+
         </div>
+
       </div>
+
 
       <p class="email-body" id="source-body"></p>
+
+
       <div class="attachments" id="source-attachments"></div>
+
     </section>
+
+
+    <!-- =====================================================
+         REVIEW TOOLBAR
+    ====================================================== -->
 
     <section class="quotation-review-toolbar">
+
       <div class="detected-category">
-        <strong>TallyAI detects <span id="detected-category">Delivery Order</span></strong>
+
+        <strong>
+          TallyAI detects
+
+          <span id="detected-category">
+            Delivery Order
+          </span>
+        </strong>
+
         <span class="ai-indicator" aria-hidden="true"></span>
+
       </div>
+
 
       <div class="review-actions">
+
         <div class="field compact-field">
-          <label for="category-select">Category</label>
+
+          <label for="category-select">
+            Category
+          </label>
+
           <select id="category-select"></select>
+
         </div>
-        <a class="btn" id="edit-delivery-order" href="#">Edit</a>
-        <button class="btn btn-primary" id="save-pending" type="button">Save to Pending</button>
+
+
+        <a class="btn" id="edit-delivery-order" href="#">
+          Edit
+        </a>
+
+
+        <button class="btn btn-primary" id="save-pending" type="button">
+          Save to Pending
+        </button>
+
       </div>
+
     </section>
+
+
+    <!-- =====================================================
+         DELIVERY ORDER PREVIEW
+    ====================================================== -->
 
     <section class="delivery-pdf-shell" aria-label="Delivery Order PDF preview">
+
+
       <article class="delivery-paper" id="delivery-preview">
+
+
+        <!-- =================================================
+             COMPANY
+        ================================================== -->
+
         <header class="delivery-paper-header">
+
           <div>
-            <h2>MAXGREEN CONTRACTOR PTE LTD</h2>
-            <p>71 Woodlands Ave 10 #06-18 Woodlands Industrial Xchange Singapore 737743</p>
-            <p>Tel/Fax: 69097551/7552 &nbsp; HP: 91998892 &nbsp; Email: green_01kat@yahoo.com</p>
-            <p>Co Reg No./ GST Reg. No: 200915795C</p>
+
+            <h2>
+              MAXGREEN CONTRACTOR PTE LTD
+            </h2>
+
+            <p>
+              71 Woodlands Ave 10 #06-18
+              Woodlands Industrial Xchange
+              Singapore 737743
+            </p>
+
+            <p>
+              Tel/Fax: 69097551/7552
+              &nbsp; HP: 91998892
+              &nbsp; Email: green_01kat@yahoo.com
+            </p>
+
+            <p>
+              Co Reg No./ GST Reg. No:
+              200915795C
+            </p>
+
           </div>
-          <div class="delivery-register"><img src="./assets/images/bizsafe-logo.png" alt="Registered with bizSAFE" /></div>
+
+
+          <div class="delivery-register">
+
+            <img src="./assets/images/bizsafe-logo.png" alt="Registered with bizSAFE" />
+
+          </div>
+
         </header>
 
-        <div class="delivery-title-row"><h3>Delivery Order</h3></div>
+
+        <!-- =================================================
+             TITLE
+        ================================================== -->
+
+        <div class="delivery-title-row">
+
+          <h3>
+            Delivery Order
+          </h3>
+
+        </div>
+
+
+        <!-- =================================================
+             CUSTOMER / META
+        ================================================== -->
 
         <section class="delivery-info-row">
+
+
           <div class="delivery-customer">
-            <strong id="preview-company">Customer / Company</strong>
+
+            <strong id="preview-company">
+              Customer / Company
+            </strong>
+
             <span id="preview-address"></span>
+
             <span id="preview-postal"></span>
+
             <span id="preview-attn"></span>
+
           </div>
 
+
           <dl class="delivery-meta">
-            <div><dt>No.</dt><dd id="preview-number">:</dd></div>
-            <div><dt>Date</dt><dd id="preview-date">:</dd></div>
-            <div><dt>Ref.</dt><dd id="preview-reference">:</dd></div>
-            <div><dt>External Ref.</dt><dd id="preview-external-reference">:</dd></div>
-            <div><dt>Staff</dt><dd id="preview-staff">:</dd></div>
-            <div><dt>Terms</dt><dd id="preview-terms">:</dd></div>
-            <div><dt>Job</dt><dd id="preview-job">:</dd></div>
+
+
+            <div>
+
+              <dt>
+                No.
+              </dt>
+
+              <dd id="preview-number">
+                :
+              </dd>
+
+            </div>
+
+
+            <div>
+
+              <dt>
+                Date
+              </dt>
+
+              <dd id="preview-date">
+                :
+              </dd>
+
+            </div>
+
+
+            <div>
+
+              <dt>
+                Ref.
+              </dt>
+
+              <dd id="preview-reference">
+                :
+              </dd>
+
+            </div>
+
+
+            <div>
+
+              <dt>
+                External Ref.
+              </dt>
+
+              <dd id="preview-external-reference">
+                :
+              </dd>
+
+            </div>
+
+
+            <div>
+
+              <dt>
+                Staff
+              </dt>
+
+              <dd id="preview-staff">
+                :
+              </dd>
+
+            </div>
+
+
+            <div>
+
+              <dt>
+                Terms
+              </dt>
+
+              <dd id="preview-terms">
+                :
+              </dd>
+
+            </div>
+
+
+            <div>
+
+              <dt>
+                Job
+              </dt>
+
+              <dd id="preview-job">
+                :
+              </dd>
+
+            </div>
+
+
           </dl>
+
         </section>
 
-        <h4 id="preview-subject">DELIVERY ORDER SUBJECT</h4>
+
+        <!-- =================================================
+             SUBJECT
+        ================================================== -->
+
+        <h4 id="preview-subject">
+          DELIVERY ORDER SUBJECT
+        </h4>
+
+
+        <!-- =================================================
+             ITEMS
+        ================================================== -->
 
         <table class="delivery-table">
+
           <thead>
+
             <tr>
-              <th>SNo</th>
-              <th>Description</th>
-              <th>Quantity</th>
+
+              <th>
+                SNo
+              </th>
+
+              <th>
+                Description
+              </th>
+
+              <th>
+                Quantity
+              </th>
+
             </tr>
+
           </thead>
+
+
           <tbody id="preview-items"></tbody>
+
         </table>
 
+
+        <!-- =================================================
+             FOOTER
+        ================================================== -->
+
         <footer class="delivery-footer delivery-footer-generated">
-          <div class="delivery-page-mark">Page 1 of 1 - E. &amp; O.E.</div>
-          <div class="computer-generated-note">This is a computer generated document, no signature is required.</div>
+
+          <div class="delivery-page-mark">
+            Page 1 of 1 - E. &amp; O.E.
+          </div>
+
+          <div class="computer-generated-note">
+            This is a computer generated document,
+            no signature is required.
+          </div>
+
         </footer>
+
+
       </article>
+
     </section>
 
-    <div id="review-toast" class="save-toast" role="status" hidden>Saved to Pending.</div>
+
+    <!-- =====================================================
+         TOAST
+    ====================================================== -->
+
+    <div id="review-toast" class="save-toast" role="status" hidden>
+      Saved to Pending.
+    </div>
+
   </main>
 
+
+  <!-- =========================================================
+       EXISTING JS
+  ========================================================== -->
+
   <script type="module" src="./assets/js/pages/deliveryOrderView.js"></script>
+
 </body>
+
 </html>

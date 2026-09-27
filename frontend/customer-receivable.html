@@ -1,9 +1,1193 @@
-<!doctype html><html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>MaxGreen Agent — Customer Receivable</title><link rel="icon" href="data:,"/><link rel="stylesheet" href="./assets/css/base.css"/><link rel="stylesheet" href="./assets/css/customer-receivable.css"/></head>
-<body><main class="receivable-page"><a class="back-link" href="./index.html">← Back to Dashboard</a><h1>Customer Receivable</h1>
-<section class="receivable-controls"><div class="field"><label for="receivable-search">Search</label><input id="receivable-search" placeholder="Search invoice or company"/></div><div class="field"><label for="receivable-status-filter">Status</label><select id="receivable-status-filter"><option>All</option><option>Paid</option><option>Not Fully Paid</option><option>Not Paid</option></select></div><div class="field"><label for="receivable-date-filter">Date</label><select id="receivable-date-filter"><option value="All">All dates</option></select></div></section>
-<section class="receivable-table-wrap"><table class="receivable-table"><thead><tr><th>Invoice No.</th><th>Company</th><th>Sent Email on</th><th>Balance</th><th>Status</th></tr></thead><tbody id="receivable-body"></tbody></table></section>
-<div class="receivable-footer"><button class="btn soa-generate-button" id="open-soa" type="button">Generate SOA</button></div></main>
-<div class="soa-modal" id="soa-modal" hidden><div class="soa-backdrop" data-close-soa></div><section class="soa-card"><header><h2>SOA</h2><button class="soa-x" type="button" data-close-soa>×</button></header><div class="field soa-company-field"><label>Company</label><input id="soa-company-search" placeholder="Search company" autocomplete="off"/><div id="soa-company-options" class="soa-company-options" hidden></div></div><div class="soa-date-row"><div class="field"><label>From</label><input id="soa-from" type="date"/></div><div class="field"><label>To</label><input id="soa-to" type="date"/></div></div><p id="soa-error" class="soa-error" hidden></p><button class="btn btn-primary soa-save" id="generate-soa" type="button">Generate and save to Pending</button></section></div>
-<script type="module" src="./assets/js/pages/customerReceivable.js"></script>
-</body></html>
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>MaxGreen Agent — Customer Receivable</title>
+
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="./assets/css/base.css" />
+
+    <style>
+        /* =========================================================
+           BASE
+        ========================================================= */
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            min-height: 100%;
+        }
+
+        body {
+            min-height: 100vh;
+            font-family:
+                Inter,
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                sans-serif;
+
+            color: #0f172a;
+
+            background:
+                radial-gradient(circle at 90% 5%,
+                    rgba(124, 58, 237, 0.08),
+                    transparent 30%),
+                radial-gradient(circle at 5% 90%,
+                    rgba(79, 70, 229, 0.06),
+                    transparent 35%),
+                linear-gradient(235deg,
+                    #eef2ff 0%,
+                    #ffffff 50%,
+                    #f5f3ff 100%);
+        }
+
+        button,
+        input,
+        select {
+            font: inherit;
+        }
+
+
+        /* =========================================================
+           PAGE
+        ========================================================= */
+
+        .receivable-page {
+            width: 100%;
+            max-width: 1500px;
+            min-height: 100vh;
+
+            margin: 0 auto;
+            padding: 40px 48px;
+
+            display: flex;
+            flex-direction: column;
+            gap: 28px;
+        }
+
+
+        /* =========================================================
+           BACK
+        ========================================================= */
+
+        .back-link {
+            width: fit-content;
+
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+
+            color: #64748b;
+
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+
+            transition:
+                color 0.2s ease,
+                transform 0.2s ease;
+        }
+
+        .back-link:hover {
+            color: #4f46e5;
+            transform: translateX(-3px);
+        }
+
+
+        /* =========================================================
+           TITLE
+        ========================================================= */
+
+        .receivable-page>h1 {
+            margin: -8px 0 -18px;
+
+            color: #0f172a;
+
+            font-size: 32px;
+            line-height: 1.2;
+            font-weight: 800;
+            letter-spacing: -1px;
+        }
+
+        .receivable-page>h1::after {
+            content: "Track outstanding and overdue invoice balances";
+
+            display: block;
+
+            margin-top: 5px;
+
+            color: #64748b;
+
+            font-size: 13px;
+            line-height: 1.4;
+            font-weight: 400;
+            letter-spacing: 0;
+        }
+
+
+        /* =========================================================
+           CONTROLS
+        ========================================================= */
+
+        .receivable-controls {
+            display: flex;
+            align-items: flex-end;
+            justify-content: flex-end;
+            gap: 10px;
+
+            margin-top: -52px;
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+        }
+
+        .receivable-controls .field label {
+            display: none;
+        }
+
+
+        /* SEARCH */
+
+        .receivable-controls .field:first-child {
+            position: relative;
+            width: 340px;
+        }
+
+        .receivable-controls .field:first-child::before {
+            content: "";
+
+            position: absolute;
+            z-index: 2;
+
+            left: 17px;
+            top: 50%;
+
+            width: 13px;
+            height: 13px;
+
+            border: 1.7px solid #94a3b8;
+            border-radius: 50%;
+
+            transform: translateY(-57%);
+
+            pointer-events: none;
+        }
+
+        .receivable-controls .field:first-child::after {
+            content: "";
+
+            position: absolute;
+            z-index: 2;
+
+            width: 6px;
+            height: 1.7px;
+
+            left: 28px;
+            top: 28px;
+
+            background: #94a3b8;
+            border-radius: 10px;
+
+            transform: rotate(45deg);
+
+            pointer-events: none;
+        }
+
+        #receivable-search {
+            width: 100%;
+            height: 44px;
+
+            padding: 0 16px 0 43px;
+
+            color: #0f172a;
+            background: rgba(255, 255, 255, 0.95);
+
+            border: 1px solid #e2e8f0;
+            border-radius: 999px;
+            outline: none;
+
+            font-size: 14px;
+
+            box-shadow: 0 2px 12px rgba(15, 23, 42, 0.04);
+
+            transition:
+                border-color 0.2s ease,
+                box-shadow 0.2s ease;
+        }
+
+        #receivable-search::placeholder {
+            color: #94a3b8;
+        }
+
+        #receivable-search:focus {
+            border-color: #a5b4fc;
+
+            box-shadow:
+                0 0 0 4px rgba(99, 102, 241, 0.08),
+                0 4px 16px rgba(15, 23, 42, 0.05);
+        }
+
+
+        /* SELECTS */
+
+        #receivable-status-filter,
+        #receivable-date-filter {
+            height: 44px;
+
+            padding: 0 39px 0 17px;
+
+            color: #0f172a;
+            background-color: rgba(255, 255, 255, 0.95);
+
+            border: 1px solid #e2e8f0;
+            border-radius: 999px;
+            outline: none;
+
+            font-size: 13px;
+            font-weight: 600;
+
+            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+
+            cursor: pointer;
+
+            appearance: none;
+
+            background-image:
+                linear-gradient(45deg, transparent 50%, #94a3b8 50%),
+                linear-gradient(135deg, #94a3b8 50%, transparent 50%);
+
+            background-position:
+                calc(100% - 17px) 19px,
+                calc(100% - 13px) 19px;
+
+            background-size:
+                4px 4px,
+                4px 4px;
+
+            background-repeat: no-repeat;
+
+            transition:
+                border-color 0.2s ease,
+                box-shadow 0.2s ease;
+        }
+
+        #receivable-status-filter {
+            min-width: 125px;
+        }
+
+        #receivable-date-filter {
+            min-width: 130px;
+        }
+
+        #receivable-status-filter:hover,
+        #receivable-date-filter:hover {
+            border-color: #c7d2fe;
+        }
+
+        #receivable-status-filter:focus,
+        #receivable-date-filter:focus {
+            border-color: #a5b4fc;
+
+            box-shadow:
+                0 0 0 4px rgba(99, 102, 241, 0.07);
+        }
+
+
+        /* =========================================================
+           TABLE CONTAINER
+        ========================================================= */
+
+        .receivable-table-wrap {
+            width: 100%;
+
+            background: rgba(255, 255, 255, 0.96);
+
+            border: 1px solid #e2e8f0;
+            border-radius: 20px;
+
+            box-shadow:
+                0 5px 24px rgba(15, 23, 42, 0.05),
+                inset 0 1px 0 rgba(255, 255, 255, 0.8);
+
+            overflow: hidden;
+        }
+
+
+        /* =========================================================
+           TABLE
+        ========================================================= */
+
+        .receivable-table {
+            width: 100%;
+
+            border-collapse: collapse;
+            border-spacing: 0;
+
+            table-layout: fixed;
+        }
+
+        .receivable-table th,
+        .receivable-table td {
+            text-align: left;
+            vertical-align: middle;
+        }
+
+
+        /* COLUMN WIDTHS */
+
+        .receivable-table th:nth-child(1),
+        .receivable-table td:nth-child(1) {
+            width: 17%;
+        }
+
+        .receivable-table th:nth-child(2),
+        .receivable-table td:nth-child(2) {
+            width: 24%;
+        }
+
+        .receivable-table th:nth-child(3),
+        .receivable-table td:nth-child(3) {
+            width: 18%;
+        }
+
+        .receivable-table th:nth-child(4),
+        .receivable-table td:nth-child(4) {
+            width: 20%;
+        }
+
+        .receivable-table th:nth-child(5),
+        .receivable-table td:nth-child(5) {
+            width: 21%;
+        }
+
+
+        /* TABLE HEADER */
+
+        .receivable-table thead {
+            background: #f8fafc;
+        }
+
+        .receivable-table thead tr {
+            height: 49px;
+        }
+
+        .receivable-table th {
+            padding: 0 24px;
+
+            color: #64748b;
+
+            border-bottom: 1px solid #e2e8f0;
+
+            font-size: 13px;
+            line-height: 1.2;
+            font-weight: 700;
+        }
+
+
+        /* TABLE BODY */
+
+        .receivable-table tbody tr {
+            height: 64px;
+
+            background: #ffffff;
+
+            border-bottom: 1px solid #f1f5f9;
+
+            transition:
+                background 0.18s ease,
+                box-shadow 0.18s ease;
+        }
+
+        .receivable-table tbody tr:last-child {
+            border-bottom: 0;
+        }
+
+        .receivable-table tbody tr:hover {
+            background: #fafaff;
+
+            box-shadow:
+                inset 3px 0 0 #6366f1;
+        }
+
+        .receivable-table td {
+            padding: 14px 24px;
+
+            color: #0f172a;
+
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+
+        /* Invoice number */
+
+        .receivable-table td:first-child {
+            color: #4f46e5;
+            font-weight: 650;
+        }
+
+
+        /* Date */
+
+        .receivable-table td:nth-child(3) {
+            color: #94a3b8;
+        }
+
+
+        /* Balance */
+
+        .receivable-table td:nth-child(4) {
+            font-weight: 650;
+        }
+
+
+        /* =========================================================
+           DYNAMIC STATUS
+           Supports text/classes generated by your existing JS.
+        ========================================================= */
+
+        .receivable-table td:last-child {
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .receivable-table td:last-child>* {
+            max-width: 150px;
+        }
+
+        /* Common possible status classes */
+
+        .status,
+        .status-badge,
+        .receivable-status {
+            min-height: 32px;
+
+            display: inline-flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+
+            padding: 7px 12px;
+
+            border-radius: 8px;
+
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-paid,
+        .paid {
+            color: #16a34a !important;
+            background: #f0fdf4 !important;
+            border: 1px solid #bbf7d0 !important;
+        }
+
+        .status-pending,
+        .pending,
+        .status-not-fully-paid,
+        .not-fully-paid {
+            color: #d97706 !important;
+            background: #fffbeb !important;
+            border: 1px solid #fde68a !important;
+        }
+
+        .status-overdue,
+        .overdue,
+        .status-not-paid,
+        .not-paid {
+            color: #dc2626 !important;
+            background: #fef2f2 !important;
+            border: 1px solid #fecaca !important;
+        }
+
+
+        /* =========================================================
+           FALLBACK STATUS STYLING
+           If JS places a select inside the status column.
+        ========================================================= */
+
+        .receivable-table td:last-child select {
+            width: 145px;
+            height: 34px;
+
+            padding: 0 32px 0 12px;
+
+            color: #475569;
+            background: #f8fafc;
+
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            outline: none;
+
+            font-size: 12px;
+            font-weight: 600;
+
+            cursor: pointer;
+        }
+
+
+        /* =========================================================
+           FOOTER
+        ========================================================= */
+
+        .receivable-footer {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+        }
+
+
+        /* =========================================================
+           GENERATE SOA BUTTON
+        ========================================================= */
+
+        .soa-generate-button {
+            min-height: 52px;
+
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+
+            padding: 0 32px;
+
+            color: #ffffff;
+
+            border: 0;
+            border-radius: 12px;
+
+            background:
+                linear-gradient(110deg,
+                    #4f46e5 0%,
+                    #6366f1 45%,
+                    #7c3aed 100%);
+
+            box-shadow:
+                0 5px 20px rgba(79, 70, 229, 0.25),
+                inset 0 1px 0 rgba(255, 255, 255, 0.18);
+
+            font-size: 15px;
+            font-weight: 700;
+
+            cursor: pointer;
+
+            transition:
+                transform 0.2s ease,
+                box-shadow 0.2s ease;
+        }
+
+        .soa-generate-button::before {
+            content: "";
+
+            width: 17px;
+            height: 19px;
+
+            display: inline-block;
+
+            border: 1.8px solid white;
+            border-radius: 3px;
+
+            opacity: 0.95;
+        }
+
+        .soa-generate-button:hover {
+            transform: translateY(-3px);
+
+            box-shadow:
+                0 10px 26px rgba(79, 70, 229, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+
+        .soa-generate-button:active {
+            transform: translateY(-1px);
+        }
+
+
+        /* =========================================================
+           SOA MODAL
+        ========================================================= */
+
+        .soa-modal {
+            position: fixed;
+            z-index: 1000;
+            inset: 0;
+
+            display: grid;
+            place-items: center;
+
+            padding: 24px;
+        }
+
+        .soa-modal[hidden] {
+            display: none !important;
+        }
+
+        .soa-backdrop {
+            position: absolute;
+            inset: 0;
+
+            background: rgba(15, 23, 42, 0.45);
+
+            backdrop-filter: blur(5px);
+        }
+
+
+        /* =========================================================
+           SOA CARD
+        ========================================================= */
+
+        .soa-card {
+            position: relative;
+            z-index: 2;
+
+            width: min(500px, 100%);
+
+            padding: 26px;
+
+            background:
+                linear-gradient(160deg,
+                    #ffffff 0%,
+                    #fdfcff 100%);
+
+            border: 1px solid rgba(226, 232, 240, 0.9);
+            border-radius: 22px;
+
+            box-shadow:
+                0 30px 80px rgba(15, 23, 42, 0.22),
+                inset 0 1px 0 white;
+
+            animation: soaAppear 0.22s ease;
+        }
+
+        @keyframes soaAppear {
+            from {
+                opacity: 0;
+                transform: translateY(10px) scale(0.98);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+
+        /* SOA HEADER */
+
+        .soa-card header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            margin-bottom: 24px;
+        }
+
+        .soa-card h2 {
+            margin: 0;
+
+            color: #0f172a;
+
+            font-size: 25px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+
+        .soa-x {
+            width: 36px;
+            height: 36px;
+
+            display: grid;
+            place-items: center;
+
+            padding: 0;
+
+            color: #64748b;
+            background: #f8fafc;
+
+            border: 1px solid #e2e8f0;
+            border-radius: 50%;
+
+            font-size: 24px;
+            line-height: 1;
+
+            cursor: pointer;
+
+            transition:
+                background 0.2s ease,
+                color 0.2s ease,
+                transform 0.2s ease;
+        }
+
+        .soa-x:hover {
+            color: #dc2626;
+            background: #fef2f2;
+            transform: rotate(8deg);
+        }
+
+
+        /* =========================================================
+           MODAL FIELDS
+        ========================================================= */
+
+        .soa-card .field label {
+            color: #475569;
+
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .soa-card input {
+            width: 100%;
+            height: 44px;
+
+            padding: 0 14px;
+
+            color: #0f172a;
+            background: #ffffff;
+
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            outline: none;
+
+            font-size: 14px;
+
+            transition:
+                border-color 0.2s ease,
+                box-shadow 0.2s ease;
+        }
+
+        .soa-card input::placeholder {
+            color: #94a3b8;
+        }
+
+        .soa-card input:focus {
+            border-color: #a5b4fc;
+
+            box-shadow:
+                0 0 0 4px rgba(99, 102, 241, 0.08);
+        }
+
+
+        /* COMPANY AUTOCOMPLETE */
+
+        .soa-company-field {
+            position: relative;
+        }
+
+        .soa-company-options {
+            position: absolute;
+            z-index: 20;
+
+            top: calc(100% + 6px);
+            right: 0;
+            left: 0;
+
+            max-height: 210px;
+
+            overflow-y: auto;
+
+            background: white;
+
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+
+            box-shadow:
+                0 15px 35px rgba(15, 23, 42, 0.12);
+        }
+
+        .soa-company-options[hidden] {
+            display: none;
+        }
+
+        .soa-company-options>* {
+            padding: 11px 14px;
+
+            border-bottom: 1px solid #f1f5f9;
+
+            font-size: 13px;
+
+            cursor: pointer;
+        }
+
+        .soa-company-options>*:last-child {
+            border-bottom: 0;
+        }
+
+        .soa-company-options>*:hover {
+            color: #4f46e5;
+            background: #f5f3ff;
+        }
+
+
+        /* =========================================================
+           DATES
+        ========================================================= */
+
+        .soa-date-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+
+            margin-top: 18px;
+        }
+
+
+        /* =========================================================
+           ERROR
+        ========================================================= */
+
+        .soa-error {
+            margin: 15px 0 0;
+
+            padding: 10px 12px;
+
+            color: #dc2626;
+            background: #fef2f2;
+
+            border: 1px solid #fecaca;
+            border-radius: 9px;
+
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .soa-error[hidden] {
+            display: none;
+        }
+
+
+        /* =========================================================
+           SAVE BUTTON
+        ========================================================= */
+
+        .soa-save {
+            width: 100%;
+            min-height: 48px;
+
+            margin-top: 22px;
+
+            color: white;
+
+            border: 0;
+            border-radius: 11px;
+
+            background:
+                linear-gradient(110deg,
+                    #4f46e5,
+                    #7c3aed);
+
+            box-shadow:
+                0 6px 18px rgba(79, 70, 229, 0.22);
+
+            font-size: 14px;
+            font-weight: 700;
+
+            cursor: pointer;
+
+            transition:
+                transform 0.2s ease,
+                box-shadow 0.2s ease;
+        }
+
+        .soa-save:hover {
+            transform: translateY(-2px);
+
+            box-shadow:
+                0 10px 24px rgba(79, 70, 229, 0.28);
+        }
+
+
+        /* =========================================================
+           RESPONSIVE
+        ========================================================= */
+
+        @media (max-width: 1050px) {
+
+            .receivable-page {
+                padding: 32px;
+            }
+
+            .receivable-controls {
+                margin-top: 0;
+                justify-content: flex-start;
+                flex-wrap: wrap;
+            }
+
+            .receivable-controls .field:first-child {
+                flex: 1;
+                min-width: 260px;
+            }
+
+            .receivable-table-wrap {
+                overflow-x: auto;
+            }
+
+            .receivable-table {
+                min-width: 900px;
+            }
+        }
+
+
+        @media (max-width: 650px) {
+
+            .receivable-page {
+                padding: 24px 18px 32px;
+                gap: 22px;
+            }
+
+            .receivable-page>h1 {
+                margin: 0;
+                font-size: 28px;
+            }
+
+            .receivable-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .receivable-controls .field,
+            .receivable-controls .field:first-child {
+                width: 100%;
+            }
+
+            #receivable-status-filter,
+            #receivable-date-filter {
+                width: 100%;
+            }
+
+            .receivable-footer {
+                justify-content: stretch;
+            }
+
+            .soa-generate-button {
+                width: 100%;
+            }
+
+            .soa-date-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+
+<body>
+
+    <main class="receivable-page">
+
+        <!-- BACK -->
+
+        <a class="back-link" href="./index.html">
+            ← Back to Dashboard
+        </a>
+
+
+        <!-- TITLE -->
+
+        <h1>Customer Receivable</h1>
+
+
+        <!-- =====================================================
+             FILTERS
+        ====================================================== -->
+
+        <section class="receivable-controls">
+
+            <div class="field">
+
+                <label for="receivable-search">
+                    Search
+                </label>
+
+                <input id="receivable-search" placeholder="Search invoice or company" />
+
+            </div>
+
+
+            <div class="field">
+
+                <label for="receivable-status-filter">
+                    Status
+                </label>
+
+                <select id="receivable-status-filter">
+
+                    <option>All</option>
+                    <option>Paid</option>
+                    <option>Not Fully Paid</option>
+                    <option>Not Paid</option>
+
+                </select>
+
+            </div>
+
+
+            <div class="field">
+
+                <label for="receivable-date-filter">
+                    Date
+                </label>
+
+                <select id="receivable-date-filter">
+
+                    <option value="All">
+                        All dates
+                    </option>
+
+                </select>
+
+            </div>
+
+        </section>
+
+
+        <!-- =====================================================
+             TABLE
+        ====================================================== -->
+
+        <section class="receivable-table-wrap">
+
+            <table class="receivable-table">
+
+                <thead>
+
+                    <tr>
+                        <th>Invoice No.</th>
+                        <th>Company</th>
+                        <th>Sent Email on</th>
+                        <th>Balance</th>
+                        <th>Status</th>
+                    </tr>
+
+                </thead>
+
+
+                <!--
+                    IMPORTANT:
+                    Your existing JS still populates this tbody.
+                -->
+
+                <tbody id="receivable-body"></tbody>
+
+            </table>
+
+        </section>
+
+
+        <!-- =====================================================
+             FOOTER
+        ====================================================== -->
+
+        <div class="receivable-footer">
+
+            <button class="btn soa-generate-button" id="open-soa" type="button">
+                Generate SOA
+            </button>
+
+        </div>
+
+    </main>
+
+
+    <!-- =========================================================
+         SOA MODAL
+    ========================================================== -->
+
+    <div class="soa-modal" id="soa-modal" hidden>
+
+        <div class="soa-backdrop" data-close-soa></div>
+
+
+        <section class="soa-card">
+
+            <header>
+
+                <h2>SOA</h2>
+
+                <button class="soa-x" type="button" data-close-soa aria-label="Close">
+                    ×
+                </button>
+
+            </header>
+
+
+            <!-- COMPANY -->
+
+            <div class="field soa-company-field">
+
+                <label for="soa-company-search">
+                    Company
+                </label>
+
+                <input id="soa-company-search" placeholder="Search company" autocomplete="off" />
+
+                <div id="soa-company-options" class="soa-company-options" hidden></div>
+
+            </div>
+
+
+            <!-- DATES -->
+
+            <div class="soa-date-row">
+
+                <div class="field">
+
+                    <label for="soa-from">
+                        From
+                    </label>
+
+                    <input id="soa-from" type="date" />
+
+                </div>
+
+
+                <div class="field">
+
+                    <label for="soa-to">
+                        To
+                    </label>
+
+                    <input id="soa-to" type="date" />
+
+                </div>
+
+            </div>
+
+
+            <!-- ERROR -->
+
+            <p id="soa-error" class="soa-error" hidden></p>
+
+
+            <!-- GENERATE -->
+
+            <button class="btn btn-primary soa-save" id="generate-soa" type="button">
+                Generate and save to Pending
+            </button>
+
+        </section>
+
+    </div>
+
+
+    <!-- =========================================================
+         EXISTING FUNCTIONALITY
+         DO NOT REMOVE
+    ========================================================== -->
+
+    <script type="module" src="./assets/js/pages/customerReceivable.js"></script>
+
+</body>
+
+</html>

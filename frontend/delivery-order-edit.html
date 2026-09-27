@@ -1,150 +1,1524 @@
 <!doctype html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
   <title>MaxGreen Agent — Construction Delivery Order</title>
+
   <link rel="icon" href="data:," />
   <link rel="stylesheet" href="./assets/css/base.css" />
   <link rel="stylesheet" href="./assets/css/delivery-order-edit.css" />
+
+  <style>
+    /* =========================================================
+       BASE
+    ========================================================= */
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+    }
+
+    body {
+      min-height: 100vh;
+      font-family:
+        Inter,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+
+      color: #374151;
+
+      background:
+        linear-gradient(225deg,
+          #e0e7ff 0%,
+          #ede9fe 50%,
+          #faf5ff 100%);
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+
+    /* =========================================================
+       PAGE
+    ========================================================= */
+
+    .delivery-edit-page {
+      width: 100%;
+      max-width: 1440px;
+      min-height: 100vh;
+
+      margin: 0 auto;
+      padding: 42px 48px 70px;
+    }
+
+
+    /* =========================================================
+       BACK
+    ========================================================= */
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+
+      margin-bottom: 22px;
+
+      color: #6366f1;
+
+      font-size: 13px;
+      font-weight: 600;
+
+      text-decoration: none;
+
+      transition:
+        transform 0.2s ease,
+        color 0.2s ease;
+    }
+
+    .back-link:hover {
+      color: #4f46e5;
+      transform: translateX(-3px);
+    }
+
+
+    /* =========================================================
+       EDITOR CARD
+    ========================================================= */
+
+    .delivery-editor-card {
+      padding: 0;
+
+      background: transparent;
+      border: 0;
+      box-shadow: none;
+    }
+
+
+    /* =========================================================
+       PAGE HEADER
+    ========================================================= */
+
+    .delivery-editor-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      gap: 24px;
+
+      margin-bottom: 28px;
+      padding: 0;
+
+      background: transparent;
+      border: 0;
+    }
+
+    .delivery-editor-header h1 {
+      margin: 0;
+
+      color: #1e1b4b;
+
+      font-size: 32px;
+      line-height: 1.2;
+      font-weight: 700;
+
+      letter-spacing: -0.7px;
+    }
+
+
+    /* =========================================================
+       BUTTONS
+    ========================================================= */
+
+    .btn {
+      min-height: 42px;
+
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+
+      padding: 0 20px;
+
+      color: #6366f1;
+      background: #ffffff;
+
+      border: 1px solid #c7d2fe;
+      border-radius: 10px;
+
+      font-size: 14px;
+      font-weight: 600;
+
+      box-shadow:
+        0 2px 8px rgba(99, 102, 241, 0.08);
+
+      transition:
+        transform 0.18s ease,
+        box-shadow 0.18s ease,
+        border-color 0.18s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+
+      border-color: #a5b4fc;
+
+      box-shadow:
+        0 5px 16px rgba(99, 102, 241, 0.14);
+    }
+
+    .btn-primary {
+      min-width: 112px;
+      min-height: 44px;
+
+      padding: 0 32px;
+
+      color: #ffffff;
+
+      background:
+        linear-gradient(180deg,
+          #6c63ff 0%,
+          #a855f7 100%);
+
+      border: 0;
+
+      font-size: 16px;
+      font-weight: 700;
+
+      box-shadow:
+        0 4px 16px rgba(108, 99, 255, 0.25);
+    }
+
+    .btn-primary:hover {
+      box-shadow:
+        0 8px 22px rgba(108, 99, 255, 0.30);
+    }
+
+    .btn-small {
+      min-height: 34px;
+
+      padding: 0 16px;
+
+      color: #6366f1;
+      background: #eef2ff;
+
+      border-color: #c7d2fe;
+      border-radius: 8px;
+
+      font-size: 13px;
+    }
+
+    #add-do-row::before {
+      content: "+";
+
+      font-size: 17px;
+      line-height: 1;
+    }
+
+    #attach-do-files::before {
+      content: "↥";
+
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+
+    /* =========================================================
+       FORM CARD
+    ========================================================= */
+
+    #delivery-order-form {
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+
+      padding: 40px;
+
+      background: #ffffff;
+
+      border-radius: 20px;
+
+      box-shadow:
+        0 8px 48px rgba(99, 102, 241, 0.09);
+    }
+
+
+    /* =========================================================
+       FIELD GENERAL
+    ========================================================= */
+
+    .field {
+      min-width: 0;
+
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .field label {
+      color: #1e1b4b;
+
+      font-size: 13px;
+      line-height: 1.2;
+      font-weight: 700;
+    }
+
+    .field input,
+    .field select {
+      width: 100%;
+      height: 44px;
+
+      padding: 0 14px;
+
+      color: #374151;
+      background: #f8f7ff;
+
+      border: 1px solid #c7d2fe;
+      border-radius: 10px;
+
+      outline: none;
+
+      font-size: 15px;
+      font-weight: 400;
+
+      transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease,
+        background 0.2s ease;
+    }
+
+    .field input::placeholder {
+      color: #c4b5fd;
+    }
+
+    .field input:hover,
+    .field select:hover {
+      border-color: #a5b4fc;
+    }
+
+    .field input:focus,
+    .field select:focus {
+      background: #ffffff;
+
+      border-color: #818cf8;
+
+      box-shadow:
+        0 0 0 4px rgba(99, 102, 241, 0.09);
+    }
+
+    .field input[readonly] {
+      color: #7c83a6;
+      background: #f8f7ff;
+
+      cursor: default;
+    }
+
+
+    /* =========================================================
+       TOP FIELDS
+    ========================================================= */
+
+    .delivery-fields-grid {
+      display: grid;
+      grid-template-columns:
+        minmax(180px, 1fr) minmax(160px, 0.9fr) minmax(175px, 1fr) minmax(175px, 1fr) minmax(180px, 1fr);
+
+      gap: 16px;
+    }
+
+    .company-picker-field {
+      position: relative;
+    }
+
+    .company-combobox {
+      position: relative;
+    }
+
+
+    /* =========================================================
+       COMPANY SUGGESTIONS
+    ========================================================= */
+
+    .company-suggestions,
+    .ref-quote-suggestions {
+      position: absolute;
+      z-index: 100;
+
+      top: calc(100% + 6px);
+      left: 0;
+      right: 0;
+
+      max-height: 230px;
+
+      padding: 6px;
+
+      background: #ffffff;
+
+      border: 1px solid #c7d2fe;
+      border-radius: 10px;
+
+      box-shadow:
+        0 15px 35px rgba(79, 70, 229, 0.14);
+
+      overflow-y: auto;
+    }
+
+    .company-suggestions[hidden],
+    .ref-quote-suggestions[hidden] {
+      display: none;
+    }
+
+    .company-suggestions>*,
+    .ref-quote-suggestions>* {
+      padding: 10px 12px;
+
+      color: #374151;
+
+      border-radius: 7px;
+
+      font-size: 13px;
+
+      cursor: pointer;
+    }
+
+    .company-suggestions>*:hover,
+    .ref-quote-suggestions>*:hover {
+      color: #4f46e5;
+      background: #f5f3ff;
+    }
+
+
+    /* =========================================================
+       SECONDARY ROW
+    ========================================================= */
+
+    .delivery-secondary-row {
+      display: grid;
+      grid-template-columns: 200px 240px;
+
+      gap: 16px;
+      align-items: start;
+    }
+
+    .currency-field {
+      width: 100%;
+    }
+
+    .ref-quote-picker-field {
+      position: relative;
+    }
+
+    .ref-quote-combobox {
+      position: relative;
+    }
+
+    .ref-quote-help {
+      margin-top: 2px;
+
+      color: #9ca3af;
+
+      font-size: 10px;
+      line-height: 1.4;
+    }
+
+
+    /* =========================================================
+       DIVIDER BEFORE SUBJECT
+    ========================================================= */
+
+    .delivery-subject-field {
+      position: relative;
+
+      padding-top: 29px;
+    }
+
+    .delivery-subject-field::before {
+      content: "";
+
+      position: absolute;
+
+      top: 0;
+      left: 0;
+      right: 0;
+
+      height: 1px;
+
+      background: #e0e7ff;
+    }
+
+    .delivery-subject-field label {
+      font-size: 15px;
+    }
+
+    .delivery-subject-field input {
+      height: 48px;
+
+      padding: 0 16px;
+    }
+
+
+    /* =========================================================
+       ITEMS SECTION
+    ========================================================= */
+
+    .delivery-items-section {
+      border: 1px solid #e0e7ff;
+      border-radius: 12px;
+
+      overflow: hidden;
+    }
+
+    .table-wrap {
+      width: 100%;
+
+      overflow-x: auto;
+    }
+
+    .delivery-items-table {
+      width: 100%;
+      min-width: 1100px;
+
+      border-collapse: collapse;
+      border-spacing: 0;
+
+      font-size: 13px;
+    }
+
+    .delivery-items-table thead {
+      background:
+        linear-gradient(180deg,
+          #4f46e5 0%,
+          #6c63ff 100%);
+    }
+
+    .delivery-items-table th {
+      height: 48px;
+
+      padding: 14px 10px;
+
+      color: #ffffff;
+      background: transparent;
+
+      border: 0;
+
+      font-size: 13px;
+      font-weight: 700;
+
+      text-align: left;
+      white-space: nowrap;
+    }
+
+    .delivery-items-table th:nth-child(1) {
+      width: 140px;
+    }
+
+    .delivery-items-table th:nth-child(2) {
+      min-width: 280px;
+    }
+
+    .delivery-items-table th:nth-child(3) {
+      width: 80px;
+      text-align: center;
+    }
+
+    .delivery-items-table th:nth-child(4) {
+      width: 80px;
+      text-align: center;
+    }
+
+    .delivery-items-table th:nth-child(5) {
+      width: 110px;
+      text-align: center;
+    }
+
+    .delivery-items-table th:nth-child(6) {
+      width: 100px;
+      text-align: center;
+    }
+
+    .delivery-items-table th:nth-child(7) {
+      width: 110px;
+      text-align: center;
+    }
+
+    .delivery-items-table th:nth-child(8) {
+      width: 120px;
+      text-align: right;
+    }
+
+    .delivery-items-table th:nth-child(9) {
+      width: 45px;
+    }
+
+
+    /* =========================================================
+       DYNAMIC TABLE ROWS
+    ========================================================= */
+
+    .delivery-items-table tbody tr {
+      background: #fafafe;
+    }
+
+    .delivery-items-table tbody tr:nth-child(even) {
+      background: #ffffff;
+    }
+
+    .delivery-items-table tbody tr:hover {
+      background: #f8f7ff;
+    }
+
+    .delivery-items-table td {
+      padding: 12px 8px;
+
+      color: #374151;
+
+      border: 0;
+      border-bottom: 1px solid #e0e7ff;
+
+      vertical-align: middle;
+    }
+
+    .delivery-items-table tbody tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .delivery-items-table td input,
+    .delivery-items-table td select,
+    .delivery-items-table td textarea {
+      width: 100%;
+      min-width: 0;
+
+      padding: 8px 9px;
+
+      color: #374151;
+      background: #ffffff;
+
+      border: 1px solid transparent;
+      border-radius: 7px;
+
+      outline: none;
+
+      font-size: 13px;
+
+      transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+    }
+
+    .delivery-items-table td textarea {
+      min-height: 42px;
+      resize: vertical;
+    }
+
+    .delivery-items-table td input:hover,
+    .delivery-items-table td select:hover,
+    .delivery-items-table td textarea:hover {
+      border-color: #ddd6fe;
+    }
+
+    .delivery-items-table td input:focus,
+    .delivery-items-table td select:focus,
+    .delivery-items-table td textarea:focus {
+      border-color: #a5b4fc;
+
+      box-shadow:
+        0 0 0 3px rgba(99, 102, 241, 0.08);
+    }
+
+    .delivery-items-table td:nth-child(3),
+    .delivery-items-table td:nth-child(4),
+    .delivery-items-table td:nth-child(5),
+    .delivery-items-table td:nth-child(6),
+    .delivery-items-table td:nth-child(7) {
+      text-align: center;
+    }
+
+    .delivery-items-table td:nth-child(8) {
+      text-align: right;
+    }
+
+    /* Generic delete button support */
+
+    .delivery-items-table tbody button {
+      width: 32px;
+      height: 32px;
+
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+
+      padding: 0;
+
+      color: #f87171;
+      background: transparent;
+
+      border: 0;
+      border-radius: 7px;
+
+      font-size: 15px;
+
+      cursor: pointer;
+    }
+
+    .delivery-items-table tbody button:hover {
+      background: #fef2f2;
+    }
+
+
+    /* =========================================================
+       ADD ROW FOOTER
+    ========================================================= */
+
+    .delivery-items-footer {
+      display: flex;
+      justify-content: flex-end;
+
+      padding: 12px 20px;
+
+      background: #f5f3ff;
+
+      border-top: 1px solid #e0e7ff;
+    }
+
+
+    /* =========================================================
+       ATTACHMENT
+    ========================================================= */
+
+    .delivery-attachment-row {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+
+      gap: 12px;
+    }
+
+    .subtle-note {
+      color: #9ca3af;
+
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+
+    /* =========================================================
+       SUMMARY
+    ========================================================= */
+
+    .delivery-summary {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 280px;
+
+      gap: 40px;
+
+      padding: 32px;
+
+      background: #f8f7ff;
+
+      border: 1px solid #e0e7ff;
+      border-radius: 16px;
+    }
+
+    .amount-in-words {
+      display: flex;
+      flex-direction: column;
+
+      gap: 12px;
+    }
+
+    .amount-in-words strong {
+      max-width: 650px;
+
+      color: #1e1b4b;
+
+      font-size: 28px;
+      line-height: 1.2;
+      font-weight: 700;
+
+      letter-spacing: -0.5px;
+    }
+
+    .amount-in-words p {
+      margin: 0;
+
+      color: #9ca3af;
+
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+
+    /* =========================================================
+       TOTALS
+    ========================================================= */
+
+    .totals {
+      width: 280px;
+
+      margin: 0;
+    }
+
+    .totals>div {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      gap: 25px;
+
+      padding: 5px 0;
+    }
+
+    .totals dt,
+    .totals dd {
+      margin: 0;
+
+      color: #6b7280;
+
+      font-size: 14px;
+      line-height: 1.3;
+      font-weight: 500;
+    }
+
+    .totals dd {
+      color: #374151;
+    }
+
+    .totals .grand-total {
+      position: relative;
+
+      margin-top: 10px;
+      padding-top: 16px;
+    }
+
+    .totals .grand-total::before {
+      content: "";
+
+      position: absolute;
+
+      top: 0;
+      left: 0;
+      right: 0;
+
+      height: 1px;
+
+      background: #4f46e5;
+    }
+
+    .totals .grand-total dt::after {
+      content: " SGD";
+    }
+
+    .totals .grand-total dt,
+    .totals .grand-total dd {
+      color: #4f46e5;
+
+      font-size: 17px;
+      font-weight: 800;
+    }
+
+
+    /* =========================================================
+       CONTACT MODAL
+    ========================================================= */
+
+    .contact-modal {
+      position: fixed;
+      z-index: 1000;
+
+      inset: 0;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      padding: 24px;
+    }
+
+    .contact-modal[hidden] {
+      display: none;
+    }
+
+    .contact-modal-backdrop {
+      position: absolute;
+
+      inset: 0;
+
+      background: rgba(30, 27, 75, 0.35);
+
+      backdrop-filter: blur(5px);
+    }
+
+    .contact-modal-card {
+      position: relative;
+      z-index: 1;
+
+      width: min(620px, 100%);
+
+      padding: 28px;
+
+      background: #ffffff;
+
+      border: 1px solid #e0e7ff;
+      border-radius: 18px;
+
+      box-shadow:
+        0 25px 70px rgba(30, 27, 75, 0.20);
+    }
+
+    .contact-modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      gap: 20px;
+
+      margin-bottom: 24px;
+    }
+
+    .contact-modal-header h2 {
+      margin: 0;
+
+      color: #1e1b4b;
+
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .contact-modal-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .company-popup-button {
+      min-height: 38px;
+
+      padding: 0 16px;
+
+      color: #6366f1;
+      background: #ffffff;
+
+      border: 1px solid #c7d2fe;
+      border-radius: 9px;
+
+      font-size: 13px;
+      font-weight: 600;
+
+      cursor: pointer;
+    }
+
+    #do-save-new-company {
+      color: #ffffff;
+
+      background:
+        linear-gradient(135deg,
+          #6366f1,
+          #8b5cf6);
+
+      border: 0;
+    }
+
+    .contact-modal-fields {
+      display: flex;
+      flex-direction: column;
+
+      gap: 15px;
+    }
+
+    .popup-field {
+      display: flex;
+      flex-direction: column;
+
+      gap: 6px;
+    }
+
+    .popup-field label {
+      color: #1e1b4b;
+
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .popup-field input {
+      width: 100%;
+      height: 44px;
+
+      padding: 0 13px;
+
+      color: #374151;
+      background: #f8f7ff;
+
+      border: 1px solid #c7d2fe;
+      border-radius: 9px;
+
+      outline: none;
+
+      font-size: 14px;
+    }
+
+    .popup-field input:focus {
+      background: #ffffff;
+
+      border-color: #818cf8;
+
+      box-shadow:
+        0 0 0 3px rgba(99, 102, 241, 0.09);
+    }
+
+    .popup-two-column {
+      display: grid;
+      grid-template-columns: 1fr 150px;
+
+      gap: 12px;
+    }
+
+
+    /* =========================================================
+       RESPONSIVE
+    ========================================================= */
+
+    @media (max-width: 1150px) {
+
+      .delivery-fields-grid {
+        grid-template-columns: repeat(3, minmax(180px, 1fr));
+      }
+
+    }
+
+
+    @media (max-width: 850px) {
+
+      .delivery-edit-page {
+        padding: 30px 24px 60px;
+      }
+
+      #delivery-order-form {
+        padding: 28px;
+      }
+
+      .delivery-fields-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .delivery-secondary-row {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .delivery-summary {
+        grid-template-columns: 1fr;
+      }
+
+      .totals {
+        width: 100%;
+      }
+
+    }
+
+
+    @media (max-width: 600px) {
+
+      .delivery-edit-page {
+        padding: 22px 14px 45px;
+      }
+
+      .delivery-editor-header {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .delivery-editor-header h1 {
+        font-size: 26px;
+      }
+
+      #save-delivery-order {
+        width: 100%;
+      }
+
+      #delivery-order-form {
+        gap: 22px;
+
+        padding: 20px;
+
+        border-radius: 15px;
+      }
+
+      .delivery-fields-grid,
+      .delivery-secondary-row {
+        grid-template-columns: 1fr;
+      }
+
+      .delivery-summary {
+        padding: 22px;
+      }
+
+      .amount-in-words strong {
+        font-size: 22px;
+      }
+
+      .popup-two-column {
+        grid-template-columns: 1fr;
+      }
+
+      .contact-modal-header {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+    }
+  </style>
 </head>
+
+
 <body>
+
   <main class="delivery-edit-page">
-    <a id="back-to-delivery" class="back-link" href="./delivery-order.html">← Back to Delivery Order.pdf</a>
+
+    <a id="back-to-delivery" class="back-link" href="./delivery-order.html">
+      ← Back to Delivery Order.pdf
+    </a>
+
 
     <section class="delivery-editor-card">
+
+      <!-- =====================================================
+           HEADER
+      ====================================================== -->
+
       <header class="delivery-editor-header">
-        <h1>Construction Delivery Order.pdf</h1>
-        <button class="btn btn-primary" id="save-delivery-order" type="button">Save</button>
+
+        <h1>
+          Construction Delivery Order.pdf
+        </h1>
+
+        <button class="btn btn-primary" id="save-delivery-order" type="button">
+          Save
+        </button>
+
       </header>
 
+
+      <!-- =====================================================
+           FORM
+      ====================================================== -->
+
       <form id="delivery-order-form" autocomplete="off">
+
+
+        <!-- TOP FIELDS -->
+
         <section class="delivery-fields-grid top-row-fields">
+
+
           <div class="field company-picker-field">
-            <label for="do-company">Company</label>
+
+            <label for="do-company">
+              Company
+            </label>
+
             <div class="company-combobox">
-              <input id="do-company" type="text" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="do-company-suggestions" placeholder="Search existing customer" />
+
+              <input id="do-company" type="text" autocomplete="off" role="combobox" aria-autocomplete="list"
+                aria-expanded="false" aria-controls="do-company-suggestions" placeholder="Search existing customer" />
+
               <div id="do-company-suggestions" class="company-suggestions" role="listbox" hidden></div>
+
             </div>
+
           </div>
+
+
           <div class="field">
-            <label for="do-attn">Attn</label>
-            <select id="do-attn"><option value="">Select company first</option></select>
+
+            <label for="do-attn">
+              Attn
+            </label>
+
+            <select id="do-attn">
+
+              <option value="">
+                Select company first
+              </option>
+
+            </select>
+
           </div>
+
+
           <div class="field">
-            <label for="do-date">Issue date</label>
+
+            <label for="do-date">
+              Issue date
+            </label>
+
             <input id="do-date" type="date" />
+
           </div>
+
+
           <div class="field">
-            <label for="do-due-date">Due date</label>
+
+            <label for="do-due-date">
+              Due date
+            </label>
+
             <input id="do-due-date" type="date" />
+
           </div>
+
+
           <div class="field">
-            <label for="do-number">DO reference</label>
+
+            <label for="do-number">
+              DO number
+            </label>
+
             <input id="do-number" type="text" readonly />
+
           </div>
+
         </section>
+
+
+        <!-- SECONDARY -->
 
         <section class="delivery-secondary-row">
+
+
           <div class="field currency-field">
-            <label for="do-currency">Currency</label>
+
+            <label for="do-currency">
+              Currency
+            </label>
+
             <select id="do-currency">
-              <option value="SGD">SGD</option>
+
+              <option value="SGD">
+                SGD
+              </option>
+
             </select>
+
           </div>
+
 
           <div class="field ref-quote-picker-field">
-            <label for="ref-quote-search">Ref Quote:</label>
+
+            <label for="ref-quote-search">
+              Ref Quote:
+            </label>
+
+
             <div class="ref-quote-combobox">
-              <input
-                id="ref-quote-search"
-                type="text"
-                autocomplete="off"
-                role="combobox"
-                aria-autocomplete="list"
-                aria-expanded="false"
-                aria-controls="ref-quote-suggestions"
-                placeholder="Search completed quotation"
-              />
+
+              <input id="ref-quote-search" type="text" autocomplete="off" role="combobox" aria-autocomplete="list"
+                aria-expanded="false" aria-controls="ref-quote-suggestions" placeholder="Search completed quotation" />
+
               <div id="ref-quote-suggestions" class="ref-quote-suggestions" role="listbox" hidden></div>
+
             </div>
-            <small class="ref-quote-help">Only completed quotations can be selected.</small>
+
+
+            <small class="ref-quote-help">
+              Only completed quotations can be selected.
+            </small>
+
           </div>
+
         </section>
+
+
+        <!-- SUBJECT -->
 
         <section class="field delivery-subject-field">
-          <label for="do-subject">Subject Title</label>
+
+          <label for="do-subject">
+            Subject Title
+          </label>
+
           <input id="do-subject" type="text" />
+
         </section>
+
+
+        <!-- =====================================================
+             ITEMS
+        ====================================================== -->
 
         <section class="delivery-items-section">
+
           <div class="table-wrap">
+
             <table class="delivery-items-table">
+
               <thead>
+
                 <tr>
+
                   <th>Item</th>
+
                   <th>Description</th>
+
                   <th>Qty</th>
+
                   <th>UOM</th>
+
                   <th>Unit Price</th>
+
                   <th>Tax Rate</th>
+
                   <th>Tax Amount</th>
+
                   <th>Amount SGD</th>
+
                   <th aria-label="Delete"></th>
+
                 </tr>
+
               </thead>
+
+
               <tbody id="delivery-items"></tbody>
+
             </table>
+
           </div>
+
+
           <div class="delivery-items-footer">
-            <button class="btn btn-small" id="add-do-row" type="button">Add Row</button>
+
+            <button class="btn btn-small" id="add-do-row" type="button">
+              Add Row
+            </button>
+
           </div>
+
         </section>
+
+
+        <!-- =====================================================
+             ATTACHMENTS
+        ====================================================== -->
 
         <section class="delivery-attachment-row">
-          <button class="btn" id="attach-do-files" type="button">Attach files</button>
+
+          <button class="btn" id="attach-do-files" type="button">
+            Attach files
+          </button>
+
+
           <span id="do-attachment-note" class="subtle-note"></span>
+
         </section>
 
+
+        <!-- =====================================================
+             SUMMARY
+        ====================================================== -->
+
         <section class="delivery-summary">
+
+
           <div class="amount-in-words">
-            <strong id="do-amount-words">Sum of Singapore Zero Dollars Only</strong>
-            <p>This is a computer generated document, no signature is required.</p>
+
+            <strong id="do-amount-words">
+              Sum of Singapore Zero Dollars Only
+            </strong>
+
+            <p>
+              This is a computer generated document,
+              no signature is required.
+            </p>
+
           </div>
+
+
           <dl class="totals">
-            <div><dt>Subtotal</dt><dd id="do-subtotal">0.00</dd></div>
-            <div><dt id="do-tax-label">GST (9%)</dt><dd id="do-gst">0.00</dd></div>
-            <div class="grand-total"><dt>Total</dt><dd id="do-total">0.00</dd></div>
+
+
+            <div>
+
+              <dt>
+                Subtotal
+              </dt>
+
+              <dd id="do-subtotal">
+                0.00
+              </dd>
+
+            </div>
+
+
+            <div>
+
+              <dt id="do-tax-label">
+                GST (9%)
+              </dt>
+
+              <dd id="do-gst">
+                0.00
+              </dd>
+
+            </div>
+
+
+            <div class="grand-total">
+
+              <dt>
+                Total
+              </dt>
+
+              <dd id="do-total">
+                0.00
+              </dd>
+
+            </div>
+
+
           </dl>
+
         </section>
+
       </form>
+
     </section>
+
   </main>
 
 
+  <!-- =========================================================
+       COMPANY MODAL
+  ========================================================== -->
+
   <div id="do-new-company-modal" class="contact-modal" hidden>
+
     <div class="contact-modal-backdrop" data-close-do-company-modal></div>
+
+
     <section class="contact-modal-card" role="dialog" aria-modal="true" aria-labelledby="do-new-company-title">
+
+
       <header class="contact-modal-header">
-        <h2 id="do-new-company-title">Update contact detail</h2>
+
+        <h2 id="do-new-company-title">
+          Update contact detail
+        </h2>
+
+
         <div class="contact-modal-actions">
-          <button class="company-popup-button" id="do-cancel-new-company" type="button">Cancel</button>
-          <button class="company-popup-button" id="do-save-new-company" type="button">Save</button>
+
+          <button class="company-popup-button" id="do-cancel-new-company" type="button">
+            Cancel
+          </button>
+
+
+          <button class="company-popup-button" id="do-save-new-company" type="button">
+            Save
+          </button>
+
         </div>
+
       </header>
+
+
       <div class="contact-modal-fields">
-        <div class="popup-field"><label for="do-new-company-name">Company Name</label><input id="do-new-company-name" type="text" /></div>
-        <div class="popup-field"><label for="do-new-company-attn">Name (Attn)</label><input id="do-new-company-attn" type="text" /></div>
-        <div class="popup-field"><label for="do-new-company-email">Email</label><input id="do-new-company-email" type="email" /></div>
-        <div class="popup-two-column">
-          <div class="popup-field"><label for="do-new-company-address">Address</label><input id="do-new-company-address" type="text" /></div>
-          <div class="popup-field"><label for="do-new-company-postal">Postal</label><input id="do-new-company-postal" type="text" inputmode="numeric" pattern="[0-9]*" /></div>
+
+
+        <div class="popup-field">
+
+          <label for="do-new-company-name">
+            Company Name
+          </label>
+
+          <input id="do-new-company-name" type="text" />
+
         </div>
-        <div class="popup-field"><label for="do-new-company-contact">Contact Number</label><input id="do-new-company-contact" type="text" inputmode="numeric" pattern="[0-9]*" /></div>
+
+
+        <div class="popup-field">
+
+          <label for="do-new-company-attn">
+            Name (Attn)
+          </label>
+
+          <input id="do-new-company-attn" type="text" />
+
+        </div>
+
+
+        <div class="popup-field">
+
+          <label for="do-new-company-email">
+            Email
+          </label>
+
+          <input id="do-new-company-email" type="email" />
+
+        </div>
+
+
+        <div class="popup-two-column">
+
+
+          <div class="popup-field">
+
+            <label for="do-new-company-address">
+              Address
+            </label>
+
+            <input id="do-new-company-address" type="text" />
+
+          </div>
+
+
+          <div class="popup-field">
+
+            <label for="do-new-company-postal">
+              Postal
+            </label>
+
+            <input id="do-new-company-postal" type="text" inputmode="numeric" pattern="[0-9]*" />
+
+          </div>
+
+        </div>
+
+
+        <div class="popup-field">
+
+          <label for="do-new-company-contact">
+            Contact Number
+          </label>
+
+          <input id="do-new-company-contact" type="text" inputmode="numeric" pattern="[0-9]*" />
+
+        </div>
+
       </div>
+
     </section>
+
   </div>
 
+
+  <!-- KEEP YOUR EXISTING JS -->
+
   <script type="module" src="./assets/js/pages/deliveryOrderEdit.js"></script>
+
 </body>
+
 </html>
