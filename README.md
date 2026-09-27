@@ -1,8 +1,36 @@
-# MaxGreen Agent — Local Integration Build v23
+# MaxGreen Agent
 
 Start with **START_HERE.md**.
 
-Folder layout:
+## Tech stack
+
+| Layer | Technology | Notes |
+| --- | --- | --- |
+| Frontend | Vanilla HTML, CSS, JavaScript (ES modules) | No framework, no bundler, no build step |
+| Backend | Python 3.12, FastAPI 0.116 | REST API served by Uvicorn 0.35 |
+| Database | SQLite | `backend/data/maxgreen.db` via the stdlib `sqlite3` driver |
+| Gmail | Google Gmail API with OAuth 2.0 | `google-api-python-client`, read-only |
+| AI | Claude Sonnet 4.5 | Called over HTTPS through the organizer-provided LLM gateway |
+| Document parsing | pypdf | Extracts text from PDF attachments for classification |
+| Web server | nginx 1.24 | Serves the static frontend and reverse-proxies `/api/` to FastAPI |
+| TLS | Let's Encrypt | Certificate renews automatically through `certbot.timer` |
+| Access control | nginx HTTP Basic auth | Required for every page and every `/api/` call |
+| Hosting | Ubuntu 24.04 on AWS Lightsail | Backend runs as a systemd service |
+
+Nothing from npm is used at runtime: the frontend is plain files served straight from disk, and
+`frontend/assets/templates/` carries the PDF templates behind the quotation, invoice and delivery
+order output.
+
+Request flow:
+
+```text
+Browser → nginx (HTTPS + basic auth) → /api/ reverse proxy
+        → FastAPI on 127.0.0.1:8000 → SQLite · Gmail API · Claude gateway
+```
+
+The backend is bound to loopback only, so it is reachable exclusively through nginx.
+
+## Folder layout
 
 ```text
 project/
@@ -30,7 +58,8 @@ project/
     └── secrets/
 ```
 
-Current milestone: Gmail read-only connection locally. Claude and AWS deployment come later.
+Currently running on an AWS Lightsail instance behind nginx, with Gmail sync, Claude
+classification and AI document pre-fill enabled.
 
 ## v24 real Gmail Inbox
 
