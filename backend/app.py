@@ -38,7 +38,13 @@ from services.database_service import (  # noqa: E402
     set_message_category,
     update_message_classification,
 )
-from services.gmail_service import fetch_attachment, get_profile, is_connected  # noqa: E402
+from services.gmail_service import (  # noqa: E402
+    GmailSendError,
+    fetch_attachment,
+    get_profile,
+    is_connected,
+    send_email,
+)
 from services.llm_service import configured_model, test_connection  # noqa: E402
 from services.llm_service import is_configured as llm_is_configured  # noqa: E402
 from services.logging_config import (  # noqa: E402
@@ -48,16 +54,23 @@ from services.logging_config import (  # noqa: E402
     new_request_id,
     reset_request_id,
     set_request_id,
+    timed,
 )
 from services.scheduler_service import start_scheduler, stop_scheduler  # noqa: E402
 from services.security_service import (  # noqa: E402
     MAX_ATTACHMENT_BYTES,
+    MAX_OUTBOUND_ATTACHMENTS,
     ValidationError,
     clamp_int,
+    decode_attachment_payload,
     sanitize_filename,
     truncate_for_log,
+    validate_body,
+    validate_email_address,
     validate_gmail_query,
+    validate_header_value,
     validate_opaque_id,
+    validate_outbound_mime,
 )
 from services.sync_service import sync_gmail  # noqa: E402
 
@@ -194,11 +207,17 @@ app.add_middleware(RequestContextMiddleware)
 # ---------------------------------------------------------------------------
 
 
-def _error(status_code: int, code: str, message: str, details: list[str] | None = None) -> JSONResponse:
+def _error(
+    status_code: int,
+    code: str,
+    message: str,
+    details: list[str] | None = None,
+    headers: dict[str, str] | None = None,
+) -> JSONResponse:
     payload: dict[str, object] = {"detail": message, "code": code, "request_id": current_request_id()}
     if details:
         payload["details"] = details
-    response = JSONResponse(status_code=status_code, content=payload)
+    response = JSONResponse(status_code=status_code, content=payload, headers=headers)
     response.headers["x-request-id"] = current_request_id()
     return response
 
@@ -237,6 +256,23 @@ async def request_validation_handler(_request: Request, exc: RequestValidationEr
     fields = sorted({str(item.get("loc", ["body"])[-1]) for item in exc.errors()})
     log_event(logger, "request.schema_invalid", level="info", outcome="rejected", fields=fields[:10])
     return _error(422, "invalid_request", "The request was not valid.", fields)
+
+
+@app.exception_handler(HTTPException)
+async def http_exception_handler(_request: Request, exc: HTTPException) -> JSONResponse:
+    """Give plain HTTPExceptions the same flat error shape as everything else.
+
+    Without this, an endpoint that raises HTTPException answers with FastAPI's default
+    ``{"detail": ...}`` and no ``code``, so the browser can only branch on the status. The
+    message is already safe (these are written by hand in this file), but the shape should
+    not depend on which exception a handler happened to choose.
+    """
+    detail = exc.detail
+    code = "http_error"
+    if isinstance(detail, dict):
+        code = str(detail.get("code") or code)
+        detail = str(detail.get("detail") or "")
+    return _error(exc.status_code, code, str(detail), headers=exc.headers)
 
 
 @app.exception_handler(Exception)
@@ -278,6 +314,33 @@ class SetCategoryRequest(BaseModel):
     category: str = Field(min_length=1, max_length=40)
 
 
+class AttachmentRequest(BaseModel):
+    """One file generated in the browser, carried as base64.
+
+    The content is decoded and size-checked in the service layer, never trusted as-is, and
+    is never echoed back: the stored descriptor carries the name and type only.
+    """
+
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+    filename: str = Field(min_length=1, max_length=200)
+    mime_type: str = Field(default="application/pdf", max_length=120)
+    data: str = Field(min_length=1)
+
+
+class SendEmailRequest(BaseModel):
+    """A composed email, sent in one step.
+
+    `extra="forbid"` and the explicit fields mean an unexpected key is a 422 rather than
+    something silently dropped on the way to a customer.
+    """
+
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+    to: str = Field(min_length=1, max_length=254)
+    subject: str = Field(min_length=1, max_length=200)
+    body: str = Field(default="", max_length=200_000)
+    attachments: list[AttachmentRequest] = Field(default_factory=list, max_length=10)
+
+
 class CreateDocumentRequest(BaseModel):
     """A new outbound document draft.
 
@@ -295,6 +358,7 @@ class CreateDocumentRequest(BaseModel):
     document_number: str = Field(default="", max_length=40)
     payload: dict = Field(default_factory=dict)
     actor: str = Field(min_length=1, max_length=80)
+    attachments: list[AttachmentRequest] = Field(default_factory=list, max_length=10)
 
 
 class ApprovalRequest(BaseModel):
@@ -380,6 +444,107 @@ def gmail_sync(
         }
     except Exception as exc:
         raise _upstream_failure("Gmail sync failed. Check the backend logs for details.", exc, status_code=500) from exc
+
+
+def _decode_outbound_attachments(items: list[AttachmentRequest]) -> list[dict]:
+    """Turn validated attachment requests into the transport's shape.
+
+    Each body is decoded and size-checked here rather than being handed to the Google API
+    as an opaque string, and the filename is sanitised before it can reach a
+    ``Content-Disposition`` header.
+    """
+    if len(items) > MAX_OUTBOUND_ATTACHMENTS:
+        raise ValidationError(
+            f"A message can carry at most {MAX_OUTBOUND_ATTACHMENTS} attachments.",
+            field="attachments",
+            code="too_many",
+        )
+
+    decoded: list[dict] = []
+    for index, item in enumerate(items):
+        decoded.append(
+            {
+                "filename": sanitize_filename(item.filename),
+                "mime_type": validate_outbound_mime(item.mime_type),
+                "data": decode_attachment_payload(item.data, field=f"attachments[{index}].data"),
+            }
+        )
+    return decoded
+
+
+@app.post("/api/gmail/send")
+def gmail_send(payload: SendEmailRequest) -> dict:
+    """Send a composed email. One request, no approval step.
+
+    The operator who composed the message is the one sending it, so there is no second
+    click to collect. What is *not* negotiable is what happens here: the recipient,
+    subject and body are validated for header injection and size, attachment types are
+    allow-listed and their bytes are decoded and bounded, and the failure text returned to
+    the browser never contains anything from Google.
+
+    A 5xx from this endpoint means nothing was sent and the request can be retried. A 4xx
+    means the input or the message was refused, and retrying it unchanged will fail again.
+    """
+    if not is_connected():
+        raise HTTPException(status_code=401, detail="Gmail is not connected. Run connect_gmail.bat first.")
+
+    # Validation runs before anything is sent, so a bad field can never produce a
+    # half-delivered message. ValidationError is mapped to 422 by the handler above.
+    recipient = validate_email_address(payload.to, field="to")
+    subject = validate_header_value(payload.subject, field="subject", max_length=200)
+    body = validate_body(payload.body, field="body", required=False)
+    attachments = _decode_outbound_attachments(payload.attachments)
+
+    with timed(
+        "gmail.send",
+        logger,
+        recipient_domain=recipient.rpartition("@")[2] or None,
+        attachment_count=len(attachments),
+        attachment_bytes=sum(len(item["data"]) for item in attachments),
+    ):
+        try:
+            result = send_email(
+                to=recipient,
+                subject=subject,
+                body=body,
+                attachments=attachments,
+            )
+        except GmailSendError as exc:
+            # exc.message is already a safe, operator-facing string; exc.safe_detail is the
+            # upstream text and stays in the log. A retryable failure is a 502 so the
+            # browser knows "safe to try again", and a permanent one is a 422 so it does
+            # not offer a retry that will fail identically.
+            log_event(
+                logger,
+                "gmail.send.failed",
+                level="error",
+                error_code=exc.code,
+                retryable=exc.retryable,
+                error=exc.safe_detail,
+                exc_info=True,
+            )
+            raise HTTPException(
+                status_code=502 if exc.retryable else 422,
+                detail={"detail": exc.message, "code": exc.code},
+            ) from exc
+        except Exception as exc:
+            raise _upstream_failure(
+                "The email could not be sent. No copy was sent; you can safely try again.",
+                exc,
+                status_code=502,
+            ) from exc
+
+    log_event(
+        logger,
+        "gmail.send.succeeded",
+        gmail_message_id=(result or {}).get("id") or None,
+        attachment_count=len(attachments),
+    )
+    return {
+        "ok": True,
+        "message_id": (result or {}).get("id", ""),
+        "thread_id": (result or {}).get("thread_id", ""),
+    }
 
 
 @app.get("/api/llm/status")
@@ -683,7 +848,16 @@ def create_document(payload: CreateDocumentRequest) -> dict:
         source_security_status=str(seed.get("source_security_status") or ""),
         source_confidence=seed.get("source_confidence"),  # type: ignore[arg-type]
         actor=payload.actor,
+        attachments=[
+            {
+                "filename": item.filename,
+                "mime_type": item.mime_type,
+                "data": item.data,
+            }
+            for item in payload.attachments
+        ],
     )
+    # Names and sizes only. The base64 content is not echoed back to the browser.
     return {"ok": True, "document": _document_summary(document)}
 
 

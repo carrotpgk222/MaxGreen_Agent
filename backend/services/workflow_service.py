@@ -40,12 +40,14 @@ from services.database_service import DatabaseError, get_connection, init_db
 from services.logging_config import current_request_id, log_event, timed
 from services.security_service import (
     ValidationError,
+    decode_attachment_payload,
     is_low_confidence,
     requires_send_override,
     sanitize_filename,
     validate_body,
     validate_email_address,
     validate_header_value,
+    validate_outbound_mime,
 )
 
 logger = logging.getLogger("maxgreen.workflow")
@@ -96,6 +98,10 @@ REQUIRED_FIELDS: dict[str, tuple[tuple[str, ...], ...]] = {
 
 MAX_ACTOR_LENGTH = 80
 MAX_NUMBER_LENGTH = 40
+
+#: Attachments per outbound document. Matches the inbound limit so a generated document
+#: cannot be used to build a larger outbound message than we are willing to receive.
+MAX_ATTACHMENTS_PER_DOCUMENT = 10
 
 #: How many times a create will re-read and re-allocate a document number after losing a
 #: race on the unique index. Two is enough in practice; five is a generous ceiling.
@@ -161,21 +167,73 @@ def _row_to_document(row: sqlite3.Row | dict[str, Any]) -> dict[str, Any]:
     return item
 
 
+def _prepare_stored_attachments(
+    attachments: list[dict[str, Any]] | None,
+) -> list[dict[str, Any]]:
+    """Decode inline attachment bodies and write them to ``document_attachments``.
+
+    Validation happens before the insert so a bad payload never creates a document row
+    that cannot be sent. The returned descriptors are what the payload should reference;
+    the bytes themselves live only in the database and are re-read at send time.
+    """
+    if not attachments:
+        return []
+    if not isinstance(attachments, list):
+        raise ValidationError("Attachments must be a list.", field="attachments", code="invalid_type")
+    if len(attachments) > MAX_ATTACHMENTS_PER_DOCUMENT:
+        raise ValidationError(
+            f"A document can carry at most {MAX_ATTACHMENTS_PER_DOCUMENT} attachments.",
+            field="attachments",
+            code="too_many",
+        )
+
+    prepared: list[dict[str, Any]] = []
+    for index, item in enumerate(attachments):
+        if not isinstance(item, dict):
+            raise ValidationError(
+                f"Attachment {index + 1} is not valid.", field="attachments", code="invalid_type"
+            )
+        filename = sanitize_filename(item.get("filename"))
+        mime_type = validate_outbound_mime(item.get("mime_type"))
+        data = decode_attachment_payload(item.get("data"), field=f"attachments[{index}].data")
+        attachment_id = uuid.uuid4().hex
+        prepared.append(
+            {
+                "attachment_id": attachment_id,
+                "filename": filename,
+                "mime_type": mime_type,
+                "data": data,
+                "descriptor": {
+                    "filename": filename,
+                    "mime_type": mime_type,
+                    "attachment_id": attachment_id,
+                    "gmail_message_id": "",
+                },
+            }
+        )
+    return prepared
+
+
 def _outbound_attachments(payload: dict[str, Any]) -> list[dict[str, Any]]:
     """Describe any attachments queued for a document, without their bytes.
 
-    Bytes are never persisted: a document references its source Gmail attachment, and the
-    bytes are re-read from Gmail at send time. That keeps the database free of customer
-    documents and makes the send reproducible.
+    Two kinds, and the difference matters at send time:
 
-    The filename is attacker-controlled (it came from an inbound email header), so it is
-    sanitised here rather than trusted back out of the database later.
+    * A **Gmail reference** (``gmail_message_id`` + ``attachment_id``) names an attachment
+      that already exists in the supplier's email. The bytes are re-read from Gmail when
+      the document is sent, so nothing is duplicated into our database.
+    * A **generated file** (the PDF the operator rendered in the browser) has no upstream
+      source, so its bytes are stored in ``document_attachments`` and referenced by
+      ``attachment_id`` alone.
+
+    The filename is attacker-controlled, so it is sanitised here rather than trusted back
+    out of the database later.
     """
     raw = payload.get("attachments")
     if not isinstance(raw, list):
         return []
     described: list[dict[str, Any]] = []
-    for item in raw[:10]:
+    for item in raw[:MAX_ATTACHMENTS_PER_DOCUMENT]:
         if not isinstance(item, dict):
             continue
         described.append(
@@ -477,8 +535,15 @@ def create_document(
     source_security_status: str = "",
     source_confidence: float | None = None,
     actor: str = "",
+    attachments: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
-    """Create a draft. A draft is never sendable, whatever the caller asks for."""
+    """Create a draft. A draft is never sendable, whatever the caller asks for.
+
+    ``attachments`` may carry inline base64 content for a file generated in the browser
+    (the rendered quotation PDF). The bytes are decoded, size-checked and stored against
+    the document; the descriptor that goes into the payload references them by
+    ``attachment_id`` only, so the payload never holds a base64 blob.
+    """
     init_db()
     if document_type not in DOCUMENT_TYPES:
         raise ValidationError(
@@ -496,6 +561,17 @@ def create_document(
     safe_actor = _validate_actor(actor)
 
     payload = dict(payload or {})
+    stored = _prepare_stored_attachments(attachments)
+    if stored:
+        # Inline descriptors are replaced by their stored references: the payload is
+        # returned in API responses and written to the audit trail's neighbourhood, and a
+        # base64 PDF in there would bloat both.
+        described = [item["descriptor"] for item in stored]
+        payload["attachments"] = described + [
+            item
+            for item in (payload.get("attachments") or [])
+            if isinstance(item, dict) and not item.get("data")
+        ][:MAX_ATTACHMENTS_PER_DOCUMENT]
     low_confidence = is_low_confidence(source_confidence)
     needs_review = 1 if (low_confidence or source_security_status in {"Spam", "Prompt Injection"}) else 0
 
@@ -520,6 +596,23 @@ def create_document(
 
     def insert(number: str) -> None:
         with get_connection() as conn:
+            for item in stored:
+                conn.execute(
+                    """
+                    INSERT INTO document_attachments (
+                        attachment_id, document_id, filename, mime_type, byte_size, content, created_at
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        item["attachment_id"],
+                        document_id,
+                        item["filename"],
+                        item["mime_type"],
+                        len(item["data"]),
+                        item["data"],
+                        timestamp,
+                    ),
+                )
             conn.execute(
                 """
                 INSERT INTO outbound_documents (
@@ -733,31 +826,90 @@ def reject_document(document_id: str, *, actor: str, reason: str) -> dict[str, A
 # ---------------------------------------------------------------------------
 
 
+def _read_stored_attachment(attachment_id: str) -> tuple[str, str, bytes] | None:
+    """Read a generated attachment's bytes back out of the database."""
+    init_db()
+
+    def run() -> tuple[str, str, bytes] | None:
+        with get_connection() as conn:
+            row = conn.execute(
+                "SELECT filename, mime_type, content FROM document_attachments WHERE attachment_id = ?",
+                (attachment_id,),
+            ).fetchone()
+        if row is None:
+            return None
+        return (
+            str(row["filename"] or "attachment"),
+            str(row["mime_type"] or "application/pdf"),
+            bytes(row["content"] or b""),
+        )
+
+    return _db_call("read an attachment", run)
+
+
 def _gather_attachments(document: dict[str, Any]) -> list[dict[str, Any]]:
-    """Re-read attachment bytes from Gmail for the documents that reference them."""
+    """Resolve every attachment descriptor to bytes at the moment of sending.
+
+    A descriptor that names a Gmail attachment is re-read from Gmail, so a supplier who
+    later edits or deletes the file cannot have the sent copy silently differ from the
+    approved one - a mismatch is a failure, not a send. A descriptor with no Gmail source
+    is a file we generated and stored, read back from the database.
+
+    Filenames and media types are re-sanitised here rather than trusted from the payload,
+    because this is the last point before they reach a mail header.
+    """
     from services.attachment_text_service import read_attachment_bytes
 
     resolved: list[dict[str, Any]] = []
     for item in document.get("attachments") or []:
+        if not isinstance(item, dict):
+            continue
         message_id = item.get("gmail_message_id") or document.get("gmail_message_id") or ""
         attachment_id = item.get("attachment_id") or ""
-        if not message_id or not attachment_id:
+        filename = sanitize_filename(item.get("filename"))
+
+        if not attachment_id:
             raise SendFailed(
-                "An attachment on this document could not be matched to its source email.",
+                "An attachment on this document could not be matched to its source.",
                 retryable=False,
                 code="attachment_unresolved",
             )
-        data = read_attachment_bytes(message_id, attachment_id)
+
+        if message_id:
+            data = read_attachment_bytes(message_id, attachment_id)
+            if not data:
+                raise SendFailed(
+                    "An attachment on this document is no longer available in the source email.",
+                    retryable=False,
+                    code="attachment_missing",
+                )
+            resolved.append(
+                {
+                    "filename": filename,
+                    "mime_type": str(item.get("mime_type") or "application/octet-stream"),
+                    "data": data,
+                }
+            )
+            continue
+
+        stored = _read_stored_attachment(attachment_id)
+        if stored is None:
+            raise SendFailed(
+                "An attachment on this document is no longer available.",
+                retryable=False,
+                code="attachment_missing",
+            )
+        stored_name, stored_mime, data = stored
         if not data:
             raise SendFailed(
-                "An attachment on this document is no longer available in the source email.",
+                "An attachment on this document is empty.",
                 retryable=False,
                 code="attachment_missing",
             )
         resolved.append(
             {
-                "filename": item.get("filename") or "attachment",
-                "mime_type": item.get("mime_type") or "application/octet-stream",
+                "filename": stored_name or filename,
+                "mime_type": stored_mime or "application/octet-stream",
                 "data": data,
             }
         )
@@ -917,6 +1069,11 @@ def send_document(document_id: str, *, actor: str, force_override: bool = False)
                 body=body,
                 attachments=attachments,
             )
+    except WorkflowError:
+        # Already translated and audited by _abort inside the inner block. Re-raised
+        # untouched, or the catch-all below would relabel a precise failure code (for
+        # example attachment_missing) as the generic send_error.
+        raise
     except GmailSendError as exc:
         raise _abort(
             error_code=exc.code,

@@ -204,6 +204,87 @@ def sanitize_filename(value: Any, *, fallback: str = "attachment") -> str:
     return candidate or fallback
 
 
+#: Attachment media types we are willing to put on an outbound message. Anything outside
+#: this set is either a rendering risk or a container that can carry macros, so it is
+#: refused rather than forwarded. The declared type is attacker-controlled, so it is
+#: allow-listed here and never merely echoed into a header.
+ALLOWED_OUTBOUND_MIME_TYPES = frozenset(
+    {
+        "application/pdf",
+        "image/png",
+        "image/jpeg",
+        "image/gif",
+        "text/plain",
+        "text/csv",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    }
+)
+
+#: Attachments per outbound message.
+MAX_OUTBOUND_ATTACHMENTS = 10
+
+
+def validate_outbound_mime(value: Any, *, field: str = "mime_type") -> str:
+    """Normalise an outbound attachment's declared type and check it against the allow-list."""
+    raw = str(value or "").split(";")[0].strip().lower()
+    if not raw:
+        return "application/pdf"
+    if raw not in ALLOWED_OUTBOUND_MIME_TYPES:
+        raise ValidationError(
+            f"Attachments of type {raw} cannot be sent. Use PDF, an image, or a text/CSV file.",
+            field=field,
+            code="unsupported_type",
+        )
+    return raw
+
+
+def decode_attachment_payload(value: Any, *, field: str = "attachment") -> bytes:
+    """Decode a base64 attachment body into bytes, with the size checked *after* decoding.
+
+    The browser renders a document to PDF and posts it base64-encoded, so this is the only
+    way a generated quotation reaches the send path. The decoded length is what matters for
+    the size cap: a caller cannot evade it by padding, and the check happens on real bytes
+    rather than on the encoded string length.
+    """
+    import base64
+    import binascii
+
+    if not isinstance(value, str) or not value.strip():
+        raise ValidationError("The attachment has no content.", field=field, code="empty_attachment")
+
+    # Reject before decoding: 4 base64 chars encode 3 bytes, and this keeps a hostile
+    # request from allocating an unbounded buffer just to be measured afterwards.
+    if len(value) > ((MAX_ATTACHMENT_BYTES // 3) + 1) * 4 + 4:
+        raise ValidationError(
+            f"The attachment is larger than {MAX_ATTACHMENT_BYTES // (1024 * 1024)} MB.",
+            field=field,
+            code="too_large",
+        )
+
+    # Accept both the standard and URL-safe alphabets, with or without padding: browsers
+    # and hand-rolled clients differ, and rejecting a valid PDF over padding is a bad
+    # trade for a workflow nobody can retry.
+    compact = re.sub(r"\s+", "", value).replace("-", "+").replace("_", "/")
+    padded = compact + "=" * (-len(compact) % 4)
+
+    try:
+        data = base64.b64decode(padded, validate=True)
+    except (binascii.Error, ValueError) as exc:
+        raise ValidationError(
+            "The attachment is not valid base64.", field=field, code="invalid_encoding"
+        ) from exc
+
+    if not data:
+        raise ValidationError("The attachment has no content.", field=field, code="empty_attachment")
+    if len(data) > MAX_ATTACHMENT_BYTES:
+        raise ValidationError(
+            f"The attachment is larger than {MAX_ATTACHMENT_BYTES // (1024 * 1024)} MB.",
+            field=field,
+            code="too_large",
+        )
+    return data
+
+
 def validate_gmail_query(value: Any) -> str:
     """Validate the Gmail search string passed to the Gmail API.
 

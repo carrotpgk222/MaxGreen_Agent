@@ -7,6 +7,8 @@ value, or leaks an internal message.
 
 from __future__ import annotations
 
+import base64
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -333,3 +335,302 @@ def _create(client, **overrides) -> dict:
     response = client.post("/api/documents", json=body)
     assert response.status_code == 201, response.text
     return response.json()["document"]
+
+
+class TestGeneratedAttachmentOverHttp:
+    """The browser-generated PDF now travels with the document instead of a raw send."""
+
+    PDF = base64.b64encode(b"%PDF-1.4\n% quotation\n%%EOF").decode("ascii")
+
+    def test_a_pdf_is_accepted_and_never_echoed_back(self, client, temp_db, monkeypatch):
+        sent: list[dict] = []
+        monkeypatch.setattr(
+            "services.gmail_service.send_email",
+            lambda **kwargs: sent.append(kwargs) or {"id": "gmail-pdf"},
+        )
+        response = client.post(
+            "/api/documents",
+            json={
+                "document_type": "Quotation",
+                "recipient_email": "customer@example.com",
+                "subject": "Quotation",
+                "body": "Please find the quotation attached.",
+                "payload": {"company": "Example Co", "items": [{"description": "Clean lobby"}]},
+                "actor": "operator@example.com",
+                "attachments": [
+                    {"filename": "MGQ-1.pdf", "mime_type": "application/pdf", "data": self.PDF}
+                ],
+            },
+        )
+        assert response.status_code == 201
+        # The base64 must not come back in the response body.
+        assert self.PDF not in response.text
+
+        document_id = response.json()["document"]["document_id"]
+        for action, body in (
+            ("submit", {"actor": "op@example.com"}),
+            ("approve", {"actor": "manager@example.com"}),
+            ("send", {"actor": "op@example.com"}),
+        ):
+            assert client.post(f"/api/documents/{document_id}/{action}", json=body).status_code == 200
+
+        assert len(sent) == 1
+        assert sent[0]["attachments"][0]["data"].startswith(b"%PDF")
+
+    def test_an_html_attachment_is_refused(self, client, temp_db):
+        response = client.post(
+            "/api/documents",
+            json={
+                "document_type": "Quotation",
+                "recipient_email": "customer@example.com",
+                "subject": "Quotation",
+                "body": "Body",
+                "actor": "operator@example.com",
+                "attachments": [
+                    {"filename": "x.html", "mime_type": "text/html", "data": self.PDF}
+                ],
+            },
+        )
+        assert response.status_code == 422
+
+    def test_more_than_ten_attachments_are_refused(self, client, temp_db):
+        response = client.post(
+            "/api/documents",
+            json={
+                "document_type": "Quotation",
+                "recipient_email": "customer@example.com",
+                "subject": "Quotation",
+                "body": "Body",
+                "actor": "operator@example.com",
+                "attachments": [
+                    {"filename": f"f{i}.pdf", "mime_type": "application/pdf", "data": self.PDF}
+                    for i in range(11)
+                ],
+            },
+        )
+        assert response.status_code == 422
+
+
+class TestDirectSend:
+    """POST /api/gmail/send: one step, but not an unvalidated one.
+
+    The operator composes and sends in a single action, so there is no approval step. What
+    must still hold is that the request cannot inject headers, smuggle an active-content
+    attachment, or leak an upstream failure to the browser.
+    """
+
+    PDF = base64.b64encode(b"%PDF-1.4\n% quotation\n%%EOF").decode("ascii")
+
+    @pytest.fixture
+    def connected(self, monkeypatch):
+        monkeypatch.setattr("app.is_connected", lambda: True)
+
+    @pytest.fixture
+    def transport(self, monkeypatch):
+        sent: list[dict] = []
+        monkeypatch.setattr(
+            "app.send_email",
+            lambda **kwargs: sent.append(kwargs) or {"id": "gmail-direct", "thread_id": "t9"},
+        )
+        return sent
+
+    def test_a_plain_email_sends_in_one_request(self, client, connected, transport):
+        response = client.post(
+            "/api/gmail/send",
+            json={"to": "customer@example.com", "subject": "Quotation", "body": "Hello"},
+        )
+        assert response.status_code == 200
+        assert response.json() == {"ok": True, "message_id": "gmail-direct", "thread_id": "t9"}
+        assert len(transport) == 1
+        assert transport[0]["to"] == "customer@example.com"
+
+    def test_the_generated_pdf_is_actually_attached(self, client, connected, transport):
+        """The old endpoint accepted attachments and silently dropped them."""
+        response = client.post(
+            "/api/gmail/send",
+            json={
+                "to": "customer@example.com",
+                "subject": "Quotation",
+                "body": "Please find the quotation attached.",
+                "attachments": [
+                    {"filename": "MGQ-1.pdf", "mime_type": "application/pdf", "data": self.PDF}
+                ],
+            },
+        )
+        assert response.status_code == 200
+        attachments = transport[0]["attachments"]
+        assert len(attachments) == 1
+        assert attachments[0]["filename"] == "MGQ-1.pdf"
+        assert attachments[0]["data"] == b"%PDF-1.4\n% quotation\n%%EOF"
+
+    def test_crlf_in_the_recipient_is_refused(self, client, connected, transport):
+        response = client.post(
+            "/api/gmail/send",
+            json={
+                "to": "victim@example.com\r\nBcc: attacker@evil.test",
+                "subject": "Quotation",
+                "body": "Hello",
+            },
+        )
+        assert response.status_code == 422
+        assert transport == []
+
+    def test_crlf_in_the_subject_is_refused(self, client, connected, transport):
+        response = client.post(
+            "/api/gmail/send",
+            json={
+                "to": "customer@example.com",
+                "subject": "Hello\r\nBcc: attacker@evil.test",
+                "body": "Hello",
+            },
+        )
+        assert response.status_code == 422
+        assert transport == []
+
+    def test_a_second_recipient_in_the_to_field_is_refused(self, client, connected, transport):
+        response = client.post(
+            "/api/gmail/send",
+            json={"to": "a@example.com, b@example.com", "subject": "Quotation", "body": "Hello"},
+        )
+        assert response.status_code == 422
+        assert transport == []
+
+    def test_active_content_attachments_are_refused(self, client, connected, transport):
+        for mime in ("text/html", "image/svg+xml", "application/x-msdownload"):
+            response = client.post(
+                "/api/gmail/send",
+                json={
+                    "to": "customer@example.com",
+                    "subject": "Quotation",
+                    "body": "Hello",
+                    "attachments": [{"filename": "x", "mime_type": mime, "data": self.PDF}],
+                },
+            )
+            assert response.status_code == 422, mime
+        assert transport == []
+
+    def test_an_attachment_filename_is_sanitised(self, client, connected, transport):
+        response = client.post(
+            "/api/gmail/send",
+            json={
+                "to": "customer@example.com",
+                "subject": "Quotation",
+                "body": "Hello",
+                "attachments": [
+                    {"filename": "../../../etc/passwd.pdf", "mime_type": "application/pdf", "data": self.PDF}
+                ],
+            },
+        )
+        assert response.status_code == 200
+        assert transport[0]["attachments"][0]["filename"] == "passwd.pdf"
+
+    def test_an_oversized_attachment_is_refused(self, client, connected, transport):
+        response = client.post(
+            "/api/gmail/send",
+            json={
+                "to": "customer@example.com",
+                "subject": "Quotation",
+                "body": "Hello",
+                "attachments": [
+                    {
+                        "filename": "big.pdf",
+                        "mime_type": "application/pdf",
+                        "data": "A" * (16 * 1024 * 1024 * 2),
+                    }
+                ],
+            },
+        )
+        assert response.status_code == 422
+        assert transport == []
+
+    def test_an_oversized_body_is_refused(self, client, connected, transport):
+        response = client.post(
+            "/api/gmail/send",
+            json={"to": "customer@example.com", "subject": "Quotation", "body": "x" * 300_000},
+        )
+        assert response.status_code == 422
+        assert transport == []
+
+    def test_an_unknown_field_is_refused(self, client, connected, transport):
+        """A typo must not be silently dropped on the way to a customer."""
+        response = client.post(
+            "/api/gmail/send",
+            json={"to": "customer@example.com", "subject": "Quotation", "body": "Hi", "bcc": "a@b.com"},
+        )
+        assert response.status_code == 422
+        assert transport == []
+
+    def test_disconnected_gmail_returns_401(self, client, monkeypatch):
+        monkeypatch.setattr("app.is_connected", lambda: False)
+        response = client.post(
+            "/api/gmail/send",
+            json={"to": "customer@example.com", "subject": "Quotation", "body": "Hi"},
+        )
+        assert response.status_code == 401
+
+    def test_an_upstream_failure_never_reaches_the_client(self, client, connected, monkeypatch):
+        def explode(**kwargs):
+            raise RuntimeError("token refresh failed for sk-live-DO-NOT-LEAK-abc123")
+
+        monkeypatch.setattr("app.send_email", explode)
+        response = client.post(
+            "/api/gmail/send",
+            json={"to": "customer@example.com", "subject": "Quotation", "body": "Hi"},
+        )
+        assert response.status_code == 502
+        assert "DO-NOT-LEAK" not in response.text
+        assert "try again" in response.json()["detail"].lower()
+
+    def test_a_rejected_message_is_a_422_and_says_not_to_retry(self, client, connected, monkeypatch):
+        from services.gmail_service import GmailSendError
+
+        def reject(**kwargs):
+            raise GmailSendError(
+                "Gmail rejected the message.",
+                code="send_rejected",
+                retryable=False,
+                safe_detail="HttpError status=403 insufficientPermissions",
+            )
+
+        monkeypatch.setattr("app.send_email", reject)
+        response = client.post(
+            "/api/gmail/send",
+            json={"to": "customer@example.com", "subject": "Quotation", "body": "Hi"},
+        )
+        assert response.status_code == 422
+        assert response.json()["code"] == "send_rejected"
+        assert "403" not in response.text
+
+    def test_a_retryable_failure_is_a_502(self, client, connected, monkeypatch):
+        from services.gmail_service import GmailSendError
+
+        def flaky(**kwargs):
+            raise GmailSendError(
+                "Gmail is unavailable.",
+                code="send_unavailable",
+                retryable=True,
+                safe_detail="HttpError status=503 backendError",
+            )
+
+        monkeypatch.setattr("app.send_email", flaky)
+        response = client.post(
+            "/api/gmail/send",
+            json={"to": "customer@example.com", "subject": "Quotation", "body": "Hi"},
+        )
+        assert response.status_code == 502
+        assert "503" not in response.text
+
+    def test_the_recipient_address_is_not_logged(self, client, connected, transport, caplog):
+        with caplog.at_level("INFO"):
+            client.post(
+                "/api/gmail/send",
+                json={
+                    "to": "very-private-customer@example.com",
+                    "subject": "Confidential quotation 12345",
+                    "body": "SECRET-BODY-CONTENT",
+                },
+            )
+        logged = "\n".join(record.getMessage() for record in caplog.records)
+        assert "very-private-customer@example.com" not in logged
+        assert "SECRET-BODY-CONTENT" not in logged
+        assert "Confidential quotation" not in logged

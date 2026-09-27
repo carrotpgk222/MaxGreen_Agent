@@ -99,6 +99,21 @@ _BASE_SCHEMA: tuple[str, ...] = (
         created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     )
     """,
+    # Generated documents (a quotation the operator typed out, rather than one that
+    # arrived by email) have no source attachment in Gmail to re-read at send time, so
+    # the rendered PDF is stored against the document. Bytes live here and not in
+    # outbound_documents so that listing documents never has to page through them.
+    """
+    CREATE TABLE IF NOT EXISTS document_attachments (
+        attachment_id TEXT PRIMARY KEY,
+        document_id TEXT NOT NULL,
+        filename TEXT NOT NULL,
+        mime_type TEXT NOT NULL DEFAULT 'application/octet-stream',
+        byte_size INTEGER NOT NULL DEFAULT 0,
+        content BLOB,
+        created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )
+    """,
 )
 
 _INDEXES: tuple[str, ...] = (
@@ -109,6 +124,7 @@ _INDEXES: tuple[str, ...] = (
     "CREATE INDEX IF NOT EXISTS idx_documents_state ON outbound_documents(state)",
     "CREATE INDEX IF NOT EXISTS idx_documents_gmail_message ON outbound_documents(gmail_message_id)",
     "CREATE INDEX IF NOT EXISTS idx_workflow_events_document ON workflow_events(document_id, event_id)",
+    "CREATE INDEX IF NOT EXISTS idx_document_attachments_document ON document_attachments(document_id)",
 )
 
 

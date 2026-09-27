@@ -58,6 +58,17 @@ class GmailSendError(RuntimeError):
         self.retryable = retryable
         self.safe_detail = safe_detail or message
 
+    @property
+    def message(self) -> str:
+        """The operator-facing description.
+
+        Distinct from ``safe_detail`` on purpose: this is the sentence shown to whoever
+        pressed Send, and it never contains upstream text. Reading it as ``str(exc)`` works
+        but invites conflating the two, which is how an upstream response body ends up in
+        a browser.
+        """
+        return str(self.args[0]) if self.args else "The email could not be sent."
+
 
 class GmailReadError(RuntimeError):
     """A Gmail read failed in a way the caller must handle explicitly."""

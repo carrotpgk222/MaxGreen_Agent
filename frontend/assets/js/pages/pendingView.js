@@ -12,6 +12,9 @@ import { createDefaultInvoice, createInvoiceItem } from '../core/invoiceUtils.js
 import { getCompanies } from '../core/customerStorage.js'
 import { getQueryParam } from '../core/utils.js'
 import { attachmentNames } from '../core/attachmentUtils.js'
+import {
+  sendEmail
+} from '../core/documentSend.js'
 
 import {
   createDefaultQuotation,
@@ -1986,97 +1989,29 @@ if (
 
 
         // ====================================================
-        // SEND THROUGH BACKEND
+        // SEND
         // ====================================================
 
-        const response =
-          await fetch(
-            'http://127.0.0.1:8000/api/gmail/send',
+        // One step: compose, click Send, sent. The backend validates the recipient,
+        // subject, body and attachment types on the way through.
+        const sent =
+          await sendEmail(
             {
 
-              method: 'POST',
-
-              headers: {
-                'Content-Type':
-                  'application/json'
-              },
-
-              body:
-                JSON.stringify({
-
-                  to,
-
-                  subject,
-
-                  body,
-
-                  attachments:
-                    generatedAttachments
-
-                })
+              to,
+              subject,
+              body,
+              attachments:
+                generatedAttachments
 
             }
           )
 
 
 
-        // ====================================================
-        // READ BACKEND RESPONSE
-        // ====================================================
+        const result =
+          sent
 
-        let result
-
-
-        try {
-
-          result =
-            await response.json()
-
-        }
-
-        catch {
-
-          result = {}
-
-        }
-
-
-
-        // ====================================================
-        // BACKEND / GMAIL ERROR
-        // ====================================================
-
-        if (!response.ok) {
-
-          throw new Error(
-
-            result.detail ||
-
-            result.error ||
-
-            'Unable to send email.'
-
-          )
-
-        }
-
-
-
-        if (
-          result.ok !== true
-        ) {
-
-          throw new Error(
-
-            result.detail ||
-
-            result.error ||
-
-            'Gmail did not confirm the email was sent.'
-
-          )
-
-        }
 
 
 
@@ -2185,21 +2120,21 @@ if (
         // ====================================================
 
         if (
-          result.message_id
+          result.messageId
         ) {
 
           email.gmailSentMessageId =
-            result.message_id
+            result.messageId
 
         }
 
 
         if (
-          result.thread_id
+          result.threadId
         ) {
 
           email.gmailSentThreadId =
-            result.thread_id
+            result.threadId
 
         }
 
@@ -2286,14 +2221,34 @@ if (
         // FAILURE
         // ====================================================
 
+        // ====================================================
+        // FAILURE
+        // ====================================================
+
         console.error(
           'Email sending failed:',
           error
         )
 
 
+        // A 5xx means nothing was sent, so retrying is safe. A 4xx means the request
+        // itself was refused and will fail identically, so say which it was rather than
+        // implying a retry is always the answer.
+        const retryable =
+          error.retryable === true
+
+        const requestId =
+          error.requestId
+            ? `\n\nRequest ID: ${error.requestId}`
+            : ''
+
+
         window.alert(
-          `Email was not sent.\n\n${error.message}`
+          retryable
+
+            ? `Email was not sent.\n\n${error.message}\n\nNothing was sent, so it is safe to try again.${requestId}`
+
+            : `Email was not sent.\n\n${error.message}${requestId}`
         )
 
 

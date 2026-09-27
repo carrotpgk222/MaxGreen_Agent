@@ -14,7 +14,13 @@ export async function apiJson(path, options = {}) {
   }
 
   if (!response.ok) {
-    throw new Error(payload.detail || `HTTP ${response.status}`)
+    // `code` is the stable, machine-readable failure identifier and is carried on the
+    // error so callers can branch on it. `detail` is the human message.
+    const error = new Error(payload.detail || `HTTP ${response.status}`)
+    error.code = payload.code || String(response.status)
+    error.requestId = payload.request_id || ''
+    error.status = response.status
+    throw error
   }
 
   return payload

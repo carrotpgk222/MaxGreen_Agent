@@ -7,6 +7,8 @@ approval, and that one document can never be sent twice.
 
 from __future__ import annotations
 
+import base64
+
 import pytest
 
 from services import gmail_service
@@ -539,3 +541,136 @@ class TestSendTransportContract:
             ws.send_document(document["document_id"], actor="operator@example.com")
         assert ws.get_document(document["document_id"])["state"] == "Send Failed"
 
+
+
+class TestGeneratedAttachments:
+    """A PDF rendered in the browser has no Gmail source, so its bytes are stored.
+
+    Before this, the frontend generated the document PDF and posted it to an unguarded
+    endpoint that dropped it on the floor. The bytes now travel with the document and are
+    attached at send time, without opening a path around the approval gate.
+    """
+
+    PDF_BYTES = b"%PDF-1.4\n% generated quotation\n%%EOF"
+
+    def _pdf(self) -> str:
+        return base64.b64encode(self.PDF_BYTES).decode("ascii")
+
+    def test_a_generated_pdf_is_attached_to_the_send(self, temp_db, sent_calls):
+        document = make_approved_document(
+            attachments=[
+                {"filename": "MGQ-1.pdf", "mime_type": "application/pdf", "data": self._pdf()}
+            ]
+        )
+        result = ws.send_document(document["document_id"], actor="operator@example.com")
+
+        assert result["ok"] is True
+        assert len(sent_calls) == 1
+        attachments = sent_calls[0]["attachments"]
+        assert len(attachments) == 1
+        assert attachments[0]["filename"] == "MGQ-1.pdf"
+        assert attachments[0]["data"] == self.PDF_BYTES
+
+    def test_the_base64_body_never_reaches_the_stored_payload(self, temp_db):
+        """The payload is returned by API calls and written near the audit trail."""
+        document = make_document(
+            attachments=[
+                {"filename": "MGQ-1.pdf", "mime_type": "application/pdf", "data": self._pdf()}
+            ]
+        )
+        stored = ws.get_document(document["document_id"])
+        assert self.PDF_BYTES.decode() not in str(stored)
+        assert self._pdf() not in str(stored)
+        # The descriptor still names the file, so the UI can show what will be attached.
+        assert stored["attachments"][0]["filename"] == "MGQ-1.pdf"
+
+    def test_a_generated_pdf_still_needs_approval(self, temp_db, sent_calls):
+        document = make_document(
+            attachments=[
+                {"filename": "MGQ-1.pdf", "mime_type": "application/pdf", "data": self._pdf()}
+            ]
+        )
+        with pytest.raises(ws.WorkflowError) as excinfo:
+            ws.send_document(document["document_id"], actor="operator@example.com")
+        assert excinfo.value.code == "not_approved"
+        assert sent_calls == []
+
+    def test_a_generated_pdf_is_sanitised_before_storage(self, temp_db, sent_calls):
+        document = make_approved_document(
+            attachments=[
+                {
+                    "filename": "../../../etc/passwd.pdf",
+                    "mime_type": "application/pdf",
+                    "data": self._pdf(),
+                }
+            ]
+        )
+        ws.send_document(document["document_id"], actor="operator@example.com")
+        assert sent_calls[0]["attachments"][0]["filename"] == "passwd.pdf"
+
+    def test_an_active_content_type_is_refused(self, temp_db):
+        """HTML and SVG are how an attachment becomes active content in a mail client."""
+        for mime in ("text/html", "image/svg+xml", "application/x-msdownload"):
+            with pytest.raises(ValidationError) as excinfo:
+                make_document(
+                    attachments=[
+                        {"filename": "x", "mime_type": mime, "data": self._pdf()}
+                    ]
+                )
+            assert excinfo.value.code == "unsupported_type"
+
+    def test_a_non_base64_body_is_refused(self, temp_db):
+        with pytest.raises(ValidationError) as excinfo:
+            make_document(
+                attachments=[{"filename": "x.pdf", "mime_type": "application/pdf", "data": "not base64!!!"}]
+            )
+        assert excinfo.value.code == "invalid_encoding"
+
+    def test_an_empty_attachment_is_refused(self, temp_db):
+        with pytest.raises(ValidationError) as excinfo:
+            make_document(
+                attachments=[{"filename": "x.pdf", "mime_type": "application/pdf", "data": "  "}]
+            )
+        assert excinfo.value.code == "empty_attachment"
+
+    def test_an_oversized_attachment_is_refused_before_decoding_pressure(self, temp_db):
+        with pytest.raises(ValidationError) as excinfo:
+            make_document(
+                attachments=[
+                    {
+                        "filename": "big.pdf",
+                        "mime_type": "application/pdf",
+                        "data": "A" * (16 * 1024 * 1024 * 2),
+                    }
+                ]
+            )
+        assert excinfo.value.code == "too_large"
+
+    def test_too_many_attachments_are_refused(self, temp_db):
+        with pytest.raises(ValidationError) as excinfo:
+            make_document(
+                attachments=[
+                    {"filename": f"f{i}.pdf", "mime_type": "application/pdf", "data": self._pdf()}
+                    for i in range(11)
+                ]
+            )
+        assert excinfo.value.code == "too_many"
+
+    def test_a_missing_stored_attachment_fails_the_send_without_stranding_it(
+        self, temp_db, sent_calls
+    ):
+        """Attachment resolution happens after the claim, so it must release the row."""
+        document = make_approved_document(
+            attachments=[
+                {"filename": "MGQ-1.pdf", "mime_type": "application/pdf", "data": self._pdf()}
+            ]
+        )
+        with ws.get_connection() as conn:
+            conn.execute("DELETE FROM document_attachments")
+
+        with pytest.raises(ws.WorkflowError) as excinfo:
+            ws.send_document(document["document_id"], actor="operator@example.com")
+
+        assert excinfo.value.code == "attachment_missing"
+        assert sent_calls == []
+        assert ws.get_document(document["document_id"])["state"] == "Send Failed"
