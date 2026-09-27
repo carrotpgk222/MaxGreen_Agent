@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MaxGreen Agent — Settings</title>
+  <link rel="icon" href="data:," />
+  <link rel="stylesheet" href="./assets/css/base.css" />
+  <link rel="stylesheet" href="./assets/css/list-pages.css" />
+</head>
+<body>
+  <main class="page">
+    <a class="back-link" href="./index.html">← Back to Dashboard</a>
+    <header class="page-header"><div><p class="eyebrow">Configuration</p><h1 class="page-title">Settings</h1><p class="page-description">Integration and workflow settings for the prototype.</p></div></header>
+    <section class="settings-grid">
+      <article class="card settings-card"><h2>Gmail Integration</h2><p>Not connected yet. Gmail reading and sent-mail monitoring will be added later.</p></article>
+      <article class="card settings-card"><h2>LLM Gateway</h2><p>Not connected yet. The gateway URL, API key and model will later be loaded from environment configuration on the backend.</p></article>
+      <article class="card settings-card"><h2>Business Profile</h2><p>MaxGreen Contractor Pte Ltd details and PDF template information will be configured here later.</p></article>
+      <article class="card settings-card"><h2>Demo Data</h2><p>The clean demo dataset is stored in <code>assets/data/demo-data.json</code>. Runtime edits are kept in browser storage because Live Server cannot write back to a JSON file.</p><p>Data version: <strong id="demo-data-version">—</strong></p><button class="btn" id="reset-demo" type="button">Reset Demo Data</button></article>
+    </section>
+  </main>
+  <script type="module" src="./assets/js/pages/settings.js"></script>
+</body>
+</html>

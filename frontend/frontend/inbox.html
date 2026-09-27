@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MaxGreen Agent — Inbox</title>
+  <link rel="icon" href="data:," />
+  <link rel="stylesheet" href="./assets/css/base.css" />
+  <link rel="stylesheet" href="./assets/css/inbox.css" />
+</head>
+
+<body>
+  <main class="page">
+    <a class="back-link" href="./index.html">← Back to Dashboard</a>
+
+    <header class="page-header">
+      <div>
+        <p class="eyebrow">Email Processing</p>
+        <h1 class="page-title">Inbox</h1>
+        <p class="page-description">Real Gmail routed by Claude. Quotation, Invoice & DO, and Others stay here; Supplier
+          Payable is routed to its dashboard page.</p>
+      </div>
+    </header>
+
+    <section class="card inbox-card">
+      <div class="inbox-toolbar">
+        <div>
+          <strong>Real Gmail Inbox</strong>
+          <span class="sync-status" id="sync-status">Loading stored Gmail messages…</span>
+        </div>
+        <div class="inbox-actions">
+          <button class="btn" id="classify-inbox" type="button">Classify Unclassified</button>
+          <button class="btn btn-primary" id="sync-inbox" type="button">Sync Gmail</button>
+        </div>
+      </div>
+
+      <div class="inbox-filters">
+        <div class="field">
+          <label for="inbox-search">Search</label>
+          <input id="inbox-search" type="search" placeholder="Search sender email" />
+        </div>
+
+        <div class="field">
+          <label for="category-filter">Category</label>
+          <select id="category-filter">
+            <option value="All">All</option>
+            <option value="Unclassified">Unclassified</option>
+            <option value="Quotation">Quotation</option>
+            <option value="Invoice &amp; DO">Invoice &amp; DO</option>
+            <option value="Others">Others</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="date-filter">Date</label>
+          <select id="date-filter">
+            <option value="All">All dates</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="tabs" role="tablist" aria-label="Inbox party type">
+        <button class="tab active" type="button" data-party="customer">Customers</button>
+        <button class="tab" type="button" data-party="supplier">Suppliers</button>
+      </div>
+
+      <div class="table-wrap">
+        <table class="inbox-table">
+          <thead>
+            <tr>
+              <th>From</th>
+              <th>Subject</th>
+              <th>Category</th>
+              <th>Received</th>
+              <th class="view-cell">View</th>
+            </tr>
+          </thead>
+          <tbody id="inbox-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="./assets/js/pages/inbox.js"></script>
+</body>
+
+</html>

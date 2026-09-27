@@ -1,0 +1,15 @@
+
+
+/* Extracted from purchase-order-view.html */
+    body{background:#eef0f3}
+    .po-page{width:min(100% - 32px,900px);margin:28px auto}
+    .po-paper{background:#fff;border:1px solid #b8bdc7;min-height:1050px;padding:44px 50px;box-shadow:0 10px 28px rgba(0,0,0,.06)}
+    .po-header{display:flex;justify-content:space-between;border-bottom:2px solid #333;padding-bottom:14px}
+    .po-header h1{margin:0;font-size:28px}.po-label{font-weight:700;font-size:14px;color:#555}
+    .po-meta{display:grid;grid-template-columns:1fr 1fr;gap:8px 32px;margin:22px 0 34px}
+    .po-table{width:100%;border-collapse:collapse}.po-table th,.po-table td{border:1px solid #555;padding:9px;vertical-align:top}
+    .po-table th{background:#f1f1f1}.po-description{min-height:430px;white-space:pre-wrap}
+    .po-note{margin-top:20px;padding-top:14px;border-top:1px solid #555;font-weight:700;white-space:pre-wrap}
+  
+.po-table th:first-child { width: 70px; }
+.po-table th:last-child { width: 130px; }

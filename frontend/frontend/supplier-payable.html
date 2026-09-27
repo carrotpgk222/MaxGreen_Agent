@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>MaxGreen Agent — Supplier Payable</title>
+
+  <link rel="icon" href="data:," />
+  <link rel="stylesheet" href="./assets/css/base.css" />
+
+  <link rel="stylesheet" href="./assets/css/supplier-payable.css" />
+</head>
+
+
+<body>
+
+  <main class="page supplier-payable-page">
+
+
+    <!-- =====================================================
+             BACK
+        ====================================================== -->
+
+    <a class="back-link" href="./index.html">
+      ← Back to Dashboard
+    </a>
+
+
+    <!-- =====================================================
+             HEADER
+        ====================================================== -->
+
+    <header class="supplier-payable-header">
+
+      <h1 class="page-title">
+        Supplier Payable
+      </h1>
+
+      <!--
+                Existing JS can still update this text.
+            -->
+
+      <p id="supplier-payable-status">
+        Loading real Supplier Payable messages…
+      </p>
+
+    </header>
+
+
+    <!-- =====================================================
+             SEARCH
+        ====================================================== -->
+
+    <section class="supplier-toolbar" aria-label="Supplier payable filters">
+
+      <div class="field supplier-search-field">
+
+        <label for="supplier-payable-search">
+          Search
+        </label>
+
+        <input id="supplier-payable-search" type="search" placeholder="Search..." autocomplete="off" />
+
+      </div>
+
+    </section>
+
+
+    <!-- =====================================================
+             TABLE
+        ====================================================== -->
+
+    <section class="supplier-table-card">
+
+      <div class="table-wrap">
+
+        <table class="supplier-payable-table">
+
+          <thead>
+
+            <tr>
+              <th>From</th>
+              <th>Subject</th>
+              <th>No. mails</th>
+              <th>Date</th>
+              <th>Priority</th>
+              <th>Status</th>
+            </tr>
+
+          </thead>
+
+
+          <!--
+                        Existing supplierPayable.js still
+                        generates all rows here.
+                    -->
+
+          <tbody id="supplier-payable-body"></tbody>
+
+        </table>
+
+      </div>
+
+    </section>
+
+
+    <!-- =====================================================
+             PRIORITY RULE
+        ====================================================== -->
+
+    <p class="supplier-rule-note">
+      Priority defaults from reminder frequency:
+      1–2 mails = Low,
+      3–4 = Medium,
+      5+ = High.
+    </p>
+
+  </main>
+
+
+  <!-- =========================================================
+         EXISTING JAVASCRIPT
+    ========================================================== -->
+
+  <script type="module" src="./assets/js/pages/supplierPayable.js"></script>
+
+</body>
+
+</html>

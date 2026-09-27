@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>MaxGreen Agent — Customer Receivable</title>
+
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="./assets/css/base.css" />
+
+    <link rel="stylesheet" href="./assets/css/customer-receivable.css" />
+</head>
+
+
+<body>
+
+    <main class="receivable-page">
+
+        <!-- BACK -->
+
+        <a class="back-link" href="./index.html">
+            ← Back to Dashboard
+        </a>
+
+
+        <!-- TITLE -->
+
+        <h1>Customer Receivable</h1>
+
+
+        <!-- =====================================================
+             FILTERS
+        ====================================================== -->
+
+        <section class="receivable-controls">
+
+            <div class="field">
+
+                <label for="receivable-search">
+                    Search
+                </label>
+
+                <input id="receivable-search" placeholder="Search invoice or company" />
+
+            </div>
+
+
+            <div class="field">
+
+                <label for="receivable-status-filter">
+                    Status
+                </label>
+
+                <select id="receivable-status-filter">
+
+                    <option>All</option>
+                    <option>Paid</option>
+                    <option>Not Fully Paid</option>
+                    <option>Not Paid</option>
+
+                </select>
+
+            </div>
+
+
+            <div class="field">
+
+                <label for="receivable-date-filter">
+                    Date
+                </label>
+
+                <select id="receivable-date-filter">
+
+                    <option value="All">
+                        All dates
+                    </option>
+
+                </select>
+
+            </div>
+
+        </section>
+
+
+        <!-- =====================================================
+             TABLE
+        ====================================================== -->
+
+        <section class="receivable-table-wrap">
+
+            <table class="receivable-table">
+
+                <thead>
+
+                    <tr>
+                        <th>Invoice No.</th>
+                        <th>Company</th>
+                        <th>Sent Email on</th>
+                        <th>Balance</th>
+                        <th>Status</th>
+                    </tr>
+
+                </thead>
+
+
+                <!--
+                    IMPORTANT:
+                    Your existing JS still populates this tbody.
+                -->
+
+                <tbody id="receivable-body"></tbody>
+
+            </table>
+
+        </section>
+
+
+        <!-- =====================================================
+             FOOTER
+        ====================================================== -->
+
+        <div class="receivable-footer">
+
+            <button class="btn soa-generate-button" id="open-soa" type="button">
+                Generate SOA
+            </button>
+
+        </div>
+
+    </main>
+
+
+    <!-- =========================================================
+         SOA MODAL
+    ========================================================== -->
+
+    <div class="soa-modal" id="soa-modal" hidden>
+
+        <div class="soa-backdrop" data-close-soa></div>
+
+
+        <section class="soa-card">
+
+            <header>
+
+                <h2>SOA</h2>
+
+                <button class="soa-x" type="button" data-close-soa aria-label="Close">
+                    ×
+                </button>
+
+            </header>
+
+
+            <!-- COMPANY -->
+
+            <div class="field soa-company-field">
+
+                <label for="soa-company-search">
+                    Company
+                </label>
+
+                <input id="soa-company-search" placeholder="Search company" autocomplete="off" />
+
+                <div id="soa-company-options" class="soa-company-options" hidden></div>
+
+            </div>
+
+
+            <!-- DATES -->
+
+            <div class="soa-date-row">
+
+                <div class="field">
+
+                    <label for="soa-from">
+                        From
+                    </label>
+
+                    <input id="soa-from" type="date" />
+
+                </div>
+
+
+                <div class="field">
+
+                    <label for="soa-to">
+                        To
+                    </label>
+
+                    <input id="soa-to" type="date" />
+
+                </div>
+
+            </div>
+
+
+            <!-- ERROR -->
+
+            <p id="soa-error" class="soa-error" hidden></p>
+
+
+            <!-- GENERATE -->
+
+            <button class="btn btn-primary soa-save" id="generate-soa" type="button">
+                Generate and save to Pending
+            </button>
+
+        </section>
+
+    </div>
+
+
+    <!-- =========================================================
+         EXISTING FUNCTIONALITY
+         DO NOT REMOVE
+    ========================================================== -->
+
+    <script type="module" src="./assets/js/pages/customerReceivable.js"></script>
+
+</body>
+
+</html>

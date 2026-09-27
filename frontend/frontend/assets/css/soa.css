@@ -1,0 +1,150 @@
+.soa-pdf-shell {
+  margin-top: 14px;
+  padding: 18px;
+  background: #e8e8e8;
+}
+
+.soa-paper {
+  width: min(100%, 980px);
+  min-height: 760px;
+  margin: 0 auto;
+  padding: 26px 26px 22px;
+  background: #fff;
+  border: 1px solid #555;
+  color: #111;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.soa-paper-header {
+  display: grid;
+  grid-template-columns: 1fr 130px;
+  gap: 22px;
+  align-items: start;
+}
+
+.soa-paper-header h2 {
+  margin: 0 0 2px;
+  font-family: "Times New Roman", serif;
+  font-size: 31px;
+  line-height: 1;
+}
+
+.soa-paper-header p {
+  margin: 0;
+  font-size: 10px;
+  line-height: 1.25;
+}
+
+.soa-paper-header img {
+  width: 100%;
+  max-height: 76px;
+  object-fit: contain;
+}
+
+.soa-title {
+  margin-top: 24px;
+  padding-bottom: 3px;
+  border-bottom: 2px solid #222;
+  text-align: right;
+  font-size: 27px;
+  font-weight: 800;
+}
+
+.soa-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 190px;
+  gap: 28px;
+  min-height: 150px;
+  padding: 8px 20px 0;
+  font-size: 10px;
+}
+
+.soa-to-line { line-height: 1.4; }
+.soa-head-meta { line-height: 1.35; }
+
+.soa-table,
+.soa-ageing {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 10px;
+}
+
+.soa-table th,
+.soa-ageing th,
+.soa-ageing td {
+  border: 1px solid #333;
+  padding: 4px 7px;
+}
+
+/* Match the supplied SOA: the header is boxed, but transaction rows
+   themselves are open (no internal row/column grid). */
+.soa-table th {
+  text-align: center;
+  font-weight: 700;
+}
+
+.soa-table tbody td {
+  border: 0;
+  padding: 4px 7px;
+  font-weight: 400;
+}
+
+.soa-table .soa-marker-col,
+.soa-table td:first-child {
+  width: 4%;
+  padding: 0;
+}
+
+.soa-table th:nth-child(2) { width: 16%; }
+.soa-table th:nth-child(3) { width: 30%; }
+.soa-table th:nth-child(4),
+.soa-table th:nth-child(5),
+.soa-table th:nth-child(6) { width: 16.66%; }
+
+.soa-table td:nth-child(2) { text-align: center; }
+.soa-table td:nth-child(n+4) { text-align: right; }
+
+.soa-table tfoot td {
+  border: 1px solid #333;
+  padding: 4px 7px;
+  font-weight: 800;
+  text-align: right;
+}
+
+.soa-ageing-title {
+  margin-top: 35px;
+  text-align: center;
+  font-size: 10px;
+}
+
+.soa-ageing th,
+.soa-ageing td {
+  text-align: center;
+}
+
+.soa-ageing th {
+  font-weight: 500;
+}
+
+.soa-ageing-total td {
+  font-weight: 500;
+  text-align: center;
+}
+
+.soa-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  margin-top: 180px;
+  font-size: 9px;
+}
+
+.soa-footer span:last-child {
+  text-align: right;
+}
+
+@media (max-width: 900px) {
+  .soa-pdf-shell { padding: 8px; overflow-x: auto; }
+  .soa-paper { width: 900px; }
+}

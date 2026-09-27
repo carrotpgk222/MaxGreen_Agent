@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gmail Attachment</title>
+  <link rel="icon" href="data:," />
+  <link rel="stylesheet" href="./assets/css/base.css" />
+  <link rel="stylesheet" href="./assets/css/attachment-viewer.css" />
+</head>
+<body>
+  <main class="attachment-view-page">
+    <section class="attachment-view-card">
+      <p class="eyebrow">GMAIL ATTACHMENT</p>
+      <h1 class="page-title" id="attachment-name">Attachment</h1>
+      <p class="page-description">This is the mock attachment viewer. When Gmail is connected, the attachment URL will open the actual Gmail file in this tab.</p>
+      <div class="attachment-demo">
+        <div>
+          <strong id="attachment-preview-name">Attachment</strong>
+          <p>Preview placeholder for local prototype data.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+  <script>
+    const name = new URLSearchParams(location.search).get('name') || 'Attachment'
+    document.getElementById('attachment-name').textContent = name
+    document.getElementById('attachment-preview-name').textContent = name
+    document.title = `${name} — Attachment`
+  </script>
+</body>
+</html>

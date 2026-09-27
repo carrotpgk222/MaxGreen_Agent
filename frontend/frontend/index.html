@@ -1,0 +1,377 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>MaxGreen Agent — Dashboard</title>
+
+  <link rel="icon" href="data:," />
+  <link rel="stylesheet" href="./assets/css/base.css" />
+
+  <link rel="stylesheet" href="./assets/css/dashboard.css" />
+</head>
+
+
+<body class="dashboard-page">
+
+  <main class="page">
+
+    <!-- ===================== HEADER ===================== -->
+
+    <header class="dashboard-header">
+
+      <div class="dashboard-heading">
+        <h1>Dashboard</h1>
+        <p>Here's what's happening with your business today.</p>
+      </div>
+
+      <div class="dashboard-actions">
+
+        <div class="search-wrapper">
+
+          <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="8"></circle>
+            <path d="m21 21-4.35-4.35"></path>
+          </svg>
+
+          <input class="dashboard-search" type="search" placeholder="Search..." aria-label="Search" />
+
+        </div>
+
+
+        <a class="settings-link" href="./settings.html" aria-label="Settings" title="Settings">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path
+              d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1.08-1.5 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6h.08A1.65 1.65 0 0 0 10 3.09V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9v.08A1.65 1.65 0 0 0 20.91 10H21a2 2 0 1 1 0 4h-.09A1.65 1.65 0 0 0 19.4 15z">
+            </path>
+          </svg>
+        </a>
+
+      </div>
+
+    </header>
+
+
+    <!-- ===================== GRID ===================== -->
+
+    <div class="dashboard-grid">
+
+
+      <!-- ================= LEFT ================= -->
+
+      <section class="dashboard-left" aria-label="Dashboard shortcuts">
+
+        <!-- TOP CARDS -->
+
+        <div class="dashboard-top-cards">
+
+
+          <!-- INBOX -->
+
+          <a class="dashboard-stat stat-inbox" href="./inbox.html" id="inbox-link">
+
+            <div class="stat-header">
+
+              <div class="stat-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M4 4h16v16H4z"></path>
+                  <path d="M4 13h4l2 3h4l2-3h4"></path>
+                </svg>
+              </div>
+
+              <span class="stat-arrow">›</span>
+
+            </div>
+
+            <div class="dashboard-stat-number" id="count-inbox">0</div>
+
+            <div class="dashboard-stat-title">
+              Inbox
+            </div>
+
+            <div class="dashboard-stat-subtitle">
+              To be Reviewed
+            </div>
+
+          </a>
+
+
+          <!-- CUSTOMER RECEIVABLE -->
+
+          <a class="dashboard-stat stat-receivable" href="./customer-receivable.html">
+
+            <div class="stat-header">
+
+              <div class="stat-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="8" r="4"></circle>
+                  <path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"></path>
+                </svg>
+              </div>
+
+              <span class="stat-arrow">›</span>
+
+            </div>
+
+            <div class="dashboard-stat-number" id="count-receivable">0</div>
+
+            <div class="dashboard-stat-title">
+              Customer
+            </div>
+
+            <div class="dashboard-stat-subtitle">
+              Receivable
+            </div>
+
+          </a>
+
+
+          <!-- SUPPLIER -->
+
+          <a class="dashboard-stat stat-payable" href="./supplier-payable.html">
+
+            <div class="stat-header">
+
+              <div class="stat-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="3" width="18" height="6" rx="1"></rect>
+                  <rect x="3" y="9" width="18" height="6" rx="1"></rect>
+                  <rect x="3" y="15" width="18" height="6" rx="1"></rect>
+                </svg>
+              </div>
+
+              <span class="stat-arrow">›</span>
+
+            </div>
+
+            <div class="dashboard-stat-number" id="count-payable">0</div>
+
+            <div class="dashboard-stat-title">
+              Supplier
+            </div>
+
+            <div class="dashboard-stat-subtitle">
+              Payable
+            </div>
+
+          </a>
+
+        </div>
+
+
+        <!-- MIDDLE CARDS -->
+
+        <div class="dashboard-middle-cards">
+
+
+          <!-- PENDING -->
+
+          <a class="dashboard-stat stat-pending" href="./pending.html">
+
+            <div class="stat-header">
+
+              <div class="stat-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="9"></circle>
+                  <path d="M12 7v5l3 2"></path>
+                </svg>
+              </div>
+
+              <span class="stat-arrow">›</span>
+
+            </div>
+
+            <div class="dashboard-stat-number" id="count-pending">0</div>
+
+            <div class="dashboard-stat-title">
+              Pending
+            </div>
+
+            <div class="dashboard-stat-subtitle">
+              Tasks in queue
+            </div>
+
+          </a>
+
+
+          <!-- COMPLETED -->
+
+          <a class="dashboard-stat stat-completed" href="./completed.html">
+
+            <div class="stat-header">
+
+              <div class="stat-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="9"></circle>
+                  <path d="m8 12 3 3 5-6"></path>
+                </svg>
+              </div>
+
+              <span class="stat-arrow">›</span>
+
+            </div>
+
+            <div class="dashboard-stat-number" id="count-completed">0</div>
+
+            <div class="dashboard-stat-title">
+              Completed
+            </div>
+
+            <div class="dashboard-stat-subtitle">
+              Tasks done
+            </div>
+
+          </a>
+
+        </div>
+
+
+        <!-- ALL CUSTOMERS -->
+
+        <a class="all-customers-card" href="./customers.html">
+
+          <div class="all-customers-left">
+
+            <span class="all-customers-icon">
+
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+              </svg>
+
+            </span>
+
+            <span>All Customers</span>
+
+          </div>
+
+          <span class="all-customers-arrow">
+            ›
+          </span>
+
+        </a>
+
+      </section>
+
+
+      <!-- ================= RECEIVABLE ================= -->
+
+      <section class="receivable-card" aria-label="Receivable amount">
+
+        <div class="receivable-header">
+
+          <div>
+            <h2>Receivable Amount</h2>
+            <p>Outstanding payment breakdown</p>
+          </div>
+
+          <button class="receivable-menu" type="button" aria-label="More options">
+            •••
+          </button>
+
+        </div>
+
+
+        <!-- MONEY -->
+
+        <div class="money-summary">
+
+          <div class="money-block awaiting">
+
+            <strong id="receivable-total">
+              0.00
+            </strong>
+
+            <span>
+              awaiting payment
+            </span>
+
+          </div>
+
+
+          <div class="divider" aria-hidden="true"></div>
+
+
+          <div class="money-block overdue">
+
+            <strong id="receivable-overdue">
+              0.00
+            </strong>
+
+            <span>
+              overdue
+            </span>
+
+          </div>
+
+        </div>
+
+
+        <!-- CHART -->
+
+        <div class="chart-area">
+
+          <div class="chart-container">
+
+
+            <!-- Y AXIS -->
+            <div class="chart-y-axis" id="receivable-y-axis">
+              <span>0</span>
+              <span>0</span>
+              <span>0</span>
+              <span>0</span>
+              <span>0</span>
+            </div>
+
+            <!-- BARS -->
+            <div class="chart">
+
+              <div class="chart-grid-lines">
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+
+              <div id="receivable-chart-bars"></div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </section>
+
+    </div>
+
+  </main>
+
+
+  <!--
+        YOUR EXISTING JS IS STILL USED.
+
+        Important IDs preserved:
+        count-inbox
+        count-receivable
+        count-payable
+        count-pending
+        count-completed
+        receivable-total
+        receivable-overdue
+        inbox-link
+    -->
+
+  <script type="module" src="./assets/js/pages/dashboard.js"></script>
+
+</body>
+
+</html>

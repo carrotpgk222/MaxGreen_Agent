@@ -1,0 +1,995 @@
+{
+  "version": "v22-add-4-inbox-quotations-1",
+  "emails": [
+    {
+      "id": "quote-completed-001",
+      "partyType": "customer",
+      "subject": "Quotation - Glass Replacement Works",
+      "category": "Quotation",
+      "originalCategory": "Quotation",
+      "section": "completed",
+      "receivedDate": "2026-09-17",
+      "status": "Completed",
+      "body": "Completed quotation available for reference.",
+      "attachments": [],
+      "fileName": "MGQ.2026.09.17.1.pdf",
+      "amount": 2180.0,
+      "confidence": 1.0,
+      "documentId": "MGQ.2026.09.17.1",
+      "from": "cheryl@alphaengineering.sg",
+      "sentAt": "2026-09-17T10:00:00.000Z",
+      "completedAt": "2026-09-17T10:00:00.000Z",
+      "sentTo": "cheryl@alphaengineering.sg"
+    },
+    {
+      "id": "quote-completed-002",
+      "partyType": "customer",
+      "subject": "Quotation - Electrical Repair Works",
+      "category": "Quotation",
+      "originalCategory": "Quotation",
+      "section": "completed",
+      "receivedDate": "2026-09-17",
+      "status": "Completed",
+      "body": "Completed quotation available for reference.",
+      "attachments": [],
+      "fileName": "MGQ.2026.09.17.2.pdf",
+      "amount": 1635.0,
+      "confidence": 1.0,
+      "documentId": "MGQ.2026.09.17.2",
+      "from": "daniel@harbourclient.sg",
+      "sentAt": "2026-09-17T11:00:00.000Z",
+      "completedAt": "2026-09-17T11:00:00.000Z",
+      "sentTo": "daniel@harbourclient.sg"
+    },
+    {
+      "id": "quote-completed-003",
+      "partyType": "customer",
+      "subject": "Quotation - Ceiling Repair Works",
+      "category": "Quotation",
+      "originalCategory": "Quotation",
+      "section": "completed",
+      "receivedDate": "2026-09-17",
+      "status": "Completed",
+      "body": "Completed quotation available for reference.",
+      "attachments": [],
+      "fileName": "MGQ.2026.09.17.3.pdf",
+      "amount": 2016.5,
+      "confidence": 1.0,
+      "documentId": "MGQ.2026.09.17.3",
+      "from": "daniel@harbourclient.sg",
+      "sentAt": "2026-09-17T12:00:00.000Z",
+      "completedAt": "2026-09-17T12:00:00.000Z",
+      "sentTo": "daniel@harbourclient.sg"
+    },
+    {
+      "id": "quote-completed-004",
+      "partyType": "customer",
+      "subject": "Quotation - Water Heater Replacement",
+      "category": "Quotation",
+      "originalCategory": "Quotation",
+      "section": "completed",
+      "receivedDate": "2026-09-17",
+      "status": "Completed",
+      "body": "Completed quotation available for reference.",
+      "attachments": [],
+      "fileName": "MGQ.2026.09.17.4.pdf",
+      "amount": 2136.4,
+      "confidence": 1.0,
+      "documentId": "MGQ.2026.09.17.4",
+      "from": "cheryl@alphaengineering.sg",
+      "sentAt": "2026-09-17T13:00:00.000Z",
+      "completedAt": "2026-09-17T13:00:00.000Z",
+      "sentTo": "cheryl@alphaengineering.sg"
+    },
+    {
+      "id": "quote-inbox-001",
+      "partyType": "customer",
+      "subject": "Request for quotation - Office glass partition replacement",
+      "category": "Quotation",
+      "originalCategory": "Quotation",
+      "section": "inbox",
+      "receivedDate": "2026-09-18",
+      "status": "To Be Reviewed",
+      "body": "Hi, please provide a quotation for replacement of the damaged office glass partition. Kindly include labour, materials and disposal of the existing panel.",
+      "attachments": [],
+      "fileName": "MGQ.2026.09.18.1.pdf",
+      "amount": 0,
+      "confidence": 0.97,
+      "documentId": "MGQ.2026.09.18.1",
+      "from": "cheryl@alphaengineering.sg"
+    },
+    {
+      "id": "quote-inbox-002",
+      "partyType": "customer",
+      "subject": "Quotation request - Lighting replacement works",
+      "category": "Quotation",
+      "originalCategory": "Quotation",
+      "section": "inbox",
+      "receivedDate": "2026-09-18",
+      "status": "To Be Reviewed",
+      "body": "Please quote for replacement of faulty light fittings at the office and include testing and commissioning.",
+      "attachments": [],
+      "fileName": "MGQ.2026.09.18.2.pdf",
+      "amount": 0,
+      "confidence": 0.97,
+      "documentId": "MGQ.2026.09.18.2",
+      "from": "daniel@harbourclient.sg"
+    },
+    {
+      "id": "quote-inbox-003",
+      "partyType": "customer",
+      "subject": "Please quote - Pantry plumbing repair",
+      "category": "Quotation",
+      "originalCategory": "Quotation",
+      "section": "inbox",
+      "receivedDate": "2026-09-18",
+      "status": "To Be Reviewed",
+      "body": "Could you provide a quotation for repair of the leaking pantry sink, replacement of flexible hose and testing after completion?",
+      "attachments": [],
+      "fileName": "MGQ.2026.09.18.3.pdf",
+      "amount": 0,
+      "confidence": 0.97,
+      "documentId": "MGQ.2026.09.18.3",
+      "from": "kelvin.ong@alphaengineering.sg"
+    },
+    {
+      "id": "quote-inbox-004",
+      "partyType": "customer",
+      "subject": "Quotation request - Door closer replacement",
+      "category": "Quotation",
+      "originalCategory": "Quotation",
+      "section": "inbox",
+      "receivedDate": "2026-09-18",
+      "status": "To Be Reviewed",
+      "body": "Please provide your quotation to replace two defective door closers including supply, installation and adjustment.",
+      "attachments": [],
+      "fileName": "MGQ.2026.09.18.4.pdf",
+      "amount": 0,
+      "confidence": 0.97,
+      "documentId": "MGQ.2026.09.18.4",
+      "from": "joanne.teo@harbourclient.sg"
+    },
+    {
+      "id": "invdo-001",
+      "partyType": "customer",
+      "subject": "PO for glass replacement works",
+      "category": "Invoice & DO",
+      "originalCategory": "Invoice & DO",
+      "section": "inbox",
+      "receivedDate": "2026-09-18",
+      "status": "To Be Reviewed",
+      "body": "Purchase Order received. Note to Supplier: Quote Ref: MGQ.2026.09.17.1. Please prepare the Invoice and Delivery Order.",
+      "attachments": [
+        {
+          "name": "PO-ALPHA-1801.pdf",
+          "url": "./purchase-order-view.html?id=invdo-001"
+        }
+      ],
+      "fileName": "INV.2026.09.18.1.pdf + DO.2026.09.18.1.pdf",
+      "amount": 0,
+      "confidence": 0.98,
+      "documentIds": {
+        "invoice": "INV.2026.09.18.1",
+        "deliveryOrder": "DO.2026.09.18.1"
+      },
+      "from": "purchaseorders@alphaengineering.sg",
+      "purchaseOrderQuoteRefs": [
+        "MGQ.2026.09.17.1"
+      ],
+      "matchedQuotationEmailIds": [
+        "quote-completed-001"
+      ],
+      "sourceQuotationEmailId": "quote-completed-001",
+      "refQuoteDocumentId": "MGQ.2026.09.17.1"
+    },
+    {
+      "id": "invdo-002",
+      "partyType": "customer",
+      "subject": "Purchase Order - electrical and ceiling works",
+      "category": "Invoice & DO",
+      "originalCategory": "Invoice & DO",
+      "section": "inbox",
+      "receivedDate": "2026-09-18",
+      "status": "To Be Reviewed",
+      "body": "Purchase Order received. Note to Supplier: Quote Ref: MGQ.2026.09.17.2 / MGQ.2026.09.17.3. Please prepare the Invoice and Delivery Order.",
+      "attachments": [
+        {
+          "name": "PO-HARBOUR-1802.pdf",
+          "url": "./purchase-order-view.html?id=invdo-002"
+        }
+      ],
+      "fileName": "INV.2026.09.18.2.pdf + DO.2026.09.18.2.pdf",
+      "amount": 0,
+      "confidence": 0.98,
+      "documentIds": {
+        "invoice": "INV.2026.09.18.2",
+        "deliveryOrder": "DO.2026.09.18.2"
+      },
+      "from": "procurement@harbourclient.sg",
+      "purchaseOrderQuoteRefs": [
+        "MGQ.2026.09.17.2",
+        "MGQ.2026.09.17.3"
+      ],
+      "matchedQuotationEmailIds": [
+        "quote-completed-002",
+        "quote-completed-003"
+      ],
+      "sourceQuotationEmailId": "quote-completed-002",
+      "refQuoteDocumentId": "MGQ.2026.09.17.2 / MGQ.2026.09.17.3"
+    },
+    {
+      "id": "invdo-003",
+      "partyType": "customer",
+      "subject": "PO for water heater replacement",
+      "category": "Invoice & DO",
+      "originalCategory": "Invoice & DO",
+      "section": "inbox",
+      "receivedDate": "2026-09-18",
+      "status": "To Be Reviewed",
+      "body": "Purchase Order received. Note to Supplier: Quote Ref: MGQ.2026.09.17.4. Please prepare the Invoice and Delivery Order.",
+      "attachments": [
+        {
+          "name": "PO-ALPHA-1803.pdf",
+          "url": "./purchase-order-view.html?id=invdo-003"
+        }
+      ],
+      "fileName": "INV.2026.09.18.3.pdf + DO.2026.09.18.3.pdf",
+      "amount": 0,
+      "confidence": 0.98,
+      "documentIds": {
+        "invoice": "INV.2026.09.18.3",
+        "deliveryOrder": "DO.2026.09.18.3"
+      },
+      "from": "facilities@alphaengineering.sg",
+      "purchaseOrderQuoteRefs": [
+        "MGQ.2026.09.17.4"
+      ],
+      "matchedQuotationEmailIds": [
+        "quote-completed-004"
+      ],
+      "sourceQuotationEmailId": "quote-completed-004",
+      "refQuoteDocumentId": "MGQ.2026.09.17.4"
+    },
+    {
+      "id": "rp-001",
+      "partyType": "supplier",
+      "subject": "Payment reminder - subcontract glass works",
+      "category": "Request for Payment",
+      "originalCategory": "Request for Payment",
+      "section": "supplier-payable",
+      "receivedDate": "2026-09-18",
+      "status": "To Be Reviewed",
+      "body": "Outstanding payment reminder for completed subcontract works.",
+      "attachments": [],
+      "fileName": "Request for Payment - BuildCo.pdf",
+      "amount": 2850,
+      "confidence": 0.96,
+      "from": "accounts@buildco.sg",
+      "supplierCompanyId": "supplier-buildco",
+      "mailDates": [
+        "2026-09-02",
+        "2026-09-06",
+        "2026-09-10",
+        "2026-09-14",
+        "2026-09-18"
+      ],
+      "supplierPayableStatus": "Not Paid"
+    },
+    {
+      "id": "rp-002",
+      "partyType": "supplier",
+      "subject": "Payment follow-up - electrical services",
+      "category": "Request for Payment",
+      "originalCategory": "Request for Payment",
+      "section": "supplier-payable",
+      "receivedDate": "2026-09-18",
+      "status": "To Be Reviewed",
+      "body": "Follow-up on partial payment for electrical services.",
+      "attachments": [],
+      "fileName": "Request for Payment - FastWorks.pdf",
+      "amount": 1960,
+      "confidence": 0.94,
+      "from": "billing@fastworks.sg",
+      "supplierCompanyId": "supplier-fastworks",
+      "mailDates": [
+        "2026-09-08",
+        "2026-09-13",
+        "2026-09-18"
+      ],
+      "supplierPayableStatus": "Not Fully Paid"
+    }
+  ],
+  "companies": [
+    {
+      "id": "company-alpha",
+      "companyName": "Alpha Engineering Pte Ltd",
+      "type": "Client",
+      "contacts": [
+        {
+          "id": "alpha-1",
+          "name": "Ms Cheryl Tan",
+          "email": "cheryl@alphaengineering.sg",
+          "address": "21 Pioneer Road North",
+          "postal": "628467",
+          "contactNumber": "91234567"
+        },
+        {
+          "id": "alpha-2",
+          "name": "Mr Kelvin Ong",
+          "email": "kelvin.ong@alphaengineering.sg",
+          "address": "21 Pioneer Road North",
+          "postal": "628467",
+          "contactNumber": "97654321"
+        }
+      ]
+    },
+    {
+      "id": "company-harbour",
+      "companyName": "Harbour Client Pte Ltd",
+      "type": "Client",
+      "contacts": [
+        {
+          "id": "harbour-1",
+          "name": "Mr Daniel Lim",
+          "email": "daniel@harbourclient.sg",
+          "address": "18 Harbour Drive",
+          "postal": "098765",
+          "contactNumber": "92345678"
+        },
+        {
+          "id": "harbour-2",
+          "name": "Ms Joanne Teo",
+          "email": "joanne.teo@harbourclient.sg",
+          "address": "18 Harbour Drive",
+          "postal": "098765",
+          "contactNumber": "96543210"
+        }
+      ]
+    },
+    {
+      "id": "supplier-buildco",
+      "companyName": "BuildCo Engineering Pte Ltd",
+      "type": "Supplier",
+      "contacts": [
+        {
+          "id": "buildco-1",
+          "name": "Mr Aaron Lee",
+          "email": "accounts@buildco.sg",
+          "address": "8 Kaki Bukit Road 2",
+          "postal": "417841",
+          "contactNumber": "95678901"
+        }
+      ]
+    },
+    {
+      "id": "supplier-fastworks",
+      "companyName": "FastWorks Services Pte Ltd",
+      "type": "Supplier",
+      "contacts": [
+        {
+          "id": "fastworks-1",
+          "name": "Ms Joanne Koh",
+          "email": "billing@fastworks.sg",
+          "address": "31 Tuas South Avenue 8",
+          "postal": "637651",
+          "contactNumber": "96789012"
+        }
+      ]
+    }
+  ],
+  "quotationDrafts": {
+    "quote-completed-001": {
+      "documentId": "MGQ.2026.09.17.1",
+      "companyId": "company-alpha",
+      "company": "Alpha Engineering Pte Ltd",
+      "customerAddress": "21 Pioneer Road North",
+      "customerPostal": "628467",
+      "attn": "Ms Cheryl Tan",
+      "issueDate": "2026-09-17",
+      "dueDate": "",
+      "quotationNumber": "MGQ.2026.09.17.1",
+      "currency": "SGD",
+      "subjectTitle": "GLASS REPLACEMENT WORKS",
+      "attachments": [],
+      "items": [
+        {
+          "rowId": "q1-r1",
+          "item": "1",
+          "description": "Supply labour and materials for glass replacement works.",
+          "qty": 2,
+          "uom": "pcs",
+          "unitPrice": 1000,
+          "taxRate": 9
+        }
+      ],
+      "externalReference": ""
+    },
+    "quote-completed-002": {
+      "documentId": "MGQ.2026.09.17.2",
+      "companyId": "company-harbour",
+      "company": "Harbour Client Pte Ltd",
+      "customerAddress": "18 Harbour Drive",
+      "customerPostal": "098765",
+      "attn": "Mr Daniel Lim",
+      "issueDate": "2026-09-17",
+      "dueDate": "",
+      "quotationNumber": "MGQ.2026.09.17.2",
+      "currency": "SGD",
+      "subjectTitle": "ELECTRICAL REPAIR WORKS",
+      "attachments": [],
+      "items": [
+        {
+          "rowId": "q2-r1",
+          "item": "1",
+          "description": "Relocate power socket (2 nos)\nExtend and separate power supply (2 nos)\nTesting and commissioning",
+          "qty": 1,
+          "uom": "lump sum",
+          "unitPrice": 1500,
+          "taxRate": 9
+        }
+      ],
+      "externalReference": ""
+    },
+    "quote-completed-003": {
+      "documentId": "MGQ.2026.09.17.3",
+      "companyId": "company-harbour",
+      "company": "Harbour Client Pte Ltd",
+      "customerAddress": "18 Harbour Drive",
+      "customerPostal": "098765",
+      "attn": "Ms Joanne Teo",
+      "issueDate": "2026-09-17",
+      "dueDate": "",
+      "quotationNumber": "MGQ.2026.09.17.3",
+      "currency": "SGD",
+      "subjectTitle": "CEILING REPAIR WORKS",
+      "attachments": [],
+      "items": [
+        {
+          "rowId": "q3-r1",
+          "item": "1",
+          "description": "Repair and make good damaged ceiling area including touch-up painting.",
+          "qty": 1,
+          "uom": "lump sum",
+          "unitPrice": 1850,
+          "taxRate": 9
+        }
+      ],
+      "externalReference": ""
+    },
+    "quote-completed-004": {
+      "documentId": "MGQ.2026.09.17.4",
+      "companyId": "company-alpha",
+      "company": "Alpha Engineering Pte Ltd",
+      "customerAddress": "21 Pioneer Road North",
+      "customerPostal": "628467",
+      "attn": "Mr Kelvin Ong",
+      "issueDate": "2026-09-17",
+      "dueDate": "",
+      "quotationNumber": "MGQ.2026.09.17.4",
+      "currency": "SGD",
+      "subjectTitle": "WATER HEATER REPLACEMENT",
+      "attachments": [],
+      "items": [
+        {
+          "rowId": "q4-r1",
+          "item": "1",
+          "description": "Supply and install 56L storage water heater including testing and commissioning.",
+          "qty": 2,
+          "uom": "no.",
+          "unitPrice": 980,
+          "taxRate": 9
+        }
+      ],
+      "externalReference": ""
+    },
+    "quote-inbox-001": {
+      "documentId": "MGQ.2026.09.18.1",
+      "companyId": "company-alpha",
+      "company": "Alpha Engineering Pte Ltd",
+      "customerAddress": "21 Pioneer Road North",
+      "customerPostal": "628467",
+      "attn": "Ms Cheryl Tan",
+      "issueDate": "2026-09-18",
+      "dueDate": "",
+      "quotationNumber": "MGQ.2026.09.18.1",
+      "currency": "SGD",
+      "subjectTitle": "OFFICE GLASS PARTITION REPLACEMENT",
+      "attachments": [],
+      "items": [
+        {
+          "rowId": "qi1-r1",
+          "item": "1",
+          "description": "Supply labour and materials for replacement of damaged office glass partition.",
+          "qty": 1,
+          "uom": "lot",
+          "unitPrice": 1250,
+          "taxRate": 9
+        }
+      ],
+      "externalReference": ""
+    },
+    "quote-inbox-002": {
+      "documentId": "MGQ.2026.09.18.2",
+      "companyId": "company-harbour",
+      "company": "Harbour Client Pte Ltd",
+      "customerAddress": "18 Harbour Drive",
+      "customerPostal": "098765",
+      "attn": "Mr Daniel Lim",
+      "issueDate": "2026-09-18",
+      "dueDate": "",
+      "quotationNumber": "MGQ.2026.09.18.2",
+      "currency": "SGD",
+      "subjectTitle": "LIGHTING REPLACEMENT WORKS",
+      "attachments": [],
+      "items": [
+        {
+          "rowId": "qi2-r1",
+          "item": "1",
+          "description": "Replace faulty light fittings including testing and commissioning.",
+          "qty": 8,
+          "uom": "pcs",
+          "unitPrice": 85,
+          "taxRate": 9
+        }
+      ],
+      "externalReference": ""
+    },
+    "quote-inbox-003": {
+      "documentId": "MGQ.2026.09.18.3",
+      "companyId": "company-alpha",
+      "company": "Alpha Engineering Pte Ltd",
+      "customerAddress": "21 Pioneer Road North",
+      "customerPostal": "628467",
+      "attn": "Mr Kelvin Ong",
+      "issueDate": "2026-09-18",
+      "dueDate": "",
+      "quotationNumber": "MGQ.2026.09.18.3",
+      "currency": "SGD",
+      "subjectTitle": "PANTRY PLUMBING REPAIR",
+      "attachments": [],
+      "items": [
+        {
+          "rowId": "qi3-r1",
+          "item": "1",
+          "description": "Repair leaking pantry sink, replace flexible hose and test upon completion.",
+          "qty": 1,
+          "uom": "lot",
+          "unitPrice": 420,
+          "taxRate": 9
+        }
+      ],
+      "externalReference": ""
+    },
+    "quote-inbox-004": {
+      "documentId": "MGQ.2026.09.18.4",
+      "companyId": "company-harbour",
+      "company": "Harbour Client Pte Ltd",
+      "customerAddress": "18 Harbour Drive",
+      "customerPostal": "098765",
+      "attn": "Ms Joanne Teo",
+      "issueDate": "2026-09-18",
+      "dueDate": "",
+      "quotationNumber": "MGQ.2026.09.18.4",
+      "currency": "SGD",
+      "subjectTitle": "DOOR CLOSER REPLACEMENT",
+      "attachments": [],
+      "items": [
+        {
+          "rowId": "qi4-r1",
+          "item": "1",
+          "description": "Supply and replace defective door closers including installation and adjustment.",
+          "qty": 2,
+          "uom": "pcs",
+          "unitPrice": 180,
+          "taxRate": 9
+        }
+      ],
+      "externalReference": ""
+    }
+  },
+  "deliveryOrderDrafts": {
+    "invdo-001": {
+      "documentId": "DO.2026.09.18.1",
+      "deliveryOrderNumber": "DO.2026.09.18.1",
+      "sourceQuotationEmailId": "quote-completed-001",
+      "sourceQuotationEmailIds": [
+        "quote-completed-001"
+      ],
+      "refQuoteDocumentId": "MGQ.2026.09.17.1",
+      "externalReference": "MGQ.2026.09.17.1",
+      "companyId": "company-alpha",
+      "company": "Alpha Engineering Pte Ltd",
+      "customerAddress": "21 Pioneer Road North",
+      "customerPostal": "628467",
+      "attn": "Ms Cheryl Tan",
+      "issueDate": "2026-09-18",
+      "dueDate": "",
+      "currency": "SGD",
+      "reference": "DO.2026.09.18.1",
+      "staff": "",
+      "terms": "",
+      "job": "",
+      "subjectTitle": "GLASS REPLACEMENT WORKS",
+      "attachments": [],
+      "items": [
+        {
+          "rowId": "invdo-001-do-1",
+          "item": "1",
+          "description": "Supply labour and materials for glass replacement works.",
+          "qty": 2,
+          "uom": "pcs",
+          "unitPrice": 1000,
+          "taxRate": 9
+        }
+      ]
+    },
+    "invdo-002": {
+      "documentId": "DO.2026.09.18.2",
+      "deliveryOrderNumber": "DO.2026.09.18.2",
+      "sourceQuotationEmailId": "quote-completed-002",
+      "sourceQuotationEmailIds": [
+        "quote-completed-002",
+        "quote-completed-003"
+      ],
+      "refQuoteDocumentId": "MGQ.2026.09.17.2 / MGQ.2026.09.17.3",
+      "externalReference": "MGQ.2026.09.17.2 / MGQ.2026.09.17.3",
+      "companyId": "company-harbour",
+      "company": "Harbour Client Pte Ltd",
+      "customerAddress": "18 Harbour Drive",
+      "customerPostal": "098765",
+      "attn": "Mr Daniel Lim",
+      "issueDate": "2026-09-18",
+      "dueDate": "",
+      "currency": "SGD",
+      "reference": "DO.2026.09.18.2",
+      "staff": "",
+      "terms": "",
+      "job": "",
+      "subjectTitle": "ELECTRICAL REPAIR WORKS / CEILING REPAIR WORKS",
+      "attachments": [],
+      "items": [
+        {
+          "rowId": "invdo-002-do-1",
+          "item": "1",
+          "description": "Relocate power socket (2 nos)\nExtend and separate power supply (2 nos)\nTesting and commissioning",
+          "qty": 1,
+          "uom": "lump sum",
+          "unitPrice": 1500,
+          "taxRate": 9
+        },
+        {
+          "rowId": "invdo-002-do-2",
+          "item": "2",
+          "description": "Repair and make good damaged ceiling area including touch-up painting.",
+          "qty": 1,
+          "uom": "lump sum",
+          "unitPrice": 1850,
+          "taxRate": 9
+        }
+      ]
+    },
+    "invdo-003": {
+      "documentId": "DO.2026.09.18.3",
+      "deliveryOrderNumber": "DO.2026.09.18.3",
+      "sourceQuotationEmailId": "quote-completed-004",
+      "sourceQuotationEmailIds": [
+        "quote-completed-004"
+      ],
+      "refQuoteDocumentId": "MGQ.2026.09.17.4",
+      "externalReference": "MGQ.2026.09.17.4",
+      "companyId": "company-alpha",
+      "company": "Alpha Engineering Pte Ltd",
+      "customerAddress": "21 Pioneer Road North",
+      "customerPostal": "628467",
+      "attn": "Mr Kelvin Ong",
+      "issueDate": "2026-09-18",
+      "dueDate": "",
+      "currency": "SGD",
+      "reference": "DO.2026.09.18.3",
+      "staff": "",
+      "terms": "",
+      "job": "",
+      "subjectTitle": "WATER HEATER REPLACEMENT",
+      "attachments": [],
+      "items": [
+        {
+          "rowId": "invdo-003-do-1",
+          "item": "1",
+          "description": "Supply and install 56L storage water heater including testing and commissioning.",
+          "qty": 2,
+          "uom": "no.",
+          "unitPrice": 980,
+          "taxRate": 9
+        }
+      ]
+    }
+  },
+  "invoiceDrafts": {
+    "invdo-001": {
+      "documentId": "INV.2026.09.18.1",
+      "invoiceNumber": "INV.2026.09.18.1",
+      "sourceQuotationEmailId": "quote-completed-001",
+      "sourceQuotationEmailIds": [
+        "quote-completed-001"
+      ],
+      "sourceDeliveryOrderEmailId": "invdo-001",
+      "refQuoteDocumentId": "MGQ.2026.09.17.1",
+      "externalDeliveryOrderId": "DO.2026.09.18.1",
+      "reference": "MGQ.2026.09.17.1",
+      "externalReference": "DO.2026.09.18.1",
+      "companyId": "company-alpha",
+      "company": "Alpha Engineering Pte Ltd",
+      "customerAddress": "21 Pioneer Road North",
+      "customerPostal": "628467",
+      "attn": "Ms Cheryl Tan",
+      "issueDate": "2026-09-18",
+      "dueDate": "",
+      "currency": "SGD",
+      "staff": "",
+      "terms": "",
+      "job": "",
+      "subjectTitle": "GLASS REPLACEMENT WORKS",
+      "attachments": [],
+      "items": [
+        {
+          "rowId": "invdo-001-inv-1",
+          "item": "1",
+          "itemCode": "",
+          "description": "Supply labour and materials for glass replacement works.",
+          "qty": 2,
+          "uom": "pcs",
+          "unitPrice": 1000,
+          "taxRate": 9
+        }
+      ]
+    },
+    "invdo-002": {
+      "documentId": "INV.2026.09.18.2",
+      "invoiceNumber": "INV.2026.09.18.2",
+      "sourceQuotationEmailId": "quote-completed-002",
+      "sourceQuotationEmailIds": [
+        "quote-completed-002",
+        "quote-completed-003"
+      ],
+      "sourceDeliveryOrderEmailId": "invdo-002",
+      "refQuoteDocumentId": "MGQ.2026.09.17.2 / MGQ.2026.09.17.3",
+      "externalDeliveryOrderId": "DO.2026.09.18.2",
+      "reference": "MGQ.2026.09.17.2 / MGQ.2026.09.17.3",
+      "externalReference": "DO.2026.09.18.2",
+      "companyId": "company-harbour",
+      "company": "Harbour Client Pte Ltd",
+      "customerAddress": "18 Harbour Drive",
+      "customerPostal": "098765",
+      "attn": "Mr Daniel Lim",
+      "issueDate": "2026-09-18",
+      "dueDate": "",
+      "currency": "SGD",
+      "staff": "",
+      "terms": "",
+      "job": "",
+      "subjectTitle": "ELECTRICAL REPAIR WORKS / CEILING REPAIR WORKS",
+      "attachments": [],
+      "items": [
+        {
+          "rowId": "invdo-002-inv-1",
+          "item": "1",
+          "itemCode": "",
+          "description": "Relocate power socket (2 nos)\nExtend and separate power supply (2 nos)\nTesting and commissioning",
+          "qty": 1,
+          "uom": "lump sum",
+          "unitPrice": 1500,
+          "taxRate": 9
+        },
+        {
+          "rowId": "invdo-002-inv-2",
+          "item": "2",
+          "itemCode": "",
+          "description": "Repair and make good damaged ceiling area including touch-up painting.",
+          "qty": 1,
+          "uom": "lump sum",
+          "unitPrice": 1850,
+          "taxRate": 9
+        }
+      ]
+    },
+    "invdo-003": {
+      "documentId": "INV.2026.09.18.3",
+      "invoiceNumber": "INV.2026.09.18.3",
+      "sourceQuotationEmailId": "quote-completed-004",
+      "sourceQuotationEmailIds": [
+        "quote-completed-004"
+      ],
+      "sourceDeliveryOrderEmailId": "invdo-003",
+      "refQuoteDocumentId": "MGQ.2026.09.17.4",
+      "externalDeliveryOrderId": "DO.2026.09.18.3",
+      "reference": "MGQ.2026.09.17.4",
+      "externalReference": "DO.2026.09.18.3",
+      "companyId": "company-alpha",
+      "company": "Alpha Engineering Pte Ltd",
+      "customerAddress": "21 Pioneer Road North",
+      "customerPostal": "628467",
+      "attn": "Mr Kelvin Ong",
+      "issueDate": "2026-09-18",
+      "dueDate": "",
+      "currency": "SGD",
+      "staff": "",
+      "terms": "",
+      "job": "",
+      "subjectTitle": "WATER HEATER REPLACEMENT",
+      "attachments": [],
+      "items": [
+        {
+          "rowId": "invdo-003-inv-1",
+          "item": "1",
+          "itemCode": "",
+          "description": "Supply and install 56L storage water heater including testing and commissioning.",
+          "qty": 2,
+          "uom": "no.",
+          "unitPrice": 980,
+          "taxRate": 9
+        }
+      ]
+    }
+  },
+  "receivables": [
+    {
+      "id": "recv-alpha-001",
+      "invoiceEmailId": "history-recv-alpha-001",
+      "invoiceNo": "INV.2026.07.15.1",
+      "companyId": "company-alpha",
+      "company": "Alpha Engineering Pte Ltd",
+      "sentEmailOn": "2026-07-15",
+      "invoiceAmount": 3270,
+      "payments": [
+        {
+          "id": "pay-a1",
+          "paidAmount": 3270,
+          "date": "2026-07-30"
+        }
+      ],
+      "balance": 0,
+      "status": "Paid"
+    },
+    {
+      "id": "recv-alpha-002",
+      "invoiceEmailId": "history-recv-alpha-002",
+      "invoiceNo": "INV.2026.08.20.1",
+      "companyId": "company-alpha",
+      "company": "Alpha Engineering Pte Ltd",
+      "sentEmailOn": "2026-08-20",
+      "invoiceAmount": 2180,
+      "payments": [
+        {
+          "id": "pay-a2",
+          "paidAmount": 1000,
+          "date": "2026-09-01"
+        }
+      ],
+      "balance": 1180,
+      "status": "Not Fully Paid"
+    },
+    {
+      "id": "recv-alpha-003",
+      "invoiceEmailId": "history-recv-alpha-003",
+      "invoiceNo": "INV.2026.09.05.1",
+      "companyId": "company-alpha",
+      "company": "Alpha Engineering Pte Ltd",
+      "sentEmailOn": "2026-09-05",
+      "invoiceAmount": 1090,
+      "payments": [],
+      "balance": 1090,
+      "status": "Not Paid"
+    },
+    {
+      "id": "recv-harbour-001",
+      "invoiceEmailId": "history-recv-harbour-001",
+      "invoiceNo": "INV.2026.06.10.1",
+      "companyId": "company-harbour",
+      "company": "Harbour Client Pte Ltd",
+      "sentEmailOn": "2026-06-10",
+      "invoiceAmount": 1635,
+      "payments": [
+        {
+          "id": "pay-h1",
+          "paidAmount": 1635,
+          "date": "2026-06-25"
+        }
+      ],
+      "balance": 0,
+      "status": "Paid"
+    },
+    {
+      "id": "recv-harbour-002",
+      "invoiceEmailId": "history-recv-harbour-002",
+      "invoiceNo": "INV.2026.07.01.1",
+      "companyId": "company-harbour",
+      "company": "Harbour Client Pte Ltd",
+      "sentEmailOn": "2026-07-01",
+      "invoiceAmount": 980,
+      "payments": [],
+      "balance": 980,
+      "status": "Not Paid"
+    },
+    {
+      "id": "recv-harbour-003",
+      "invoiceEmailId": "history-recv-harbour-003",
+      "invoiceNo": "INV.2026.08.12.1",
+      "companyId": "company-harbour",
+      "company": "Harbour Client Pte Ltd",
+      "sentEmailOn": "2026-08-12",
+      "invoiceAmount": 2725,
+      "payments": [
+        {
+          "id": "pay-h3",
+          "paidAmount": 1000,
+          "date": "2026-08-28"
+        },
+        {
+          "id": "pay-h3b",
+          "paidAmount": 725,
+          "date": "2026-09-10"
+        }
+      ],
+      "balance": 1000,
+      "status": "Not Fully Paid"
+    },
+    {
+      "id": "recv-harbour-004",
+      "invoiceEmailId": "history-recv-harbour-004",
+      "invoiceNo": "INV.2026.09.02.1",
+      "companyId": "company-harbour",
+      "company": "Harbour Client Pte Ltd",
+      "sentEmailOn": "2026-09-02",
+      "invoiceAmount": 1308,
+      "payments": [
+        {
+          "id": "pay-h4",
+          "paidAmount": 1308,
+          "date": "2026-09-15"
+        }
+      ],
+      "balance": 0,
+      "status": "Paid"
+    },
+    {
+      "id": "recv-harbour-005",
+      "invoiceEmailId": "history-recv-harbour-005",
+      "invoiceNo": "INV.2026.09.16.1",
+      "companyId": "company-harbour",
+      "company": "Harbour Client Pte Ltd",
+      "sentEmailOn": "2026-09-16",
+      "invoiceAmount": 4360,
+      "payments": [],
+      "balance": 4360,
+      "status": "Not Paid"
+    }
+  ],
+  "soaDrafts": {},
+  "documentChains": [
+    {
+      "bundleEmailId": "invdo-001",
+      "quotationRefs": [
+        "MGQ.2026.09.17.1"
+      ],
+      "invoiceDocumentId": "INV.2026.09.18.1",
+      "deliveryOrderDocumentId": "DO.2026.09.18.1"
+    },
+    {
+      "bundleEmailId": "invdo-002",
+      "quotationRefs": [
+        "MGQ.2026.09.17.2",
+        "MGQ.2026.09.17.3"
+      ],
+      "invoiceDocumentId": "INV.2026.09.18.2",
+      "deliveryOrderDocumentId": "DO.2026.09.18.2"
+    },
+    {
+      "bundleEmailId": "invdo-003",
+      "quotationRefs": [
+        "MGQ.2026.09.17.4"
+      ],
+      "invoiceDocumentId": "INV.2026.09.18.3",
+      "deliveryOrderDocumentId": "DO.2026.09.18.3"
+    }
+  ]
+}

@@ -1,0 +1,868 @@
+body { background: #f3f3f3; }
+
+.supplier-payable-page {
+  width: min(1120px, calc(100% - 48px));
+  min-height: calc(100vh - 40px);
+  margin-top: 20px;
+  padding: 38px 42px 70px;
+  background: #fff;
+}
+
+.supplier-payable-header { margin: 8px 0 28px; }
+.supplier-payable-header .page-title { margin: 0; font-size: 30px; }
+
+.supplier-toolbar {
+  display: flex;
+  margin-bottom: 110px;
+}
+
+.supplier-search-field { width: min(380px, 100%); }
+.supplier-search-field label { color: #111; }
+.supplier-search-field input {
+  min-height: 44px;
+  border: 0;
+  border-radius: 4px;
+  background: #ddd;
+}
+
+.supplier-table-card {
+  overflow: hidden;
+  border: 1px solid #e1e1e1;
+  border-radius: 4px;
+}
+
+.supplier-payable-table {
+  width: 100%;
+  min-width: 880px;
+  border-collapse: collapse;
+}
+
+.supplier-payable-table th {
+  padding: 12px 18px;
+  background: #fff;
+  text-align: left;
+  font-size: 13px;
+}
+
+.supplier-payable-table td {
+  padding: 15px 18px;
+  border-top: 1px solid #e3e3e3;
+  font-size: 13px;
+  vertical-align: middle;
+}
+
+.supplier-payable-table th:nth-child(1) { width: 29%; }
+.supplier-payable-table th:nth-child(2) { width: 25%; }
+.supplier-payable-table th:nth-child(3) { width: 10%; text-align: center; }
+.supplier-payable-table th:nth-child(4) { width: 13%; }
+.supplier-payable-table th:nth-child(5) { width: 11%; }
+.supplier-payable-table th:nth-child(6) { width: 12%; }
+.supplier-payable-table td:nth-child(3) { text-align: center; font-weight: 700; }
+
+.supplier-payable-table select {
+  min-width: 116px;
+  min-height: 34px;
+  border: 0;
+  border-radius: 7px;
+  background: #dedede;
+  padding: 0 10px;
+  font-weight: 700;
+}
+
+.supplier-rule-note {
+  margin: 12px 0 0;
+  color: #777;
+  font-size: 11px;
+}
+
+@media (max-width: 760px) {
+  .supplier-payable-page {
+    width: calc(100% - 18px);
+    padding: 24px 16px 48px;
+  }
+  .supplier-toolbar { margin-bottom: 35px; }
+}
+
+.supplier-meta {
+  margin-top: 0.25rem;
+  font-size: 0.78rem;
+  opacity: 0.7;
+}
+
+/* Extracted from supplier-payable.html */
+    /* =========================================================
+           BASE
+        ========================================================= */
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+    }
+
+    body {
+      min-height: 100vh;
+
+      font-family:
+        Inter,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+
+      color: #1e1b4b;
+
+      background:
+        radial-gradient(circle at 90% 5%,
+          rgba(139, 92, 246, 0.10),
+          transparent 30%),
+        radial-gradient(circle at 5% 90%,
+          rgba(99, 102, 241, 0.10),
+          transparent 35%),
+        linear-gradient(225deg,
+          #e0e7ff 0%,
+          #ede9fe 50%,
+          #faf5ff 100%);
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+
+
+    /* =========================================================
+           PAGE
+        ========================================================= */
+
+    .supplier-payable-page {
+      width: 100%;
+      max-width: 1500px;
+      min-height: 100vh;
+
+      margin: 0 auto;
+      padding: 40px 48px;
+
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+    }
+
+
+    /* =========================================================
+           BACK LINK
+        ========================================================= */
+
+    .back-link {
+      width: fit-content;
+
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+
+      color: #6366f1;
+
+      font-size: 13px;
+      font-weight: 600;
+      text-decoration: none;
+
+      opacity: 0.8;
+
+      transition:
+        opacity 0.2s ease,
+        transform 0.2s ease,
+        color 0.2s ease;
+    }
+
+    .back-link:hover {
+      color: #4f46e5;
+      opacity: 1;
+      transform: translateX(-3px);
+    }
+
+
+    /* =========================================================
+           HEADER
+        ========================================================= */
+
+    .supplier-payable-header {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 3px;
+
+      margin-top: -5px;
+    }
+
+    .page-title {
+      margin: 0;
+
+      color: #1e1b4b;
+
+      font-size: 32px;
+      line-height: 1.2;
+      font-weight: 800;
+      letter-spacing: -1px;
+    }
+
+    #supplier-payable-status {
+      margin: 0;
+
+      color: #6366f1;
+
+      font-size: 13px;
+      line-height: 1.4;
+      font-weight: 400;
+    }
+
+
+    /* =========================================================
+           TOOLBAR
+        ========================================================= */
+
+    .supplier-toolbar {
+      position: absolute;
+
+      top: 68px;
+      right: max(48px,
+          calc((100vw - 1500px) / 2 + 48px));
+
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .supplier-search-field {
+      position: relative;
+
+      width: 340px;
+    }
+
+    .supplier-search-field label {
+      display: none;
+    }
+
+
+    /* Search icon */
+
+    .supplier-search-field::before {
+      content: "";
+
+      position: absolute;
+      z-index: 2;
+
+      left: 17px;
+      top: 50%;
+
+      width: 12px;
+      height: 12px;
+
+      border: 1.6px solid #a5b4fc;
+      border-radius: 50%;
+
+      transform: translateY(-58%);
+
+      pointer-events: none;
+    }
+
+    .supplier-search-field::after {
+      content: "";
+
+      position: absolute;
+      z-index: 2;
+
+      left: 28px;
+      top: 26px;
+
+      width: 6px;
+      height: 1.6px;
+
+      background: #a5b4fc;
+      border-radius: 20px;
+
+      transform: rotate(45deg);
+
+      pointer-events: none;
+    }
+
+
+    #supplier-payable-search {
+      width: 100%;
+      height: 44px;
+
+      padding: 0 17px 0 43px;
+
+      color: #1e1b4b;
+
+      background: rgba(255, 255, 255, 0.96);
+
+      border: 1px solid #c7d2fe;
+      border-radius: 999px;
+      outline: none;
+
+      font-size: 14px;
+
+      box-shadow:
+        0 2px 12px rgba(99, 102, 241, 0.13);
+
+      transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease,
+        transform 0.2s ease;
+    }
+
+    #supplier-payable-search::placeholder {
+      color: #a5b4fc;
+    }
+
+    #supplier-payable-search:hover {
+      border-color: #a5b4fc;
+    }
+
+    #supplier-payable-search:focus {
+      border-color: #818cf8;
+
+      box-shadow:
+        0 0 0 4px rgba(99, 102, 241, 0.10),
+        0 6px 18px rgba(99, 102, 241, 0.12);
+    }
+
+
+    /* =========================================================
+           TABLE CARD
+        ========================================================= */
+
+    .supplier-table-card {
+      width: 100%;
+
+      background: rgba(255, 255, 255, 0.97);
+
+      border: 1px solid #e0e7ff;
+      border-radius: 16px;
+
+      box-shadow:
+        0 8px 32px rgba(99, 102, 241, 0.13),
+        inset 0 1px 0 rgba(255, 255, 255, 0.8);
+
+      overflow: hidden;
+    }
+
+    .table-wrap {
+      width: 100%;
+      overflow-x: auto;
+    }
+
+
+    /* =========================================================
+           TABLE
+        ========================================================= */
+
+    .supplier-payable-table {
+      width: 100%;
+
+      border-collapse: collapse;
+      border-spacing: 0;
+
+      table-layout: fixed;
+    }
+
+    .supplier-payable-table th,
+    .supplier-payable-table td {
+      text-align: left;
+      vertical-align: middle;
+    }
+
+
+    /* =========================================================
+           COLUMN WIDTHS
+        ========================================================= */
+
+    .supplier-payable-table th:nth-child(1),
+    .supplier-payable-table td:nth-child(1) {
+      width: 25%;
+    }
+
+    .supplier-payable-table th:nth-child(2),
+    .supplier-payable-table td:nth-child(2) {
+      width: 25%;
+    }
+
+    .supplier-payable-table th:nth-child(3),
+    .supplier-payable-table td:nth-child(3) {
+      width: 10%;
+    }
+
+    .supplier-payable-table th:nth-child(4),
+    .supplier-payable-table td:nth-child(4) {
+      width: 13%;
+    }
+
+    .supplier-payable-table th:nth-child(5),
+    .supplier-payable-table td:nth-child(5) {
+      width: 13.5%;
+    }
+
+    .supplier-payable-table th:nth-child(6),
+    .supplier-payable-table td:nth-child(6) {
+      width: 13.5%;
+    }
+
+
+    /* =========================================================
+           TABLE HEADER
+        ========================================================= */
+
+    .supplier-payable-table thead {
+      background:
+        linear-gradient(90deg,
+          rgba(238, 242, 255, 0.8),
+          rgba(250, 245, 255, 0.75));
+    }
+
+    .supplier-payable-table thead tr {
+      height: 50px;
+    }
+
+    .supplier-payable-table th {
+      padding: 0 24px;
+
+      color: #6366f1;
+
+      border-bottom: 1px solid #e0e7ff;
+
+      font-size: 13px;
+      line-height: 1.2;
+      font-weight: 700;
+    }
+
+
+    /* =========================================================
+           TABLE ROWS
+        ========================================================= */
+
+    .supplier-payable-table tbody tr {
+      height: 68px;
+
+      background: #ffffff;
+
+      border-bottom: 1px solid #f3f4f6;
+
+      transition:
+        background 0.2s ease,
+        box-shadow 0.2s ease,
+        transform 0.2s ease;
+    }
+
+    .supplier-payable-table tbody tr:nth-child(even) {
+      background: #fafafa;
+    }
+
+    .supplier-payable-table tbody tr:last-child {
+      border-bottom: 0;
+    }
+
+    .supplier-payable-table tbody tr:hover {
+      position: relative;
+      z-index: 1;
+
+      background: #f5f3ff;
+
+      box-shadow:
+        inset 4px 0 0 #6366f1;
+    }
+
+    .supplier-payable-table td {
+      padding: 14px 24px;
+
+      color: #374151;
+
+      font-size: 13px;
+      line-height: 1.4;
+      font-weight: 400;
+
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+
+    /* =========================================================
+           FROM
+        ========================================================= */
+
+    .supplier-payable-table td:nth-child(1) {
+      color: #1e1b4b;
+    }
+
+
+    /* =========================================================
+           MAIL COUNT
+        ========================================================= */
+
+    .supplier-payable-table td:nth-child(3) {
+      color: #6366f1;
+      font-weight: 600;
+    }
+
+
+    /* =========================================================
+           DATE
+        ========================================================= */
+
+    .supplier-payable-table td:nth-child(4) {
+      color: #9ca3af;
+    }
+
+
+    /* =========================================================
+           EMAIL / SENDER AVATAR
+
+           If your JS wraps sender text, these classes will work.
+        ========================================================= */
+
+    .supplier-sender,
+    .sender-cell,
+    .supplier-from {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .supplier-avatar,
+    .sender-avatar {
+      width: 32px;
+      height: 32px;
+
+      flex: 0 0 32px;
+
+      display: grid;
+      place-items: center;
+
+      color: white;
+
+      background:
+        linear-gradient(135deg,
+          #6366f1,
+          #a855f7);
+
+      border-radius: 50%;
+
+      font-size: 12px;
+      font-weight: 700;
+
+      box-shadow:
+        0 3px 9px rgba(99, 102, 241, 0.18);
+    }
+
+    .supplier-payable-table tbody tr:nth-child(even) .supplier-avatar,
+    .supplier-payable-table tbody tr:nth-child(even) .sender-avatar {
+      background:
+        linear-gradient(135deg,
+          #ec4899,
+          #8b5cf6);
+    }
+
+
+    /* =========================================================
+           SELECTS GENERATED BY JS
+           Priority + Status
+        ========================================================= */
+
+    .supplier-payable-table select {
+      width: 130px;
+      height: 32px;
+
+      padding: 0 32px 0 12px;
+
+      border-radius: 8px;
+      outline: none;
+
+      font-size: 12px;
+      font-weight: 650;
+
+      cursor: pointer;
+
+      appearance: none;
+
+      background-repeat: no-repeat;
+      background-position: calc(100% - 12px) center;
+      background-size: 8px;
+
+      transition:
+        box-shadow 0.2s ease,
+        transform 0.2s ease;
+    }
+
+    .supplier-payable-table select:hover {
+      transform: translateY(-1px);
+    }
+
+
+    /* =========================================================
+           PRIORITY BADGES
+        ========================================================= */
+
+    .priority,
+    .priority-badge,
+    .supplier-priority {
+      min-width: 110px;
+      min-height: 30px;
+
+      display: inline-flex;
+      align-items: center;
+      justify-content: space-between;
+
+      padding: 6px 12px;
+
+      border-radius: 8px;
+
+      font-size: 12px;
+      font-weight: 650;
+    }
+
+
+    /* High */
+
+    .priority-high,
+    .high {
+      color: #ef4444 !important;
+
+      background-color: #fef2f2 !important;
+
+      border: 1px solid #fecaca !important;
+    }
+
+
+    /* Medium */
+
+    .priority-medium,
+    .medium {
+      color: #d97706 !important;
+
+      background-color: #fffbeb !important;
+
+      border: 1px solid #fde68a !important;
+    }
+
+
+    /* Low */
+
+    .priority-low,
+    .low {
+      color: #2563eb !important;
+
+      background-color: #eff6ff !important;
+
+      border: 1px solid #bfdbfe !important;
+    }
+
+
+    /* =========================================================
+           STATUS BADGES
+        ========================================================= */
+
+    .status,
+    .status-badge,
+    .supplier-status {
+      min-width: 110px;
+      min-height: 30px;
+
+      display: inline-flex;
+      align-items: center;
+      justify-content: space-between;
+
+      padding: 6px 12px;
+
+      border-radius: 8px;
+
+      font-size: 12px;
+      font-weight: 650;
+    }
+
+
+    /* Paid */
+
+    .status-paid,
+    .paid {
+      color: #16a34a !important;
+
+      background-color: #f0fdf4 !important;
+
+      border: 1px solid #bbf7d0 !important;
+    }
+
+
+    /* Pending */
+
+    .status-pending,
+    .pending {
+      color: #d97706 !important;
+
+      background-color: #fffbeb !important;
+
+      border: 1px solid #fde68a !important;
+    }
+
+
+    /* Not Paid */
+
+    .status-not-paid,
+    .not-paid,
+    .unpaid {
+      color: #dc2626 !important;
+
+      background-color: #fef2f2 !important;
+
+      border: 1px solid #fecaca !important;
+    }
+
+
+    /* =========================================================
+           SELECT COLOR FALLBACKS
+
+           If JS uses <select> instead of badges.
+        ========================================================= */
+
+    .supplier-payable-table td:nth-child(5) select {
+      color: #ef4444;
+
+      background-color: #fef2f2;
+
+      border: 1px solid #fecaca;
+
+      background-image:
+        linear-gradient(45deg, transparent 50%, #ef4444 50%),
+        linear-gradient(135deg, #ef4444 50%, transparent 50%);
+
+      background-position:
+        calc(100% - 14px) 13px,
+        calc(100% - 10px) 13px;
+
+      background-size:
+        4px 4px,
+        4px 4px;
+    }
+
+    .supplier-payable-table td:nth-child(6) select {
+      color: #16a34a;
+
+      background-color: #f0fdf4;
+
+      border: 1px solid #bbf7d0;
+
+      background-image:
+        linear-gradient(45deg, transparent 50%, #16a34a 50%),
+        linear-gradient(135deg, #16a34a 50%, transparent 50%);
+
+      background-position:
+        calc(100% - 14px) 13px,
+        calc(100% - 10px) 13px;
+
+      background-size:
+        4px 4px,
+        4px 4px;
+    }
+
+
+    /* =========================================================
+           RULE NOTE
+        ========================================================= */
+
+    .supplier-rule-note {
+      width: fit-content;
+
+      margin: -8px 0 0;
+      padding: 9px 13px;
+
+      color: #6366f1;
+
+      background: rgba(255, 255, 255, 0.48);
+
+      border: 1px solid rgba(199, 210, 254, 0.65);
+      border-radius: 9px;
+
+      font-size: 11px;
+      line-height: 1.4;
+      font-weight: 500;
+    }
+
+
+    /* =========================================================
+           EMPTY STATE
+        ========================================================= */
+
+    #supplier-payable-body:empty::after {
+      content: "No supplier payable messages found.";
+
+      display: table-cell;
+
+      height: 130px;
+
+      padding: 30px;
+
+      color: #a5b4fc;
+
+      text-align: center;
+      vertical-align: middle;
+
+      font-size: 13px;
+
+      background: rgba(255, 255, 255, 0.9);
+    }
+
+
+    /* =========================================================
+           RESPONSIVE
+        ========================================================= */
+
+    @media (max-width: 1050px) {
+
+      .supplier-payable-page {
+        padding: 32px;
+      }
+
+      .supplier-toolbar {
+        position: static;
+
+        width: 100%;
+
+        justify-content: flex-start;
+      }
+
+      .supplier-search-field {
+        width: 100%;
+        max-width: 420px;
+      }
+
+      .supplier-payable-table {
+        min-width: 1050px;
+      }
+    }
+
+
+    @media (max-width: 650px) {
+
+      .supplier-payable-page {
+        padding: 24px 18px 32px;
+        gap: 22px;
+      }
+
+      .page-title {
+        font-size: 28px;
+      }
+
+      .supplier-search-field {
+        max-width: none;
+      }
+
+      #supplier-payable-search {
+        width: 100%;
+      }
+
+      .supplier-rule-note {
+        width: 100%;
+      }
+    }

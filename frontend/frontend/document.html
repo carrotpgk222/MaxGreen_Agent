@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MaxGreen Agent — Document Review</title>
+  <link rel="icon" href="data:," />
+  <link rel="stylesheet" href="./assets/css/base.css" />
+  <link rel="stylesheet" href="./assets/css/document.css" />
+</head>
+<body>
+  <main class="page">
+    <a class="back-link" href="./inbox.html">← Back to Inbox</a>
+
+    <header class="page-header">
+      <div>
+        <p class="eyebrow">Generated Document</p>
+        <h1 class="page-title" id="document-file-name">Document</h1>
+      </div>
+    </header>
+
+    <div class="document-grid">
+      <section>
+        <article class="card email-card">
+          <div class="email-meta">
+            <div>
+              <strong id="email-subject">Email subject</strong>
+              <p>From <span id="email-from">—</span></p>
+              <p>Received <span id="email-date">—</span></p>
+            </div>
+            <button class="btn" type="button" disabled title="Gmail integration will be added later">Open original email ↗</button>
+          </div>
+
+          <p class="email-body" id="email-body"></p>
+          <div class="attachments" id="attachment-list"></div>
+        </article>
+
+        <section class="card review-card">
+          <div class="review-ai">
+            <p class="eyebrow">AI Detected</p>
+            <strong id="original-category">—</strong>
+            <span id="confidence">—</span>
+          </div>
+
+          <div class="field">
+            <label for="category-select">Category</label>
+            <select id="category-select"></select>
+          </div>
+
+          <button class="btn btn-soft" id="edit-document" type="button">Edit</button>
+          <button class="btn btn-primary" id="save-pending" type="button">Save to Pending</button>
+        </section>
+
+        <section class="pdf-preview">
+          <div class="pdf-paper">
+            <div class="pdf-head">
+              <div>
+                <h2>MAXGREEN CONTRACTOR PTE LTD</h2>
+                <p>71 Woodlands Ave 10 · Singapore 737743</p>
+                <p>Tel: 69097551 · Email: operations@example.com</p>
+              </div>
+              <div class="pdf-brand">MaxGreen</div>
+            </div>
+
+            <div class="pdf-title" id="pdf-title">Document</div>
+
+            <div class="pdf-info">
+              <div>
+                <strong>Customer</strong><br />
+                Sample Client Pte Ltd<br />
+                Singapore
+              </div>
+              <div>
+                No: AI-2026-001<br />
+                Date: <span id="pdf-date">—</span><br />
+                Ref: <span id="pdf-reference">—</span>
+              </div>
+            </div>
+
+            <div class="pdf-table">
+              <div class="pdf-row header">
+                <span>S/No</span><span>Description</span><span>Qty</span><span>Amount</span>
+              </div>
+              <div class="pdf-row">
+                <span>1</span>
+                <span><span id="description-text">Replacement of Quartz TableTop</span><input id="description-input" hidden /></span>
+                <span>1</span>
+                <span><span id="amount-text">$0.00</span><input id="amount-input" type="number" min="0" step="0.01" hidden /></span>
+              </div>
+            </div>
+
+            <div class="pdf-footer">
+              <span>Mock document preview — final template will be specified later.</span>
+              <strong>Total: <span id="total-amount">$0.00</span></strong>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <aside class="card audit-card">
+        <h3>Review Details</h3>
+        <dl>
+          <dt>Party</dt><dd id="audit-party">—</dd>
+          <dt>Original category</dt><dd id="audit-original">—</dd>
+          <dt>Current category</dt><dd id="audit-current">—</dd>
+          <dt>Received</dt><dd id="audit-date">—</dd>
+        </dl>
+        <div class="audit-note">
+          <strong>Human-in-the-loop</strong><br />
+          AI output remains a draft until reviewed and saved by the user.
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <script type="module" src="./assets/js/pages/document.js"></script>
+</body>
+</html>

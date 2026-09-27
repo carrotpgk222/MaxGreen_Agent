@@ -1,0 +1,944 @@
+body { background: #fff; }
+
+.pending-page {
+  width: min(1120px, calc(100% - 56px));
+  padding-top: 30px;
+}
+
+.pending-header { margin-bottom: 26px; }
+.pending-header .page-title { font-size: 31px; }
+
+.pending-controls {
+  display: grid;
+  grid-template-columns: minmax(280px, 1fr) 190px 150px;
+  gap: 18px;
+  align-items: end;
+  margin-bottom: 18px;
+}
+
+.pending-controls .field label {
+  color: #111;
+  font-size: 12px;
+}
+
+.pending-controls input,
+.pending-controls select {
+  min-height: 43px;
+  border-radius: 4px;
+  background: #f0f0f0;
+  border-color: #e2e2e2;
+}
+
+.pending-tabs {
+  display: flex;
+  gap: 34px;
+  border-bottom: 1px solid #ddd;
+  margin-bottom: 8px;
+}
+
+.pending-tab {
+  position: relative;
+  padding: 10px 18px 12px;
+  border: 0;
+  background: transparent;
+  color: #111;
+  font-weight: 750;
+}
+
+.pending-tab.active::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 4px;
+  border-radius: 999px;
+  background: #d3d3d3;
+}
+
+.pending-table-card {
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.pending-table { min-width: 760px; }
+.pending-table th {
+  color: #111;
+  background: #fff;
+  font-size: 12px;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.pending-table td { font-size: 13px; }
+.pending-table tbody tr:hover { background: #fafafa; }
+.pending-table th:nth-child(1) { width: 32%; }
+.pending-table th:nth-child(2) { width: 17%; }
+.pending-table th:nth-child(3) { width: 20%; }
+.pending-table th:nth-child(4) { width: 18%; }
+.pending-table th:nth-child(5) { width: 90px; }
+
+.pending-view-button {
+  display: inline-flex;
+  min-width: 64px;
+  justify-content: center;
+  padding: 8px 13px;
+  border-radius: 5px;
+  background: #dedede;
+  font-size: 12px;
+  font-weight: 650;
+}
+.pending-view-button:hover { background: #d1d1d1; }
+
+@media (max-width: 760px) {
+  .pending-page { width: min(100% - 28px, 1120px); }
+  .pending-controls { grid-template-columns: 1fr; }
+}
+
+/* Extracted from pending.html */
+    /* =========================================================
+           BASE
+        ========================================================= */
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+    }
+
+    body {
+      min-height: 100vh;
+
+      font-family:
+        Inter,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+
+      color: #0f172a;
+
+      background:
+        radial-gradient(circle at 90% 5%,
+          rgba(124, 58, 237, 0.08),
+          transparent 30%),
+        radial-gradient(circle at 5% 90%,
+          rgba(59, 130, 246, 0.07),
+          transparent 35%),
+        linear-gradient(235deg,
+          #e8eeff 0%,
+          #f0eeff 50%,
+          #fafafa 100%);
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+
+
+    /* =========================================================
+           PAGE
+        ========================================================= */
+
+    .pending-page {
+      width: 100%;
+      max-width: 1500px;
+      min-height: 100vh;
+
+      margin: 0 auto;
+      padding: 40px 48px;
+
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+    }
+
+
+    /* =========================================================
+           BACK LINK
+        ========================================================= */
+
+    .back-link {
+      width: fit-content;
+
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+
+      color: #64748b;
+
+      font-size: 13px;
+      font-weight: 600;
+      text-decoration: none;
+
+      transition:
+        color 0.2s ease,
+        transform 0.2s ease;
+    }
+
+    .back-link:hover {
+      color: #4f46e5;
+      transform: translateX(-3px);
+    }
+
+
+    /* =========================================================
+           HEADER
+        ========================================================= */
+
+    .pending-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+
+      margin-top: -5px;
+    }
+
+    .pending-header>div {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 6px;
+    }
+
+    .page-title {
+      margin: 0;
+
+      color: #0f172a;
+
+      font-size: 32px;
+      line-height: 1.2;
+      font-weight: 800;
+      letter-spacing: -1px;
+    }
+
+    .page-description {
+      margin: 0;
+
+      color: #64748b;
+
+      font-size: 13px;
+      line-height: 1.5;
+      font-weight: 400;
+    }
+
+
+    /* =========================================================
+           PENDING BADGE
+        ========================================================= */
+
+    .pending-header>div::after {
+      content: "Pending items";
+
+      width: fit-content;
+
+      display: inline-flex;
+      align-items: center;
+
+      margin-top: 2px;
+      padding: 5px 11px;
+
+      color: #ca8a04;
+      background: #fef9c3;
+
+      border: 1px solid #fef08a;
+      border-radius: 999px;
+
+      font-size: 11px;
+      line-height: 1;
+      font-weight: 700;
+    }
+
+
+    /* =========================================================
+           CONTROLS
+        ========================================================= */
+
+    .pending-controls {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 10px;
+
+      margin-top: -87px;
+    }
+
+    .pending-controls .field {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .pending-controls label {
+      display: none;
+    }
+
+
+    /* =========================================================
+           SEARCH
+        ========================================================= */
+
+    .pending-search-field {
+      position: relative;
+      width: 340px;
+    }
+
+    .pending-search-field::before {
+      content: "";
+
+      position: absolute;
+      z-index: 2;
+
+      left: 17px;
+      top: 50%;
+
+      width: 12px;
+      height: 12px;
+
+      border: 1.5px solid #94a3b8;
+      border-radius: 50%;
+
+      transform: translateY(-58%);
+
+      pointer-events: none;
+    }
+
+    .pending-search-field::after {
+      content: "";
+
+      position: absolute;
+      z-index: 2;
+
+      left: 28px;
+      top: 25px;
+
+      width: 6px;
+      height: 1.5px;
+
+      background: #94a3b8;
+      border-radius: 10px;
+
+      transform: rotate(45deg);
+
+      pointer-events: none;
+    }
+
+    #pending-search {
+      width: 100%;
+      height: 44px;
+
+      padding: 0 16px 0 43px;
+
+      color: #0f172a;
+
+      background: rgba(255, 255, 255, 0.97);
+
+      border: 1px solid #e2e8f0;
+      border-radius: 999px;
+      outline: none;
+
+      font-size: 14px;
+
+      box-shadow:
+        0 2px 8px rgba(15, 23, 42, 0.03);
+
+      transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+    }
+
+    #pending-search::placeholder {
+      color: #94a3b8;
+    }
+
+    #pending-search:hover {
+      border-color: #cbd5e1;
+    }
+
+    #pending-search:focus {
+      border-color: #a5b4fc;
+
+      box-shadow:
+        0 0 0 4px rgba(99, 102, 241, 0.08),
+        0 5px 16px rgba(15, 23, 42, 0.05);
+    }
+
+
+    /* =========================================================
+           SELECTS
+        ========================================================= */
+
+    #pending-category,
+    #pending-date {
+      height: 44px;
+
+      padding: 0 39px 0 16px;
+
+      color: #0f172a;
+      background-color: rgba(255, 255, 255, 0.97);
+
+      border: 1px solid #e2e8f0;
+      border-radius: 999px;
+      outline: none;
+
+      font-size: 13px;
+      font-weight: 600;
+
+      appearance: none;
+      cursor: pointer;
+
+      background-image:
+        linear-gradient(45deg,
+          transparent 50%,
+          #94a3b8 50%),
+        linear-gradient(135deg,
+          #94a3b8 50%,
+          transparent 50%);
+
+      background-position:
+        calc(100% - 17px) 19px,
+        calc(100% - 13px) 19px;
+
+      background-size:
+        4px 4px,
+        4px 4px;
+
+      background-repeat: no-repeat;
+
+      transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+    }
+
+    #pending-category {
+      min-width: 145px;
+    }
+
+    #pending-date {
+      min-width: 120px;
+    }
+
+    #pending-category:hover,
+    #pending-date:hover {
+      border-color: #c7d2fe;
+    }
+
+    #pending-category:focus,
+    #pending-date:focus {
+      border-color: #a5b4fc;
+
+      box-shadow:
+        0 0 0 4px rgba(99, 102, 241, 0.07);
+    }
+
+
+    /* =========================================================
+           TABS
+        ========================================================= */
+
+    .pending-tabs {
+      display: flex;
+      align-items: flex-end;
+      gap: 24px;
+
+      margin-top: 7px;
+    }
+
+    .pending-tab {
+      position: relative;
+
+      min-width: 100px;
+
+      padding: 0 0 10px;
+
+      color: #94a3b8;
+      background: transparent;
+
+      border: 0;
+
+      font-size: 15px;
+      line-height: 18px;
+      font-weight: 600;
+
+      cursor: pointer;
+
+      transition:
+        color 0.2s ease,
+        transform 0.2s ease;
+    }
+
+    .pending-tab::after {
+      content: "";
+
+      position: absolute;
+
+      right: 0;
+      bottom: 0;
+      left: 0;
+
+      height: 3px;
+
+      background: transparent;
+
+      border-radius: 999px;
+
+      transform: scaleX(0);
+
+      transition:
+        transform 0.25s ease,
+        background 0.25s ease;
+    }
+
+    .pending-tab:hover {
+      color: #6366f1;
+    }
+
+    .pending-tab.active {
+      color: #0f172a;
+      font-weight: 700;
+    }
+
+    .pending-tab.active::after {
+      background:
+        linear-gradient(90deg,
+          #3b82f6 0%,
+          #6366f1 50%,
+          #7c3aed 100%);
+
+      transform: scaleX(1);
+
+      box-shadow:
+        0 2px 8px rgba(99, 102, 241, 0.22);
+    }
+
+
+    /* =========================================================
+           TABLE CARD
+        ========================================================= */
+
+    .pending-table-card {
+      width: 100%;
+
+      background: rgba(255, 255, 255, 0.98);
+
+      border: 1px solid #e2e8f0;
+      border-radius: 20px;
+
+      box-shadow:
+        0 5px 24px rgba(15, 23, 42, 0.06),
+        inset 0 1px 0 rgba(255, 255, 255, 0.8);
+
+      overflow: hidden;
+    }
+
+    .table-wrap {
+      width: 100%;
+      overflow-x: auto;
+    }
+
+
+    /* =========================================================
+           TABLE
+        ========================================================= */
+
+    .pending-table {
+      width: 100%;
+
+      border-collapse: collapse;
+      border-spacing: 0;
+
+      table-layout: fixed;
+    }
+
+    .pending-table th,
+    .pending-table td {
+      text-align: left;
+      vertical-align: middle;
+    }
+
+
+    /* =========================================================
+           COLUMN WIDTHS
+        ========================================================= */
+
+    .pending-table th:nth-child(1),
+    .pending-table td:nth-child(1) {
+      width: 34%;
+    }
+
+    .pending-table th:nth-child(2),
+    .pending-table td:nth-child(2) {
+      width: 16%;
+    }
+
+    .pending-table th:nth-child(3),
+    .pending-table td:nth-child(3) {
+      width: 20%;
+    }
+
+    .pending-table th:nth-child(4),
+    .pending-table td:nth-child(4) {
+      width: 16%;
+    }
+
+    .pending-table th:nth-child(5),
+    .pending-table td:nth-child(5) {
+      width: 14%;
+    }
+
+
+    /* =========================================================
+           TABLE HEADER
+        ========================================================= */
+
+    .pending-table thead {
+      background: #f8fafc;
+    }
+
+    .pending-table thead tr {
+      height: 48px;
+    }
+
+    .pending-table th {
+      padding: 0 20px;
+
+      color: #64748b;
+
+      border-bottom: 1px solid #e2e8f0;
+
+      font-size: 13px;
+      line-height: 1.2;
+      font-weight: 700;
+    }
+
+
+    /* =========================================================
+           TABLE ROW
+        ========================================================= */
+
+    .pending-table tbody tr {
+      height: 64px;
+
+      background: #ffffff;
+
+      border-bottom: 1px solid #f1f5f9;
+
+      transition:
+        background 0.18s ease,
+        box-shadow 0.18s ease;
+    }
+
+    .pending-table tbody tr:nth-child(even) {
+      background: #f8fafc;
+    }
+
+    .pending-table tbody tr:last-child {
+      border-bottom: 0;
+    }
+
+    .pending-table tbody tr:hover {
+      background: #f5f3ff;
+
+      box-shadow:
+        inset 4px 0 0 #7c3aed;
+    }
+
+    .pending-table td {
+      padding: 14px 20px;
+
+      color: #0f172a;
+
+      font-size: 14px;
+      line-height: 1.4;
+      font-weight: 400;
+
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+
+    /* Reference No */
+
+    .pending-table td:nth-child(2) {
+      color: #64748b;
+    }
+
+
+    /* Approved date */
+
+    .pending-table td:nth-child(4) {
+      color: #94a3b8;
+
+      font-size: 13px;
+    }
+
+
+    /* =========================================================
+           NAME / FILE
+        ========================================================= */
+
+    .pending-name,
+    .document-name,
+    .file-name {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .pending-name::before,
+    .document-name::before,
+    .file-name::before {
+      content: "";
+
+      width: 28px;
+      height: 28px;
+
+      flex: 0 0 28px;
+
+      display: inline-block;
+
+      background: #ede9fe;
+
+      border-radius: 8px;
+    }
+
+
+    /* =========================================================
+           CATEGORY BADGES
+        ========================================================= */
+
+    .category,
+    .category-badge,
+    .pending-category-badge {
+      width: fit-content;
+
+      display: inline-flex;
+      align-items: center;
+
+      padding: 5px 11px;
+
+      border-radius: 12px;
+
+      font-size: 12px;
+      line-height: 1.2;
+      font-weight: 500;
+    }
+
+
+    /* Invoice */
+
+    .category-invoice,
+    .invoice {
+      color: #3b82f6 !important;
+      background: #dbeafe !important;
+    }
+
+
+    /* Invoice & DO */
+
+    .category-invoice-do,
+    .invoice-do,
+    .invoice-and-do {
+      color: #7c3aed !important;
+      background: #ede9fe !important;
+    }
+
+
+    /* Quotation */
+
+    .category-quotation,
+    .quotation {
+      color: #ca8a04 !important;
+      background: #fef9c3 !important;
+    }
+
+
+    /* Delivery Order */
+
+    .category-delivery-order,
+    .delivery-order {
+      color: #16a34a !important;
+      background: #dcfce7 !important;
+    }
+
+
+    /* Statement of Account */
+
+    .category-statement-of-account,
+    .statement-of-account,
+    .category-soa,
+    .soa {
+      color: #9333ea !important;
+      background: #f3e8ff !important;
+    }
+
+
+    /* Request for Payment */
+
+    .category-request-for-payment,
+    .request-for-payment {
+      color: #ea580c !important;
+      background: #ffedd5 !important;
+    }
+
+
+    /* =========================================================
+           VIEW BUTTON
+        ========================================================= */
+
+    .pending-table td:last-child {
+      text-align: right;
+    }
+
+    .pending-table td:last-child button,
+    .pending-table td:last-child a,
+    .pending-table .view-button,
+    .pending-table .view-btn {
+      min-width: 96px;
+      height: 34px;
+
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+
+      padding: 0 16px;
+
+      color: #ffffff;
+
+      background:
+        linear-gradient(110deg,
+          #3b82f6 0%,
+          #6366f1 48%,
+          #7c3aed 100%);
+
+      border: 0;
+      border-radius: 8px;
+
+      box-shadow:
+        0 2px 10px rgba(59, 130, 246, 0.19);
+
+      font-size: 13px;
+      font-weight: 600;
+      text-decoration: none;
+
+      cursor: pointer;
+
+      transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+    }
+
+    .pending-table td:last-child button:hover,
+    .pending-table td:last-child a:hover,
+    .pending-table .view-button:hover,
+    .pending-table .view-btn:hover {
+      transform: translateY(-2px);
+
+      box-shadow:
+        0 6px 16px rgba(79, 70, 229, 0.27);
+    }
+
+    .pending-table td:last-child button:active,
+    .pending-table td:last-child a:active {
+      transform: translateY(0);
+    }
+
+
+    /* =========================================================
+           EMPTY STATE
+        ========================================================= */
+
+    #pending-body:empty::after {
+      content: "No pending documents found.";
+
+      display: table-cell;
+
+      height: 140px;
+
+      padding: 30px;
+
+      color: #94a3b8;
+
+      text-align: center;
+      vertical-align: middle;
+
+      font-size: 13px;
+
+      background: #ffffff;
+    }
+
+
+    /* =========================================================
+           RESPONSIVE
+        ========================================================= */
+
+    @media (max-width: 1100px) {
+
+      .pending-page {
+        padding: 32px;
+      }
+
+      .pending-controls {
+        margin-top: 0;
+
+        justify-content: flex-start;
+        flex-wrap: wrap;
+      }
+
+      .pending-search-field {
+        flex: 1;
+
+        width: auto;
+        min-width: 280px;
+      }
+
+      .pending-table {
+        min-width: 950px;
+      }
+    }
+
+
+    @media (max-width: 700px) {
+
+      .pending-page {
+        padding: 24px 18px 32px;
+        gap: 22px;
+      }
+
+      .page-title {
+        font-size: 29px;
+      }
+
+      .page-description {
+        max-width: 350px;
+      }
+
+      .pending-controls {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .pending-controls .field,
+      .pending-search-field {
+        width: 100%;
+        min-width: 0;
+      }
+
+      #pending-category,
+      #pending-date {
+        width: 100%;
+      }
+
+      .pending-tabs {
+        width: 100%;
+      }
+
+      .pending-tab {
+        flex: 1;
+      }
+    }

@@ -1,0 +1,1616 @@
+
+
+/* Extracted from pending-view.html */
+    /* =========================================================
+           GLOBAL
+        ========================================================= */
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+    }
+
+    body {
+      min-height: 100vh;
+      font-family:
+        Inter,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+
+      color: #111827;
+
+      background:
+        radial-gradient(circle at 90% 5%,
+          rgba(124, 58, 237, 0.12),
+          transparent 28%),
+        radial-gradient(circle at 4% 92%,
+          rgba(99, 102, 241, 0.10),
+          transparent 32%),
+        linear-gradient(225deg,
+          #e0e7ff 0%,
+          #ede9fe 50%,
+          #faf5ff 100%);
+    }
+
+    button,
+    input,
+    textarea {
+      font: inherit;
+    }
+
+
+    /* =========================================================
+           PAGE
+        ========================================================= */
+
+    .pending-view-page {
+      width: 100%;
+      max-width: 1500px;
+      min-height: 100vh;
+
+      margin: 0 auto;
+      padding: 40px 48px 70px;
+
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+    }
+
+
+    /* =========================================================
+           BACK
+        ========================================================= */
+
+    .back-link {
+      width: fit-content;
+
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+
+      color: #6366f1;
+
+      font-size: 13px;
+      font-weight: 600;
+
+      text-decoration: none;
+
+      transition:
+        color 0.2s ease,
+        transform 0.2s ease;
+    }
+
+    .back-link:hover {
+      color: #4f46e5;
+      transform: translateX(-3px);
+    }
+
+
+    /* =========================================================
+           HEADER
+        ========================================================= */
+
+    .pending-view-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      gap: 30px;
+    }
+
+    .pending-view-header>div:first-child {
+      min-width: 0;
+    }
+
+    .review-context {
+      margin: 0 0 6px;
+
+      color: #6366f1;
+
+      font-size: 11px;
+      line-height: 1.2;
+      font-weight: 700;
+
+      letter-spacing: 1.4px;
+    }
+
+    #view-context {
+      display: none;
+    }
+
+    #pending-file-name {
+      margin: 0;
+
+      color: #1e1b4b;
+
+      font-size: 36px;
+      line-height: 1.2;
+      font-weight: 800;
+      letter-spacing: -1.2px;
+
+      word-break: break-word;
+    }
+
+    #pending-file-name::after {
+      content: "Review and manage your document";
+
+      display: block;
+
+      margin-top: 5px;
+
+      color: #6366f1;
+
+      font-size: 14px;
+      line-height: 1.4;
+      font-weight: 400;
+      letter-spacing: 0;
+    }
+
+
+    /* =========================================================
+           META
+        ========================================================= */
+
+    .pending-document-meta {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 7px;
+
+      margin-top: 11px;
+    }
+
+    .pending-document-meta span {
+      min-height: 25px;
+
+      display: inline-flex;
+      align-items: center;
+
+      padding: 4px 10px;
+
+      color: #6366f1;
+      background: rgba(255, 255, 255, 0.58);
+
+      border: 1px solid #c7d2fe;
+      border-radius: 999px;
+
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+
+    /* =========================================================
+           ACTIONS
+        ========================================================= */
+
+    .pending-action-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+
+      flex-shrink: 0;
+    }
+
+    .pending-action-row .btn {
+      min-height: 44px;
+
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+
+      padding: 0 24px;
+
+      border-radius: 12px;
+
+      font-size: 13px;
+      font-weight: 700;
+
+      cursor: pointer;
+
+      transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease,
+        background 0.2s ease;
+    }
+
+    #revert-inbox {
+      color: #6366f1;
+      background: #ffffff;
+
+      border: 1px solid #c7d2fe;
+
+      box-shadow:
+        0 2px 8px rgba(99, 102, 241, 0.08);
+    }
+
+    #revert-inbox::before {
+      content: "Γå⌐";
+      font-size: 17px;
+    }
+
+    #revert-inbox:hover {
+      transform: translateY(-2px);
+
+      box-shadow:
+        0 6px 16px rgba(99, 102, 241, 0.15);
+    }
+
+    #open-email {
+      color: #ffffff;
+
+      background:
+        linear-gradient(135deg,
+          #6c63ff 0%,
+          #7c3aed 55%,
+          #a855f7 100%);
+
+      border: 0;
+
+      box-shadow:
+        0 4px 20px rgba(108, 99, 255, 0.25);
+    }
+
+    #open-email::before {
+      content: "Γ£ë";
+      font-size: 15px;
+    }
+
+    #open-email:hover {
+      transform: translateY(-2px);
+
+      box-shadow:
+        0 8px 25px rgba(108, 99, 255, 0.32);
+    }
+
+
+    /* =========================================================
+           DOCUMENT SECTIONS
+        ========================================================= */
+
+    #quotation-document,
+    #delivery-order-document,
+    #invoice-document,
+    #soa-document,
+    #generic-document {
+      position: relative;
+
+      width: 100%;
+
+      margin-top: 36px;
+    }
+
+    #quotation-document[hidden],
+    #delivery-order-document[hidden],
+    #invoice-document[hidden],
+    #soa-document[hidden],
+    #generic-document[hidden] {
+      display: none;
+    }
+
+    #quotation-document::before,
+    #delivery-order-document::before,
+    #invoice-document::before,
+    #soa-document::before,
+    #generic-document::before {
+      position: absolute;
+
+      left: 0;
+      bottom: calc(100% + 14px);
+
+      color: #1e1b4b;
+
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    #quotation-document::before {
+      content: "Quotation";
+    }
+
+    #delivery-order-document::before {
+      content: "Delivery Order";
+    }
+
+    #invoice-document::before {
+      content: "Tax Invoice";
+    }
+
+    #soa-document::before {
+      content: "Statement of Account";
+    }
+
+    #generic-document::before {
+      content: "Document";
+    }
+
+    #quotation-document::after,
+    #delivery-order-document::after,
+    #invoice-document::after,
+    #soa-document::after,
+    #generic-document::after {
+      content: "";
+
+      position: absolute;
+
+      left: 0;
+      right: 0;
+
+      bottom: calc(100% + 6px);
+
+      height: 1px;
+
+      background: #c7d2fe;
+    }
+
+
+    /* =========================================================
+           COMMON PAPER
+        ========================================================= */
+
+    .quotation-paper,
+    .delivery-paper,
+    .invoice-paper,
+    .soa-paper,
+    .generic-preview-paper {
+      position: relative;
+
+      width: 100%;
+
+      margin: 0 auto;
+      padding: 52px;
+
+      color: #111827;
+      background: #ffffff;
+
+      border: 1px solid #e0e7ff;
+      border-radius: 20px;
+
+      box-shadow:
+        0 16px 60px rgba(99, 102, 241, 0.13);
+
+      overflow: hidden;
+    }
+
+    .quotation-paper::before,
+    .delivery-paper::before,
+    .invoice-paper::before,
+    .soa-paper::before,
+    .generic-preview-paper::before {
+      content: "";
+
+      position: absolute;
+
+      top: 0;
+      left: 0;
+      right: 0;
+
+      height: 6px;
+
+      background:
+        linear-gradient(90deg,
+          #6c63ff,
+          #4f46e5,
+          #8b5cf6);
+    }
+
+
+    /* =========================================================
+           COMPANY HEADERS
+        ========================================================= */
+
+    .paper-header,
+    .delivery-paper-header,
+    .invoice-paper-header,
+    .soa-paper-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+
+      gap: 40px;
+
+      padding-bottom: 28px;
+
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    .paper-header>div:first-child,
+    .delivery-paper-header>div:first-child,
+    .invoice-paper-header>div:first-child,
+    .soa-paper-header>div:first-child {
+      flex: 1;
+    }
+
+    .paper-header h2,
+    .delivery-paper-header h2,
+    .invoice-paper-header h2,
+    .soa-paper-header h2 {
+      position: relative;
+
+      margin: 0 0 19px;
+
+      color: #111827;
+
+      font-size: 26px;
+      line-height: 1.2;
+      font-weight: 800;
+      letter-spacing: -0.6px;
+    }
+
+    .paper-header h2::after,
+    .delivery-paper-header h2::after,
+    .invoice-paper-header h2::after,
+    .soa-paper-header h2::after {
+      content: "";
+
+      position: absolute;
+
+      left: 0;
+      bottom: -10px;
+
+      width: 48px;
+      height: 3px;
+
+      background: #6c63ff;
+
+      border-radius: 999px;
+    }
+
+    .paper-header p,
+    .delivery-paper-header p,
+    .invoice-paper-header p,
+    .soa-paper-header p {
+      margin: 2px 0;
+
+      color: #6b7280;
+
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .paper-register,
+    .delivery-register,
+    .invoice-register {
+      flex-shrink: 0;
+    }
+
+    .paper-register img,
+    .delivery-register img,
+    .invoice-register img,
+    .soa-paper-header>img {
+      display: block;
+
+      max-width: 120px;
+      max-height: 65px;
+
+      object-fit: contain;
+    }
+
+
+    /* =========================================================
+           DOCUMENT TITLES
+        ========================================================= */
+
+    .paper-title-row,
+    .delivery-title-row,
+    .invoice-title-row {
+      display: flex;
+      justify-content: flex-end;
+
+      margin: 28px 0 5px;
+    }
+
+    .paper-title-row h3,
+    .delivery-title-row h3,
+    .invoice-title-row h3 {
+      margin: 0;
+
+      color: #4f46e5;
+
+      font-size: 24px;
+      font-weight: 800;
+    }
+
+
+    /* =========================================================
+           CUSTOMER INFORMATION
+        ========================================================= */
+
+    .paper-info-row,
+    .delivery-info-row,
+    .invoice-info-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+
+      gap: 50px;
+
+      margin-bottom: 28px;
+    }
+
+    .paper-customer,
+    .delivery-customer,
+    .invoice-customer {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+
+      gap: 4px;
+    }
+
+    .paper-customer::before,
+    .delivery-customer::before,
+    .invoice-customer::before {
+      content: "BILL TO";
+
+      width: fit-content;
+
+      display: inline-flex;
+
+      margin-bottom: 5px;
+      padding: 4px 12px;
+
+      color: #6c63ff;
+      background: #eef2ff;
+
+      border-radius: 6px;
+
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .paper-customer strong,
+    .delivery-customer strong,
+    .invoice-customer strong {
+      color: #111827;
+
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .paper-customer span,
+    .delivery-customer span,
+    .invoice-customer span {
+      color: #6b7280;
+
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+
+    /* =========================================================
+           DOCUMENT META
+        ========================================================= */
+
+    .paper-meta,
+    .delivery-meta,
+    .invoice-meta {
+      width: 310px;
+
+      margin: 0;
+
+      display: flex;
+      flex-direction: column;
+
+      gap: 5px;
+    }
+
+    .paper-meta>div,
+    .delivery-meta>div,
+    .invoice-meta>div {
+      display: grid;
+
+      grid-template-columns: 105px 1fr;
+
+      gap: 14px;
+    }
+
+    .paper-meta dt,
+    .paper-meta dd,
+    .delivery-meta dt,
+    .delivery-meta dd,
+    .invoice-meta dt,
+    .invoice-meta dd {
+      margin: 0;
+
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .paper-meta dt,
+    .delivery-meta dt,
+    .invoice-meta dt {
+      color: #9ca3af;
+
+      font-weight: 500;
+    }
+
+    .paper-meta dd,
+    .delivery-meta dd,
+    .invoice-meta dd {
+      color: #111827;
+
+      font-weight: 500;
+    }
+
+
+    /* =========================================================
+           SUBJECT
+        ========================================================= */
+
+    #preview-subject,
+    #do-preview-subject,
+    #inv-preview-subject {
+      width: 100%;
+
+      margin: 0 0 26px;
+      padding: 12px 18px;
+
+      color: #4f46e5;
+      background: #f5f3ff;
+
+      border: 1px solid #ddd6fe;
+      border-radius: 8px;
+
+      font-size: 13px;
+      line-height: 1.45;
+      font-weight: 700;
+    }
+
+
+    /* =========================================================
+           DOCUMENT TABLES
+        ========================================================= */
+
+    .paper-table,
+    .delivery-table,
+    .invoice-table {
+      width: 100%;
+
+      border-collapse: separate;
+      border-spacing: 0;
+
+      border: 1px solid #e5e7eb;
+      border-radius: 10px 10px 0 0;
+
+      overflow: hidden;
+    }
+
+    .paper-table thead,
+    .delivery-table thead,
+    .invoice-table thead {
+      background:
+        linear-gradient(110deg,
+          #4f46e5,
+          #6c63ff);
+    }
+
+    .paper-table th,
+    .delivery-table th,
+    .invoice-table th {
+      padding: 13px 16px;
+
+      color: #ffffff;
+      background: transparent;
+
+      border: 0;
+
+      text-align: left;
+
+      font-size: 12px;
+      line-height: 1.2;
+      font-weight: 700;
+    }
+
+    .paper-table td,
+    .delivery-table td,
+    .invoice-table td {
+      padding: 18px 16px;
+
+      color: #374151;
+      background: #ffffff;
+
+      border-bottom: 1px solid #e5e7eb;
+
+      font-size: 13px;
+      line-height: 1.55;
+
+      vertical-align: top;
+    }
+
+    .paper-table tbody tr:last-child td,
+    .delivery-table tbody tr:last-child td,
+    .invoice-table tbody tr:last-child td {
+      border-bottom: 0;
+    }
+
+
+    /* quotation / invoice numeric alignment */
+
+    .paper-table th:first-child,
+    .paper-table td:first-child,
+    .invoice-table th:first-child,
+    .invoice-table td:first-child {
+      width: 65px;
+      text-align: center;
+    }
+
+    .paper-table th:nth-child(3),
+    .paper-table td:nth-child(3),
+    .invoice-table th:nth-child(3),
+    .invoice-table td:nth-child(3) {
+      width: 110px;
+      text-align: center;
+    }
+
+    .paper-table th:nth-child(4),
+    .paper-table td:nth-child(4),
+    .paper-table th:nth-child(5),
+    .paper-table td:nth-child(5),
+    .invoice-table th:nth-child(4),
+    .invoice-table td:nth-child(4),
+    .invoice-table th:nth-child(5),
+    .invoice-table td:nth-child(5) {
+      width: 130px;
+
+      text-align: right;
+    }
+
+    .paper-table td:first-child,
+    .invoice-table td:first-child {
+      color: #4f46e5;
+
+      font-weight: 600;
+    }
+
+    .paper-table td:nth-child(5),
+    .invoice-table td:nth-child(5) {
+      color: #111827;
+
+      font-weight: 600;
+    }
+
+
+    /* =========================================================
+           QUOTATION TOTALS
+        ========================================================= */
+
+    .paper-total-row,
+    .invoice-total-row {
+      display: grid;
+      grid-template-columns: 1fr 300px;
+
+      gap: 40px;
+
+      padding: 20px;
+
+      border: 1px solid #e5e7eb;
+      border-top: 0;
+
+      border-radius: 0 0 10px 10px;
+    }
+
+    #preview-amount-words,
+    #inv-preview-amount-words {
+      color: #6b7280;
+
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    #preview-amount-words::before,
+    #inv-preview-amount-words::before {
+      content: "AMOUNT IN WORDS";
+
+      width: fit-content;
+
+      display: block;
+
+      margin-bottom: 7px;
+      padding: 4px 10px;
+
+      color: #9ca3af;
+      background: #f3f4f6;
+
+      border-radius: 6px;
+
+      font-size: 10px;
+      line-height: 1;
+      font-weight: 600;
+    }
+
+    .paper-totals,
+    .invoice-totals {
+      display: flex;
+      flex-direction: column;
+
+      gap: 8px;
+    }
+
+    .paper-totals>div,
+    .invoice-totals>div {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      gap: 30px;
+
+      color: #6b7280;
+
+      font-size: 13px;
+    }
+
+    .paper-totals strong,
+    .invoice-totals strong {
+      color: #374151;
+
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .paper-totals>div:last-child,
+    .invoice-totals>div:last-child {
+      margin-top: 2px;
+      padding-top: 10px;
+
+      border-top: 1px solid #4f46e5;
+    }
+
+    .paper-totals>div:last-child span,
+    .paper-totals>div:last-child strong,
+    .invoice-totals>div:last-child span,
+    .invoice-totals>div:last-child strong {
+      color: #4f46e5;
+
+      font-size: 15px;
+      font-weight: 800;
+    }
+
+
+    /* =========================================================
+           INVOICE PAYMENT
+        ========================================================= */
+
+    .invoice-payment {
+      margin-top: 24px;
+      padding: 18px 20px;
+
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      gap: 30px;
+
+      background: #f9fafb;
+
+      border: 1px solid #f3f4f6;
+      border-radius: 10px;
+    }
+
+    .invoice-payment strong {
+      color: #4f46e5;
+
+      font-size: 12px;
+    }
+
+    .invoice-payment p {
+      margin: 5px 0;
+
+      color: #6b7280;
+
+      font-size: 11px;
+      line-height: 1.45;
+    }
+
+    #pending-invoice-paynow {
+      width: 90px;
+      height: 90px;
+
+      padding: 4px;
+
+      object-fit: contain;
+
+      background: #ffffff;
+
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+    }
+
+
+    /* =========================================================
+           FOOTERS
+        ========================================================= */
+
+    .paper-footer,
+    .delivery-footer,
+    .invoice-footer,
+    .soa-footer {
+      margin-top: 28px;
+
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      gap: 20px;
+
+      color: #9ca3af;
+
+      font-size: 11px;
+    }
+
+    .paper-footer {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .paper-footer>span:first-child {
+      text-align: center;
+    }
+
+    .computer-generated-note {
+      width: 100%;
+
+      padding: 12px 16px;
+
+      color: #9ca3af;
+      background: #f9fafb;
+
+      border: 1px solid #f3f4f6;
+      border-radius: 10px;
+
+      text-align: center;
+
+      font-size: 11px;
+    }
+
+
+    /* =========================================================
+           SOA
+        ========================================================= */
+
+    .soa-title {
+      margin: 28px 0;
+
+      color: #4f46e5;
+
+      text-align: right;
+
+      font-size: 24px;
+      font-weight: 800;
+    }
+
+    .soa-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+
+      gap: 30px;
+
+      margin-bottom: 24px;
+    }
+
+    .soa-to-line {
+      color: #6b7280;
+
+      font-size: 13px;
+    }
+
+    .soa-to-line strong {
+      color: #111827;
+    }
+
+    .soa-head-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+
+      color: #6b7280;
+
+      font-size: 12px;
+    }
+
+    .soa-table,
+    .soa-ageing {
+      width: 100%;
+
+      border-collapse: separate;
+      border-spacing: 0;
+
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+
+      overflow: hidden;
+    }
+
+    .soa-table th,
+    .soa-ageing th {
+      padding: 12px 14px;
+
+      color: #ffffff;
+
+      background:
+        linear-gradient(110deg,
+          #4f46e5,
+          #6c63ff);
+
+      border: 0;
+
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .soa-table td,
+    .soa-ageing td {
+      padding: 12px 14px;
+
+      color: #374151;
+
+      border-bottom: 1px solid #e5e7eb;
+
+      font-size: 12px;
+    }
+
+    .soa-table tfoot td {
+      color: #4f46e5;
+      background: #f5f3ff;
+
+      font-weight: 700;
+    }
+
+    .soa-ageing-title {
+      margin: 25px 0 10px;
+
+      color: #1e1b4b;
+
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .soa-ageing-total td {
+      color: #4f46e5;
+      background: #f5f3ff;
+
+      font-weight: 700;
+    }
+
+
+    /* =========================================================
+           GENERIC DOCUMENT
+        ========================================================= */
+
+    .generic-preview-paper {
+      min-height: 420px;
+    }
+
+    .generic-preview-paper .eyebrow {
+      margin: 0 0 7px;
+
+      color: #6366f1;
+
+      font-size: 11px;
+      font-weight: 700;
+
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .generic-preview-paper h2 {
+      margin: 0 0 30px;
+
+      color: #111827;
+
+      font-size: 28px;
+    }
+
+    .generic-preview-paper dl {
+      display: grid;
+      grid-template-columns: 130px 1fr;
+
+      gap: 12px;
+
+      margin: 0;
+    }
+
+    .generic-preview-paper dt {
+      color: #9ca3af;
+
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .generic-preview-paper dd {
+      margin: 0;
+
+      color: #374151;
+
+      font-size: 13px;
+    }
+
+    .generic-note {
+      margin-top: 35px;
+      padding: 15px;
+
+      color: #6366f1;
+      background: #eef2ff;
+
+      border: 1px solid #c7d2fe;
+      border-radius: 10px;
+
+      font-size: 12px;
+    }
+
+
+    /* =========================================================
+           SENT SUCCESS
+        ========================================================= */
+
+    .sent-summary {
+      width: 100%;
+
+      display: flex;
+      align-items: center;
+
+      gap: 12px;
+
+      padding: 16px 18px;
+
+      color: #166534;
+      background: #f0fdf4;
+
+      border: 1px solid #bbf7d0;
+      border-radius: 12px;
+
+      box-shadow:
+        0 4px 14px rgba(22, 163, 74, 0.07);
+    }
+
+    .sent-summary[hidden] {
+      display: none;
+    }
+
+    .sent-summary strong {
+      font-size: 13px;
+    }
+
+    .sent-summary span {
+      color: #15803d;
+
+      font-size: 12px;
+    }
+
+
+    /* =========================================================
+           EMAIL MODAL
+        ========================================================= */
+
+    .email-modal {
+      position: fixed;
+      z-index: 1000;
+
+      inset: 0;
+
+      display: grid;
+      place-items: center;
+
+      padding: 24px;
+    }
+
+    .email-modal[hidden] {
+      display: none;
+    }
+
+    .email-modal-backdrop {
+      position: absolute;
+
+      inset: 0;
+
+      background: rgba(30, 27, 75, 0.42);
+
+      backdrop-filter: blur(7px);
+    }
+
+    .email-modal-card {
+      position: relative;
+      z-index: 2;
+
+      width: min(600px, 100%);
+      max-height: calc(100vh - 48px);
+
+      padding: 28px;
+
+      background:
+        linear-gradient(145deg,
+          #ffffff,
+          #fafaff);
+
+      border: 1px solid #e0e7ff;
+      border-radius: 22px;
+
+      box-shadow:
+        0 30px 80px rgba(30, 27, 75, 0.24);
+
+      overflow-y: auto;
+
+      animation: modalOpen 0.22s ease;
+    }
+
+    @keyframes modalOpen {
+      from {
+        opacity: 0;
+        transform: translateY(14px) scale(0.98);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+
+    /* =========================================================
+           MODAL HEADER
+        ========================================================= */
+
+    .email-modal-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+
+      gap: 20px;
+
+      margin-bottom: 24px;
+    }
+
+    .email-modal-header h2 {
+      margin: 0;
+
+      color: #1e1b4b;
+
+      font-size: 26px;
+      font-weight: 800;
+    }
+
+    .email-close {
+      width: 36px;
+      height: 36px;
+
+      display: grid;
+      place-items: center;
+
+      padding: 0;
+
+      color: #64748b;
+      background: #f8fafc;
+
+      border: 1px solid #e2e8f0;
+      border-radius: 50%;
+
+      font-size: 21px;
+
+      cursor: pointer;
+
+      transition:
+        color 0.2s ease,
+        background 0.2s ease,
+        transform 0.2s ease;
+    }
+
+    .email-close:hover {
+      color: #ef4444;
+      background: #fef2f2;
+
+      transform: rotate(6deg);
+    }
+
+
+    /* =========================================================
+           EMAIL FORM
+        ========================================================= */
+
+    .email-form {
+      display: flex;
+      flex-direction: column;
+
+      gap: 18px;
+    }
+
+    .email-form .field {
+      display: flex;
+      flex-direction: column;
+
+      gap: 7px;
+    }
+
+    .email-form label {
+      color: #475569;
+
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .email-form input,
+    .email-form textarea {
+      width: 100%;
+
+      padding: 11px 13px;
+
+      color: #0f172a;
+      background: #f8fafc;
+
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      outline: none;
+
+      font-size: 13px;
+
+      transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease,
+        background 0.2s ease;
+    }
+
+    .email-form input {
+      height: 44px;
+    }
+
+    .email-form textarea {
+      min-height: 145px;
+      resize: vertical;
+    }
+
+    .email-form input:focus,
+    .email-form textarea:focus {
+      background: #ffffff;
+
+      border-color: #818cf8;
+
+      box-shadow:
+        0 0 0 4px rgba(99, 102, 241, 0.08);
+    }
+
+
+    /* =========================================================
+           ATTACHMENTS
+        ========================================================= */
+
+    .email-attachments {
+      padding: 14px;
+
+      background: #f8fafc;
+
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+    }
+
+    .email-attachments>strong {
+      display: block;
+
+      margin-bottom: 9px;
+
+      color: #475569;
+
+      font-size: 12px;
+    }
+
+    #email-attachment-list {
+      color: #6366f1;
+
+      font-size: 12px;
+    }
+
+    .prototype-note {
+      margin: 0;
+
+      padding: 10px 12px;
+
+      color: #a16207;
+      background: #fffbeb;
+
+      border: 1px solid #fde68a;
+      border-radius: 8px;
+
+      font-size: 11px;
+      line-height: 1.45;
+    }
+
+
+    /* =========================================================
+           MODAL ACTIONS
+        ========================================================= */
+
+    .email-form-actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+
+      gap: 10px;
+
+      padding-top: 4px;
+    }
+
+    .email-form-actions .btn {
+      min-height: 42px;
+
+      padding: 0 20px;
+
+      border-radius: 10px;
+
+      font-size: 13px;
+      font-weight: 600;
+
+      cursor: pointer;
+    }
+
+    .email-form-actions .btn:not(.btn-primary) {
+      color: #64748b;
+      background: #ffffff;
+
+      border: 1px solid #e2e8f0;
+    }
+
+    .email-form-actions .btn-primary {
+      color: #ffffff;
+
+      background:
+        linear-gradient(110deg,
+          #4f46e5,
+          #7c3aed);
+
+      border: 0;
+
+      box-shadow:
+        0 4px 14px rgba(79, 70, 229, 0.22);
+    }
+
+
+    /* =========================================================
+           RESPONSIVE
+        ========================================================= */
+
+    @media (max-width: 1050px) {
+
+      .pending-view-page {
+        padding: 32px;
+      }
+
+      .quotation-paper,
+      .delivery-paper,
+      .invoice-paper,
+      .soa-paper,
+      .generic-preview-paper {
+        padding: 38px;
+      }
+
+      .paper-info-row,
+      .delivery-info-row,
+      .invoice-info-row {
+        grid-template-columns: 1fr;
+
+        gap: 25px;
+      }
+
+      .paper-meta,
+      .delivery-meta,
+      .invoice-meta {
+        width: 100%;
+      }
+    }
+
+
+    @media (max-width: 760px) {
+
+      .pending-view-page {
+        padding: 24px 18px 40px;
+      }
+
+      .pending-view-header {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      #pending-file-name {
+        font-size: 29px;
+      }
+
+      .pending-action-row {
+        width: 100%;
+      }
+
+      .pending-action-row .btn {
+        flex: 1;
+
+        padding: 0 12px;
+      }
+
+      .quotation-paper,
+      .delivery-paper,
+      .invoice-paper,
+      .soa-paper,
+      .generic-preview-paper {
+        padding: 28px 22px;
+
+        border-radius: 16px;
+      }
+
+      .paper-header,
+      .delivery-paper-header,
+      .invoice-paper-header,
+      .soa-paper-header {
+        flex-direction: column;
+      }
+
+      .paper-header h2,
+      .delivery-paper-header h2,
+      .invoice-paper-header h2,
+      .soa-paper-header h2 {
+        font-size: 21px;
+      }
+
+      .paper-title-row,
+      .delivery-title-row,
+      .invoice-title-row {
+        justify-content: flex-start;
+      }
+
+      .soa-title {
+        text-align: left;
+      }
+
+      .paper-info-row,
+      .delivery-info-row,
+      .invoice-info-row {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .paper-total-row,
+      .invoice-total-row {
+        grid-template-columns: 1fr;
+      }
+
+      .invoice-payment {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .soa-head {
+        flex-direction: column;
+      }
+
+      #quotation-document,
+      #delivery-order-document,
+      #invoice-document,
+      #soa-document {
+        overflow-x: auto;
+      }
+
+      .paper-table,
+      .delivery-table,
+      .invoice-table,
+      .soa-table,
+      .soa-ageing {
+        min-width: 700px;
+      }
+
+      .email-modal {
+        padding: 14px;
+      }
+
+      .email-modal-card {
+        padding: 22px 18px;
+      }
+
+      .email-form-actions {
+        flex-direction: column-reverse;
+      }
+
+      .email-form-actions .btn {
+        width: 100%;
+      }
+    }

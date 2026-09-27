@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>MaxGreen Agent — All Customers</title>
+
+  <link rel="icon" href="data:," />
+  <link rel="stylesheet" href="./assets/css/base.css" />
+
+  <link rel="stylesheet" href="./assets/css/customers.css" />
+</head>
+
+
+<body class="customers-page">
+
+  <main class="customers-shell">
+
+
+    <!-- =====================================================
+             BACK
+        ====================================================== -->
+
+    <a class="back-link" href="./index.html">
+      ← Back to Dashboard
+    </a>
+
+
+    <!-- =====================================================
+             HEADER
+        ====================================================== -->
+
+    <header class="customers-header">
+
+      <h1>
+        All Customers
+      </h1>
+
+
+      <div class="customers-header-actions">
+
+
+        <!-- SEARCH -->
+
+        <input id="company-search" class="company-search" type="search" aria-label="Search companies"
+          placeholder="Search..." />
+
+
+        <!-- ADD COMPANY -->
+
+        <button class="company-action-button" id="add-company" type="button">
+          Add Company
+        </button>
+
+
+        <!-- SETTINGS -->
+
+        <a class="customers-settings" href="./settings.html" aria-label="Settings" title="Settings">
+          Settings
+        </a>
+
+      </div>
+
+    </header>
+
+
+    <!-- =====================================================
+             COMPANY EDITOR
+
+             customers.js continues controlling this section.
+        ====================================================== -->
+
+    <section id="company-editor-host" class="company-editor-host" hidden></section>
+
+
+    <!-- =====================================================
+             COMPANY LIST
+
+             customers.js continues generating the company cards.
+        ====================================================== -->
+
+    <section id="company-list" class="company-list" aria-live="polite"></section>
+
+  </main>
+
+
+  <!-- =========================================================
+         EXISTING JAVASCRIPT
+    ========================================================== -->
+
+  <script type="module" src="./assets/js/pages/customers.js"></script>
+
+</body>
+
+</html>
