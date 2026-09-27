@@ -255,7 +255,7 @@ Classification is deliberately manual in this version. After you validate the re
 ```bash
 cd backend
 .venv/bin/python -m pip install -r requirements-dev.txt   # pytest, ruff, httpx
-.venv/bin/python -m pytest        # 137 tests
+.venv/bin/python -m pytest        # 236 tests
 .venv/bin/ruff check .            # lint
 ```
 
@@ -265,4 +265,73 @@ credentials.
 
 Two manual smoke scripts remain for things a unit test cannot reach: `backend/test_gmail.py`
 (confirms live Gmail read access) and `backend/test_llm_gateway.py` (confirms the gateway answers).
+
+## Running the tests (pytest)
+
+The suite is pure offline: no network calls, no Gmail token, no `.env` values and no real
+credentials are required. Every test that touches SQLite uses a throwaway file via the `temp_db`
+fixture in `backend/tests/conftest.py`, so `backend/data/maxgreen.db` is never read or written.
+
+### 1. One-time setup
+
+```bash
+# from the repo root
+backend/.venv/bin/python -m pip install -r backend/requirements-dev.txt
+```
+
+This installs the pinned dev tools (`pytest`, `ruff`, `httpx` — the last one is needed by
+`fastapi.testclient.TestClient`). `backend/.venv` is the same Python 3.12 environment the backend
+itself runs in; create it first with `python3 -m venv backend/.venv` if it is missing.
+
+### 2. Run the whole suite
+
+```bash
+# from the repo root (reads pyproject.toml: testpaths = backend/tests, pythonpath = backend)
+backend/.venv/bin/python -m pytest
+```
+
+or, with the virtualenv activated from `backend/`:
+
+```bash
+cd backend
+source .venv/bin/activate
+python -m pytest
+```
+
+Both forms resolve to the repo-root `pyproject.toml`, which sets `-q --strict-markers` as default
+options. Expect **236 passing tests** in roughly 30 seconds.
+
+### 3. Useful variations
+
+```bash
+backend/.venv/bin/python -m pytest -v                              # show every test name
+backend/.venv/bin/python -m pytest backend/tests/test_app.py       # one file
+backend/.venv/bin/python -m pytest "backend/tests/test_app.py::TestBasicRoutes::test_health_shape"
+backend/.venv/bin/python -m pytest -k classification               # name filter
+backend/.venv/bin/python -m pytest -x                              # stop at first failure
+backend/.venv/bin/python -m pytest --maxfail=3                     # stop after three failures
+backend/.venv/bin/python -m pytest --lf                            # re-run only what failed last time
+```
+
+### 4. What the suite covers
+
+| File | Tests | Focus |
+| --- | --- | --- |
+| `backend/tests/test_classification_service.py` | 71 | Prompting, response normalisation, vocabulary validation |
+| `backend/tests/test_workflow_service.py` | 59 | Document workflow transitions and per-entity state |
+| `backend/tests/test_api_hardening.py` | 40 | Route behaviour, error handling, headers, auth surface |
+| `backend/tests/test_llm_and_scheduler.py` | 30 | Gateway client, JSON parsing, retry, poll loop |
+| `backend/tests/test_database_service.py` | 23 | Schema creation, additive migrations, queries |
+| `backend/tests/test_app.py` | 13 | FastAPI app wiring through `TestClient` |
+
+### 5. If a run fails
+
+- `ModuleNotFoundError: services` or `app` — run pytest from the repo root or from `backend/`
+  with `.venv/bin/python -m pytest`; `pythonpath = ["backend"]` and `backend/tests/conftest.py`
+  both put `backend/` on `sys.path`.
+- `pytest: command not found` — the dev requirements are not installed in that interpreter;
+  re-run step 1.
+- Only the two smoke scripts need credentials. `backend/test_gmail.py` and
+  `backend/test_llm_gateway.py` are plain scripts, **not** collected by pytest, and must be run
+  by hand.
 
