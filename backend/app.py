@@ -149,8 +149,10 @@ def classify_gmail_message(gmail_message_id: str) -> dict:
         update_message_classification(gmail_message_id, result)
         return {"ok": True, "gmail_message_id": gmail_message_id, "classification": result}
     except Exception as exc:
-        logger.error("AI classification failed for Gmail %s", gmail_message_id, exc_info=True)
-        raise _upstream_failure("AI preparation failed. Check the backend logs for details.", exc) from exc
+        raise _upstream_failure(
+            f"AI preparation failed for Gmail {gmail_message_id}. Check the backend logs for details.",
+            exc,
+        ) from exc
 
 
 @app.post("/api/ai/classify-unclassified")

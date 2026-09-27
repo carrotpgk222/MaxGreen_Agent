@@ -82,7 +82,9 @@ class TestNoUpstreamLeak:
 
         assert response.status_code == 502
         assert SECRET not in response.text
-        assert response.json()["detail"] == "AI preparation failed. Check the backend logs for details."
+        assert response.json()["detail"] == (
+            "AI preparation failed for Gmail msg-leak. Check the backend logs for details."
+        )
 
     def test_classify_unclassified_reports_per_item_error_without_detail(self, client, monkeypatch):
         def explode(_message):
