@@ -15,3 +15,14 @@ export function isSelectableQuotation(email) {
     && email.category === 'Quotation'
     && !email.deletedFromCompleted
 }
+
+export function filterQuotationRows(rows, query = '') {
+  const needle = String(query || '').trim().toLowerCase()
+  if (!needle) return rows
+  return rows.filter(({ email: quoteEmail, quotation }) => [
+    quotation.quotationNumber,
+    quotation.subjectTitle,
+    quotation.company,
+    quoteEmail.subject
+  ].filter(Boolean).join(' ').toLowerCase().includes(needle))
+}

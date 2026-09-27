@@ -19,7 +19,7 @@ import {
   taxAmount,
   totalInWords
 } from '../core/quotationUtils.js'
-import { completedQuotationRows, isSelectableQuotation } from '../core/quotationPicker.js'
+import { completedQuotationRows, filterQuotationRows, isSelectableQuotation } from '../core/quotationPicker.js'
 
 const ADD_CONTACT_VALUE = '__add_contact__'
 const emailId = getQueryParam('id')
@@ -193,17 +193,8 @@ function hideRefQuoteSuggestions() {
   elements.quote.setAttribute('aria-expanded', 'false')
 }
 
-function renderRefQuoteSuggestions() {
-  const query = elements.quote.value.trim().toLowerCase()
-  const rows = completedQuotationRows().filter(({ email: quoteEmail, quotation }) => {
-    if (!query) return true
-    return [
-      quotation.quotationNumber,
-      quotation.subjectTitle,
-      quotation.company,
-      quoteEmail.subject
-    ].filter(Boolean).join(' ').toLowerCase().includes(query)
-  }).slice(0, 10)
+function renderRefQuoteSuggestions(query = '') {
+  const rows = filterQuotationRows(completedQuotationRows(), query).slice(0, 10)
 
   elements.quoteSuggestions.innerHTML = rows.length ? rows.map(({ email: quoteEmail, quotation }) => `
     <button class="ref-quote-suggestion" type="button" role="option" data-quote-email-id="${escapeHtml(quoteEmail.id)}">
@@ -419,8 +410,14 @@ elements.attn.addEventListener('change', () => {
   snapshotCustomer()
 })
 
-elements.quote.addEventListener('focus', renderRefQuoteSuggestions)
-elements.quote.addEventListener('input', renderRefQuoteSuggestions)
+// The field is pre-filled with the linked quotation, so focus must NOT treat that
+// value as a search term - it would hide every other option. List all, and select
+// the text so the first keystroke replaces it.
+elements.quote.addEventListener('focus', () => {
+  renderRefQuoteSuggestions('')
+  elements.quote.select()
+})
+elements.quote.addEventListener('input', () => renderRefQuoteSuggestions(elements.quote.value))
 elements.quote.addEventListener('keydown', event => {
   if (event.key === 'Escape') hideRefQuoteSuggestions()
 })

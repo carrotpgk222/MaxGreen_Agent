@@ -2,7 +2,7 @@ import { getEmails } from '../core/storage.js'
 import { getQueryParam } from '../core/utils.js'
 import { getQuotationDraft } from '../core/quotationStorage.js'
 import { getDeliveryOrderDraft, saveDeliveryOrderDraft } from '../core/deliveryOrderStorage.js'
-import { completedQuotationRows, isSelectableQuotation } from '../core/quotationPicker.js'
+import { completedQuotationRows, filterQuotationRows, isSelectableQuotation } from '../core/quotationPicker.js'
 import { getCompanies, saveCompanies } from '../core/customerStorage.js'
 import {
   createDefaultDeliveryOrder,
@@ -207,17 +207,8 @@ function hideRefQuoteSuggestions() {
   elements.refQuoteSearch.setAttribute('aria-expanded', 'false')
 }
 
-function renderRefQuoteSuggestions() {
-  const query = elements.refQuoteSearch.value.trim().toLowerCase()
-  const rows = completedQuotationRows().filter(({ email: quoteEmail, quotation }) => {
-    if (!query) return true
-    return [
-      quotation.quotationNumber,
-      quotation.subjectTitle,
-      quotation.company,
-      quoteEmail.subject
-    ].filter(Boolean).join(' ').toLowerCase().includes(query)
-  }).slice(0, 10)
+function renderRefQuoteSuggestions(query = '') {
+  const rows = filterQuotationRows(completedQuotationRows(), query).slice(0, 10)
 
   elements.refQuoteSuggestions.innerHTML = rows.length ? rows.map(({ email: quoteEmail, quotation }) => `
     <button class="ref-quote-suggestion" type="button" role="option" data-quote-email-id="${escapeHtml(quoteEmail.id)}">
@@ -382,8 +373,13 @@ elements.cancelNewCompany.addEventListener('click', () => closeNewCompanyModal(t
 elements.saveNewCompany.addEventListener('click', saveNewCompanyFromModal)
 elements.companyModal.addEventListener('click', event => { if (event.target.matches('[data-close-do-company-modal]')) closeNewCompanyModal(true) })
 
-elements.refQuoteSearch.addEventListener('focus', renderRefQuoteSuggestions)
-elements.refQuoteSearch.addEventListener('input', renderRefQuoteSuggestions)
+// See invoiceEdit.js: the box is pre-filled with the linked quotation, so focus
+// must not filter by that value.
+elements.refQuoteSearch.addEventListener('focus', () => {
+  renderRefQuoteSuggestions('')
+  elements.refQuoteSearch.select()
+})
+elements.refQuoteSearch.addEventListener('input', () => renderRefQuoteSuggestions(elements.refQuoteSearch.value))
 elements.refQuoteSearch.addEventListener('keydown', event => {
   if (event.key === 'Escape') hideRefQuoteSuggestions()
 })
