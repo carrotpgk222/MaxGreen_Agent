@@ -791,6 +791,7 @@ function formatAxis(value) {
 
   }
 
+
   if (
     value >= 1_000
   ) {
@@ -806,6 +807,7 @@ function formatAxis(value) {
     )
 
   }
+
 
   return '$' + Math.round(
     value

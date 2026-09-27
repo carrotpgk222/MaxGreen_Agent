@@ -1,90 +1,4 @@
-.dashboard-page { background: #fff; min-height: 100vh; }
-.dashboard-page .page { padding-top: 42px; }
-.dashboard-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 24px;
-  margin-bottom: 28px;
-}
-.dashboard-header h1 { margin: 0; font-size: 38px; letter-spacing: -0.04em; }
-.dashboard-actions { display: flex; align-items: center; gap: 14px; }
-.dashboard-search {
-  width: 320px;
-  border: 0;
-  border-radius: 5px;
-  background: #e3e3e3;
-  padding: 10px 13px;
-  outline: none;
-}
-.settings-link { font-weight: 800; display: inline-flex; gap: 8px; align-items: center; }
-.settings-icon { font-size: 22px; }
-.dashboard-grid { display: grid; grid-template-columns: minmax(560px, 1.15fr) minmax(390px, .85fr); gap: 40px; }
-.dashboard-left { display: flex; flex-direction: column; gap: 20px; }
-.dashboard-top-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
-.dashboard-middle-cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 34px; }
-.dashboard-stat {
-  min-height: 156px;
-  border-radius: 4px;
-  background: #dedede;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  padding: 18px;
-  transition: transform .15s ease, background .15s ease;
-}
-.dashboard-stat:hover { transform: translateY(-2px); background: #d5d5d5; }
-.dashboard-stat-number { font-size: 39px; font-weight: 800; line-height: 1; }
-.dashboard-stat-title { margin-top: 7px; font-size: 21px; font-weight: 800; line-height: 1.12; }
-.dashboard-stat-subtitle { margin-top: 5px; font-size: 12px; }
-.all-customers-card {
-  min-height: 110px;
-  border-radius: 3px;
-  background: #dedede;
-  display: grid;
-  place-items: center;
-  font-size: 39px;
-  font-weight: 800;
-}
-.receivable-card { background: #dedede; border-radius: 5px; padding: 24px 30px 28px; }
-.receivable-card h2 { margin: 0; font-size: 28px; }
-.money-summary { display: flex; gap: 18px; margin: 18px 0 28px; }
-.money-summary > div:not(.divider) { display: flex; flex-direction: column; gap: 4px; }
-.money-summary strong { font-size: 13px; }
-.money-summary span { font-size: 12px; font-weight: 700; }
-.divider { width: 1px; min-height: 42px; background: #4f4f4f; }
-.chart-area { position: relative; padding-left: 40px; }
-.chart-y-label { position: absolute; left: 0; top: 50%; transform: translateY(-50%) rotate(-90deg); font-size: 12px; font-weight: 700; }
-.chart {
-  height: 220px;
-  border-left: 1px solid #666;
-  border-bottom: 1px solid #666;
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 28px;
-  align-items: end;
-  padding: 12px 16px 0;
-}
-.chart-item { height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 10px; }
-.chart-bar { width: 62%; min-width: 28px; background: #fff; }
-.chart-item span { font-size: 11px; font-weight: 700; white-space: nowrap; }
-
-@media (max-width: 980px) {
-  .dashboard-grid { grid-template-columns: 1fr; }
-  .dashboard-search { width: 220px; }
-}
-@media (max-width: 680px) {
-  .dashboard-header { flex-direction: column; }
-  .dashboard-actions { width: 100%; }
-  .dashboard-search { flex: 1; min-width: 0; }
-  .dashboard-top-cards { grid-template-columns: 1fr; }
-  .dashboard-middle-cards { grid-template-columns: 1fr; gap: 20px; }
-}
-
-/* Extracted from index.html */
-    /* =========================================================
+/* =========================================================
            DASHBOARD
         ========================================================= */
 
@@ -147,7 +61,7 @@
     .dashboard-header {
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      justify-content: flex-start;
       gap: 30px;
       margin-bottom: 32px;
     }
@@ -167,101 +81,6 @@
       color: #64748b;
     }
 
-
-    /* =========================================================
-           HEADER ACTIONS
-        ========================================================= */
-
-    .dashboard-actions {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .search-wrapper {
-      width: 280px;
-      height: 46px;
-
-      display: flex;
-      align-items: center;
-      gap: 10px;
-
-      padding: 0 17px;
-
-      background: rgba(255, 255, 255, 0.9);
-      border: 1px solid #e2e8f0;
-      border-radius: 999px;
-
-      box-shadow:
-        0 2px 12px rgba(15, 23, 42, 0.03),
-        inset 0 1px 0 rgba(255, 255, 255, 0.7);
-
-      transition:
-        border-color 0.2s ease,
-        box-shadow 0.2s ease,
-        transform 0.2s ease;
-    }
-
-    .search-wrapper:focus-within {
-      border-color: #a5b4fc;
-      box-shadow:
-        0 0 0 4px rgba(99, 102, 241, 0.08),
-        0 6px 20px rgba(15, 23, 42, 0.05);
-    }
-
-    .search-icon {
-      flex-shrink: 0;
-      color: #94a3b8;
-    }
-
-    .dashboard-search {
-      width: 100%;
-      min-width: 0;
-      padding: 0;
-
-      border: 0;
-      outline: none;
-      background: transparent;
-
-      color: #0f172a;
-      font: inherit;
-      font-size: 14px;
-    }
-
-    .dashboard-search::placeholder {
-      color: #94a3b8;
-    }
-
-    .settings-link {
-      width: 46px;
-      height: 46px;
-
-      display: grid;
-      place-items: center;
-
-      color: #64748b;
-      text-decoration: none;
-
-      background: rgba(255, 255, 255, 0.9);
-      border: 1px solid #e2e8f0;
-      border-radius: 50%;
-
-      box-shadow: 0 2px 12px rgba(15, 23, 42, 0.03);
-
-      transition:
-        transform 0.2s ease,
-        color 0.2s ease,
-        border-color 0.2s ease,
-        box-shadow 0.2s ease;
-    }
-
-    .settings-link:hover {
-      transform: translateY(-2px) rotate(10deg);
-      color: #6366f1;
-      border-color: #c7d2fe;
-
-      box-shadow: 0 8px 20px rgba(99, 102, 241, 0.12);
-    }
 
 
     /* =========================================================
@@ -311,7 +130,6 @@
 
       display: flex;
       flex-direction: column;
-      align-items: stretch;
 
       padding: 25px 22px;
 
@@ -420,7 +238,7 @@
 
 
     /* =========================================================
-           INBOX ΓÇö PURPLE
+           INBOX — PURPLE
         ========================================================= */
 
     .stat-inbox {
@@ -450,7 +268,7 @@
 
 
     /* =========================================================
-           RECEIVABLE ΓÇö BLUE
+           RECEIVABLE — BLUE
         ========================================================= */
 
     .stat-receivable {
@@ -480,7 +298,7 @@
 
 
     /* =========================================================
-           PAYABLE ΓÇö ORANGE
+           PAYABLE — ORANGE
         ========================================================= */
 
     .stat-payable {
@@ -510,7 +328,7 @@
 
 
     /* =========================================================
-           PENDING ΓÇö GREEN
+           PENDING — GREEN
         ========================================================= */
 
     .stat-pending {
@@ -540,7 +358,7 @@
 
 
     /* =========================================================
-           COMPLETED ΓÇö PURPLE
+           COMPLETED — PURPLE
         ========================================================= */
 
     .stat-completed {
@@ -710,41 +528,7 @@
       font-size: 13px;
       line-height: 1.4;
     }
-
-    .receivable-menu {
-      width: 34px;
-      height: 34px;
-
-      display: grid;
-      place-items: center;
-
-      padding: 0;
-
-      color: #94a3b8;
-      background: #f8fafc;
-
-      border: 1px solid #e2e8f0;
-      border-radius: 50%;
-
-      font-size: 13px;
-      letter-spacing: 1px;
-
-      cursor: pointer;
-
-      transition:
-        color 0.2s ease,
-        border-color 0.2s ease,
-        background 0.2s ease;
-    }
-
-    .receivable-menu:hover {
-      color: #6366f1;
-      background: #eef2ff;
-      border-color: #c7d2fe;
-    }
-
-
-    /* =========================================================
+/* =========================================================
            MONEY SUMMARY
         ========================================================= */
 
@@ -1081,15 +865,6 @@
 
       .dashboard-heading h1 {
         font-size: 34px;
-      }
-
-      .dashboard-actions {
-        width: 100%;
-      }
-
-      .search-wrapper {
-        width: auto;
-        flex: 1;
       }
 
       .dashboard-top-cards {
