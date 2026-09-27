@@ -266,18 +266,13 @@ function populateReceivableCards(rows = []) {
 
 
   if (totalElement) {
-
     totalElement.textContent =
-      money(totalReceivable)
-
+      `$${money(totalReceivable)}`
   }
 
-
   if (overdueElement) {
-
     overdueElement.textContent =
-      money(totalOverdue)
-
+      `$${money(totalOverdue)}`
   }
 
 
@@ -785,6 +780,7 @@ function formatAxis(value) {
   ) {
 
     return (
+      '$' +
       Number(
         (
           value /
@@ -795,12 +791,12 @@ function formatAxis(value) {
 
   }
 
-
   if (
     value >= 1_000
   ) {
 
     return (
+      '$' +
       Number(
         (
           value /
@@ -811,8 +807,7 @@ function formatAxis(value) {
 
   }
 
-
-  return Math.round(
+  return '$' + Math.round(
     value
   ).toString()
 
