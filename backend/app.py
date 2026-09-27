@@ -59,6 +59,7 @@ from services.logging_config import (  # noqa: E402
 from services.scheduler_service import start_scheduler, stop_scheduler  # noqa: E402
 from services.security_service import (  # noqa: E402
     MAX_ATTACHMENT_BYTES,
+    MAX_ATTACHMENT_ID_LENGTH,
     MAX_OUTBOUND_ATTACHMENTS,
     ValidationError,
     clamp_int,
@@ -688,7 +689,7 @@ def gmail_attachment(
     filename: str = Query(default="", max_length=200),
 ) -> Response:
     message_id = validate_opaque_id(gmail_message_id, field="gmail_message_id")
-    att_id = validate_opaque_id(attachment_id, field="attachment_id")
+    att_id = validate_opaque_id(attachment_id, field="attachment_id", max_length=MAX_ATTACHMENT_ID_LENGTH)
 
     message = get_message(message_id)
     if message is None:

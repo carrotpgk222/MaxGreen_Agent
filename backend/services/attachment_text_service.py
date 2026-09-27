@@ -28,7 +28,9 @@ from services.gmail_service import GmailReadError, fetch_attachment
 from services.logging_config import log_event, timed
 from services.security_service import (
     MAX_ATTACHMENT_BYTES,
+    MAX_ATTACHMENT_ID_LENGTH,
     MAX_ATTACHMENTS_PER_MESSAGE,
+    MAX_ID_LENGTH,
     MAX_PDF_PAGES,
     sanitize_filename,
 )
@@ -63,7 +65,7 @@ def read_attachment_bytes(gmail_message_id: str, attachment_id: str) -> bytes:
     Shared with the send path so a document's attachment is bounded by the same limit that
     protects classification.
     """
-    if len(gmail_message_id) > 128 or len(attachment_id) > 128:
+    if len(gmail_message_id) > MAX_ID_LENGTH or len(attachment_id) > MAX_ATTACHMENT_ID_LENGTH:
         raise GmailReadError("Attachment identifiers are not valid.")
     data = fetch_attachment(gmail_message_id, attachment_id)
     if len(data) > MAX_ATTACHMENT_BYTES:

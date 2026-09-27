@@ -20,7 +20,13 @@ from typing import Any
 
 #: Gmail message/attachment ids are opaque tokens. We only need to know they cannot carry
 #: separators, quotes or newlines, because they end up in upstream request URLs.
+#:
+#: The two kinds are not the same size. A Gmail *message* id is a 16-hex-char token, so
+#: 128 is a generous cap. A Gmail *attachment* id is a much longer opaque blob: real
+#: inbox samples run 400-450 characters. Capping attachments at 128 rejected every
+#: attachment with a ``too_long`` ValidationError, so they get their own limit.
 MAX_ID_LENGTH = 128
+MAX_ATTACHMENT_ID_LENGTH = 1024
 _ID_RE = re.compile(r"^[A-Za-z0-9_.\-]+$")
 
 #: Largest attachment we will download and parse. Gmail itself allows ~25 MB; anything
@@ -94,14 +100,19 @@ class ValidationError(ValueError):
         self.code = code
 
 
-def validate_opaque_id(value: Any, *, field: str) -> str:
-    """Validate an opaque upstream id (Gmail message id, attachment id)."""
+def validate_opaque_id(value: Any, *, field: str, max_length: int | None = None) -> str:
+    """Validate an opaque upstream id (Gmail message id, attachment id).
+
+    ``max_length`` defaults to :data:`MAX_ID_LENGTH`; pass :data:`MAX_ATTACHMENT_ID_LENGTH`
+    for Gmail attachment ids, which are legitimately far longer than message ids.
+    """
+    limit = MAX_ID_LENGTH if max_length is None else max_length
     text = str(value or "").strip()
     if not text:
         raise ValidationError(f"{field} is required.", field=field, code="missing")
-    if len(text) > MAX_ID_LENGTH:
+    if len(text) > limit:
         raise ValidationError(
-            f"{field} is longer than {MAX_ID_LENGTH} characters.", field=field, code="too_long"
+            f"{field} is longer than {limit} characters.", field=field, code="too_long"
         )
     if not _ID_RE.match(text):
         raise ValidationError(
