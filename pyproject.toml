@@ -1,0 +1,35 @@
+# Tool configuration only. The project is not packaged or built from this file —
+# there is no build-system table and no wheel/sdist. See backend/requirements.txt.
+
+[tool.pytest.ini_options]
+testpaths = ["backend/tests"]
+pythonpath = ["backend"]
+addopts = "-q --strict-markers"
+filterwarnings = ["error::DeprecationWarning:services.*"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 120
+extend-exclude = [".venv", "backend/__pycache__"]
+
+[tool.ruff.lint]
+# E/F/I catch real defects; UP keeps modern idioms; B catches bug-prone patterns
+# (e.g. closures over loop variables). Style-only rules are deliberately not selected,
+# so the gate never asks for churn in working code.
+select = ["E", "F", "I", "UP", "B"]
+ignore = [
+  "B008", # FastAPI Depends()/Query()/Body() in defaults is the framework's own idiom
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["app", "services"]
+
+[tool.ruff.lint.per-file-ignores]
+# Tests may use bare asserts and private helpers deliberately.
+"backend/tests/*" = ["S101", "SLF001"]
+# app.py calls load_dotenv() before importing services.*, because those modules read
+# environment variables at import time. The imports are deliberately not at the top.
+"backend/app.py" = ["E402"]
+# LLM prompt strings are long by nature. Reflowing them would change the exact text
+# sent to the model, so line length is not enforced in the prompt-building module.
+"backend/services/classification_service.py" = ["E501"]

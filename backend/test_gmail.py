@@ -1,4 +1,4 @@
-from services.gmail_service import get_profile, fetch_latest_messages
+from services.gmail_service import fetch_latest_messages, get_profile
 
 
 def main() -> None:

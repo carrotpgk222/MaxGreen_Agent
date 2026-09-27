@@ -2,21 +2,16 @@ from __future__ import annotations
 
 import logging
 import mimetypes
-import traceback
+from contextlib import asynccontextmanager
 from pathlib import Path
 from urllib.parse import quote
 
+import uvicorn
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException, Query
-from fastapi import Body
+from fastapi import Body, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
 import uvicorn
-
-
-# ============================================================
-# BASE CONFIG
-# ============================================================
 
 BASE_DIR = Path(__file__).resolve().parent
 
@@ -29,66 +24,29 @@ load_dotenv(BASE_DIR.parent / ".env")
 # DATABASE SERVICES
 # ============================================================
 
+from services.classification_service import VALID_CATEGORIES, classify_message
 from services.database_service import (
-    count_messages,
     count_inbox_messages,
+    count_messages,
     count_supplier_payable_messages,
     get_message,
     init_db,
     list_messages,
     list_supplier_payable_messages,
     list_unclassified_messages,
-    update_message_classification,
     set_message_category,
+    update_message_classification,
 )
-
-
-# ============================================================
-# GMAIL SERVICES
-# ============================================================
-
-from services.gmail_service import (
-    fetch_attachment,
-    get_profile,
-    is_connected,
-    send_email,
-)
-
-
-# ============================================================
-# OTHER SERVICES
-# ============================================================
-
+from services.gmail_service import fetch_attachment, get_profile, is_connected
 from services.sync_service import sync_gmail
-
-from services.classification_service import (
-    classify_message,
-    VALID_CATEGORIES,
-)
-
-from services.llm_service import (
-    configured_model,
-    is_configured as llm_is_configured,
-    test_connection,
-)
-
-from services.scheduler_service import (
-    start_scheduler,
-    stop_scheduler,
-)
-
-
-# ============================================================
-# FASTAPI APP
-# ============================================================
+from services.classification_service import classify_message, VALID_CATEGORIES
+from services.llm_service import configured_model, is_configured as llm_is_configured, test_connection
+from services.scheduler_service import start_scheduler, stop_scheduler
 
 app = FastAPI(
     title="MaxGreen Agent Local Backend",
     version="0.5.0",
-    description=(
-        "Local backend for Gmail, Claude classification, "
-        "and workflow routing."
-    ),
+    description="Local backend for Gmail, Claude classification, and workflow routing.",
 )
 
 
@@ -124,19 +82,12 @@ app.add_middleware(
 
 @app.on_event("startup")
 async def startup() -> None:
-
     init_db()
-
     start_scheduler()
 
 
-# ============================================================
-# SHUTDOWN
-# ============================================================
-
 @app.on_event("shutdown")
 async def shutdown() -> None:
-
     await stop_scheduler()
 
 
@@ -192,11 +143,7 @@ def gmail_status() -> dict:
         }
 
     except Exception as exc:
-
-        return {
-            "connected": False,
-            "message": str(exc),
-        }
+        return {"connected": False, "message": str(exc)}
 
 
 # ============================================================
@@ -368,26 +315,8 @@ def gmail_send(
 
 
     except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
 
-        logger.error(
-            "Gmail send failed to %s: %s\n%s",
-            to,
-            exc,
-            traceback.format_exc(),
-        )
-
-
-        raise HTTPException(
-            status_code=500,
-            detail=(
-                f"Could not send Gmail message: {exc}"
-            ),
-        ) from exc
-
-
-# ============================================================
-# LLM STATUS
-# ============================================================
 
 @app.get("/api/llm/status")
 def llm_status() -> dict:
@@ -410,11 +339,7 @@ def llm_test() -> dict:
         return test_connection()
 
     except Exception as exc:
-
-        raise HTTPException(
-            status_code=502,
-            detail=str(exc),
-        ) from exc
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
 
 
 # ============================================================
@@ -466,44 +391,13 @@ def classify_gmail_message(
 
 
     except Exception as exc:
-
-        logger.error(
-            "AI classification failed "
-            "for Gmail %s: %s\n%s",
-            gmail_message_id,
-            exc,
-            traceback.format_exc(),
-        )
+        logger.error("AI classification failed for Gmail %s: %s\n%s", gmail_message_id, exc, traceback.format_exc())
+        raise HTTPException(status_code=502, detail=f"AI preparation failed: {exc}") from exc
 
 
-        raise HTTPException(
-            status_code=502,
-            detail=(
-                f"AI preparation failed: {exc}"
-            ),
-        ) from exc
-
-
-# ============================================================
-# CLASSIFY UNCLASSIFIED MESSAGES
-# ============================================================
-
-@app.post(
-    "/api/ai/classify-unclassified"
-)
-def classify_unclassified(
-    limit: int = Query(
-        default=10,
-        ge=1,
-        le=25,
-    ),
-) -> dict:
-
-    items = list_unclassified_messages(
-        limit=limit
-    )
-
-
+@app.post("/api/ai/classify-unclassified")
+def classify_unclassified(limit: int = Query(default=10, ge=1, le=25)) -> dict:
+    items = list_unclassified_messages(limit=limit)
     results = []
 
 
@@ -543,23 +437,8 @@ def classify_unclassified(
 
 
         except Exception as exc:
-
-            results.append(
-                {
-                    "gmail_message_id": (
-                        message_id
-                    ),
-                    "ok": False,
-                    "error": str(exc),
-                }
-            )
-
-
-    return {
-        "ok": True,
-        "processed": len(results),
-        "results": results,
-    }
+            results.append({"gmail_message_id": message_id, "ok": False, "error": str(exc)})
+    return {"ok": True, "processed": len(results), "results": results}
 
 
 # ============================================================
@@ -792,40 +671,11 @@ def gmail_attachment(
 
 
     except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Could not fetch Gmail attachment: {exc}") from exc
 
-        raise HTTPException(
-            status_code=500,
-            detail=(
-                "Could not fetch Gmail "
-                f"attachment: {exc}"
-            ),
-        ) from exc
-
-
-    safe_filename = (
-        filename
-        or attachment_meta.get(
-            "filename"
-        )
-        or "attachment"
-    )
-
-
-    media_type = (
-        attachment_meta.get(
-            "mime_type"
-        )
-        or mimetypes.guess_type(
-            safe_filename
-        )[0]
-        or "application/octet-stream"
-    )
-
-
-    encoded = quote(
-        safe_filename
-    )
-
+    safe_filename = filename or attachment_meta.get("filename") or "attachment"
+    media_type = attachment_meta.get("mime_type") or mimetypes.guess_type(safe_filename)[0] or "application/octet-stream"
+    encoded = quote(safe_filename)
 
     return Response(
         content=data,

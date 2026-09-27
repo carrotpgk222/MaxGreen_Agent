@@ -1,0 +1,11 @@
+# Development-only dependencies. Not needed to run the app.
+#
+#   python -m pip install -r backend/requirements-dev.txt
+#
+# pytest  - test runner for backend/tests/
+# ruff    - linter and formatter (config in pyproject.toml)
+# httpx   - required by fastapi.testclient.TestClient
+
+pytest==9.1.1
+ruff==0.16.9
+httpx==0.28.1

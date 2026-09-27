@@ -1,259 +1,198 @@
-# MaxGreen Agent — Local Gmail Setup (Windows)
+# MaxGreen Agent — Setup & Operations
 
-This version keeps the existing website in `frontend/` and adds a Python/FastAPI backend in `backend/`.
+> **Superseded sections removed.** Earlier revisions of this file stated that Claude, the LLM
+> gateway and AWS Lightsail were *not* connected yet. All three are live. `TECH_STACK.md` is the
+> authoritative description of the current architecture; this file covers how to run and operate it.
 
-## What this version does
+## What the app does
 
-For now we are ONLY proving this flow:
+Gmail → Python backend → SQLite → browser. Inbox messages are pulled from Gmail on a timer, read
+by Claude through the organizer's LLM gateway, classified into a fixed set of workflow categories,
+and surfaced in the Inbox page for review. Quotation, Invoice and Delivery Order drafts are
+pre-filled from the extracted data. Reading is the only Gmail path wired into the app; although the
+OAuth consent now also asks for `gmail.send`, no endpoint calls the send function.
 
-`Gmail -> Python backend -> local SQLite database -> Gmail test webpage`
+## Production (current deployment)
 
-Claude / AWS LLM Gateway is NOT connected yet.
-AWS Lightsail is NOT used yet.
-Sending email is NOT enabled yet.
+Ubuntu 24.04 on AWS Lightsail. nginx is the only public ingress; the backend is loopback-only.
 
----
+```bash
+# status
+systemctl status maxgreen-backend.service
+sudo nginx -t
 
-## 1. Install Python
+# logs — upstream error detail is logged here, not returned to the browser
+journalctl -u maxgreen-backend.service -f
+sudo tail -f /var/log/nginx/maxgreen.error.log
 
-Install Python 3.11 or 3.12 from https://www.python.org/downloads/
+# restart after a code change
+sudo systemctl restart maxgreen-backend.service
 
-During the Windows installer, tick:
+# health, from inside the box (bypasses nginx and basic auth)
+curl -s http://127.0.0.1:8000/api/health
 
-`Add python.exe to PATH`
+# health, from outside (through TLS + basic auth)
+curl -sk -u USER:PASS https://54-179-55-232.sslip.io/api/health
+```
 
-After installation, open a new PowerShell and run:
+Confirm the backend is never publicly bound:
 
-`py --version`
+```bash
+ss -ltnp | grep 8000     # must read 127.0.0.1:8000, never 0.0.0.0:8000
+```
 
-or:
+### Access
 
-`python --version`
+Every page and every `/api/` call sits behind HTTP Basic auth. Credentials are in
+`/etc/nginx/auth/maxgreen.htpasswd` (mode `640 root:www-data`).
 
-You should see Python 3.10.7 or newer. Python 3.11/3.12 is recommended.
+```bash
+sudo htpasswd -B /etc/nginx/auth/maxgreen.htpasswd <username>   # add or change a user
+```
 
----
+### TLS
 
-## 2. Install the backend packages
+Let's Encrypt via `certbot.timer`, for `54-179-55-232.sslip.io`.
 
-Open this project folder in Kiro.
+```bash
+sudo certbot certificates
+sudo systemctl status certbot.timer
+sudo certbot renew --dry-run
+```
 
-In Windows File Explorer, open:
+If the hostname changes, update `server_name`, both `ssl_certificate` paths and the `return 301`
+in `deploy/nginx-maxgreen.conf`, then reissue the certificate. See `deploy/README.md`.
 
-`project/backend/`
+## Local development
 
-Double-click:
+The backend runs identically on a laptop; only the frontend's dev server differs.
 
-`setup_windows.bat`
+### 1. Python environment
 
-It creates a private Python virtual environment at `backend/.venv/` and installs all required packages.
+```bash
+cd backend
+python3 -m venv .venv
+.venv/bin/python -m pip install -r requirements.txt
+.venv/bin/python -m pip install -r requirements-dev.txt   # pytest + ruff
+```
 
-You only need to do this once unless requirements change.
+On Windows, `setup_windows.bat` does the same thing.
 
----
+### 2. Configuration
 
-## 3. Create Google Gmail OAuth credentials
+```bash
+cp .env.example .env
+```
 
-Go to Google Cloud Console: https://console.cloud.google.com/
+Then fill in the three LLM gateway values. Real values live only in `.env`, which is git-ignored:
 
-### A. Create or select a Google Cloud project
+| Variable | Purpose |
+| --- | --- |
+| `LLM_GATEWAY_URL` | Base URL of the organizer's Ollama-compatible gateway |
+| `LLM_GATEWAY_API_KEY` | Sent as the `x-api-key` header |
+| `LLM_MODEL` | Model name to request |
 
-Example name:
+The Gmail tuning keys (`GMAIL_SYNC_QUERY`, `GMAIL_SYNC_LIMIT`, `GMAIL_AUTO_CLASSIFY`,
+`GMAIL_AUTO_CLASSIFY_LIMIT`, `GMAIL_POLL_INTERVAL_SECONDS`, `GMAIL_POLL_LIMIT`) all have working
+defaults and can be left alone.
 
-`MaxGreen Agent Local`
+### 3. Gmail OAuth (one time)
 
-### B. Enable Gmail API
-
-Open the API Library and enable:
-
-`Gmail API`
-
-### C. Configure Google Auth Platform
-
-Open:
-
-`Google Auth platform -> Branding`
-
-Configure the app. If your account is part of a Google Workspace organisation and `Internal` is available, you can use Internal for organisation-only testing. If you are using a normal Gmail account, use External and add your own Gmail address as a test user if Google asks for test users.
-
-### D. Create OAuth Client
-
-Open:
-
-`Google Auth platform -> Clients -> Create Client`
-
-Choose:
-
-`Application type: Desktop app`
-
-Name example:
-
-`MaxGreen Local Gmail`
-
-Create it and download the JSON file.
-
-Rename the downloaded file exactly to:
-
-`credentials.json`
-
-Put it here:
-
-`project/backend/secrets/credentials.json`
-
-DO NOT send this file to ChatGPT.
-DO NOT upload it to GitHub.
-
----
-
-## 4. Connect your Gmail account
-
-Inside `project/backend/`, double-click:
-
-`connect_gmail.bat`
-
-A Google sign-in page should open in your browser.
-
-Choose the Gmail account that MaxGreen Agent should read.
-
-Google will ask for permission. Approve the requested read-only Gmail access.
-
-When successful, the terminal should show:
-
-`Gmail connected successfully!`
-
-Google will create this private file automatically:
-
-`project/backend/secrets/token.json`
-
-Keep it private. It is already ignored by `.gitignore`.
-
----
-
-## 5. Test Gmail in the terminal
-
-Double-click:
-
-`backend/test_gmail.bat`
-
-You should see your latest Gmail Inbox messages printed in the terminal with sender, subject and attachment count.
-
-If this works, Gmail API connection is successful.
-
----
-
-## 6. Start the Python backend
-
-Double-click:
-
-`backend/start_backend.bat`
-
-Keep this terminal window OPEN.
-
-You should see something similar to:
-
-`Uvicorn running on http://127.0.0.1:8000`
-
-Test in your browser:
-
-`http://127.0.0.1:8000/api/health`
-
-You can also open the FastAPI testing page:
-
-`http://127.0.0.1:8000/docs`
-
----
-
-## 7. Start the frontend
-
-In Kiro, open the `frontend/` folder or open `frontend/index.html`.
-
-Use your existing extension:
-
-`Live Server by Ritwick Dey`
-
-Right-click `frontend/index.html` -> `Open with Live Server`.
-
-Your existing MaxGreen website should still run normally.
-
----
-
-## 8. Open the Gmail test page
-
-With Live Server running, open:
-
-`http://127.0.0.1:5500/gmail-test.html`
-
-If your Live Server uses another port, keep that port and open `/gmail-test.html`.
-
-The page has:
-
-- Gmail connection status
-- Sync Gmail button
-- Load stored messages button
-- Real Gmail messages stored in the local SQLite database
-
-Click:
-
-`Sync Gmail`
-
-The backend will fetch your latest Inbox messages and save them in:
-
-`project/backend/data/maxgreen.db`
-
----
-
-## Important privacy/security rules
-
-Never share or commit:
-
-- `backend/secrets/credentials.json`
-- `backend/secrets/token.json`
-- Gmail passwords
-- LLM Gateway API keys
-
-Your Gmail PASSWORD is never used by this application. Google OAuth handles login directly on Google's website.
-
----
+1. In the Google Cloud Console, enable the **Gmail API**.
+2. Under Google Auth Platform → Branding, set the audience. If the account belongs to a Workspace
+   organisation, **Internal** is the simplest option.
+3. Create an OAuth client of type **Desktop app** and download the JSON.
+4. Rename it to exactly `credentials.json` and place it at `backend/secrets/credentials.json`.
+   (Watch out for Windows hiding the extension and producing `credentials.json.json`.)
+5. Authorise:
+
+```bash
+cd backend
+.venv/bin/python gmail_auth.py
+```
+
+A browser sign-in opens; approve the requested access. This writes `backend/secrets/token.json`,
+which is also git-ignored. On Windows, double-click `connect_gmail.bat`.
+
+The consent screen requests `gmail.readonly` **and** `gmail.send`. Only reading is used today — the
+send function in `gmail_service.py` is not called by any endpoint — but Google will not let you
+remove `gmail.send` from the consent screen without re-authorising, so decline it if you would
+rather not grant it.
+
+### 4. Run the backend
+
+```bash
+cd backend
+.venv/bin/python -m uvicorn app:app --host 127.0.0.1 --port 8000 --reload
+```
+
+Or double-click `start_backend.bat` on Windows. Interactive API docs are at
+`http://127.0.0.1:8000/docs`.
+
+**Keep the host on `127.0.0.1`.** The backend has no authentication of its own; on a public
+interface it would be an unauthenticated Gmail and LLM gateway.
+
+### 5. Run the frontend
+
+There is no build step and no npm install. Serve `frontend/` with any static server — VS Code's
+*Live Server* extension is what the project was built against:
+
+```bash
+cd frontend
+python3 -m http.server 5500
+```
+
+Then open `http://localhost:5500/index.html`.
+
+`core/api.js` detects the hostname at load time: on `localhost` it calls
+`http://127.0.0.1:8000` directly (permitted by the backend's localhost-only CORS regex); on any
+other host it uses same-origin `/api` through the nginx proxy. Both paths work with no code change.
+
+## Tests and linting
+
+```bash
+cd backend
+.venv/bin/python -m pytest          # 137 tests
+.venv/bin/ruff check .              # lint
+.venv/bin/ruff check . --fix        # autofix safe findings
+```
+
+Config lives in `pyproject.toml` at the repo root. Tests are in `backend/tests/` and use a
+throwaway SQLite file, so the real database is never touched. Nothing in the suite makes a network
+call or needs real credentials.
 
 ## Troubleshooting
 
-### `Python was not found`
+**`Backend not reachable from the page`**
+The backend is not running, or it is bound to something other than `127.0.0.1:8000`. Check the
+terminal running Uvicorn and `ss -ltnp | grep 8000`.
 
-Install Python from python.org, tick `Add python.exe to PATH`, then completely close and reopen Kiro/PowerShell.
+**Live Server is on a different port**
+Fine. The CORS regex allows any port on `localhost` / `127.0.0.1`.
 
-### Google says the app cannot be accessed
+**`Missing credentials.json`**
+The file must be named exactly `credentials.json` inside `backend/secrets/`.
 
-Check your Google Auth Platform Audience/Test Users and make sure the Gmail account you are logging in with is permitted.
+**Gmail says the app cannot be accessed**
+Check the OAuth client's audience and test users in Google Auth Platform.
 
-### `Missing credentials.json`
+**Classification fails but sync succeeds**
+This is by design — a model failure never fails a sync, and the row stays `Unclassified` for the
+Inbox retry button. The real error is in `journalctl -u maxgreen-backend.service`; the browser only
+receives a generic message, by design, because upstream errors can contain model output and tokens.
 
-Make sure the file is exactly:
+**Everything returns 404 from outside**
+Expected for any path outside `/frontend/` and `/api/`. That catch-all is what keeps backend source
+and `secrets/` private.
 
-`project/backend/secrets/credentials.json`
+## Security rules
 
-Windows can hide extensions, so avoid accidentally naming it `credentials.json.json`.
+Never commit, paste into a chat, or log:
 
-### Backend not reachable from gmail-test.html
+- `backend/secrets/credentials.json`
+- `backend/secrets/token.json`
+- `.env` (holds `LLM_GATEWAY_API_KEY`)
+- any `*.pem`
 
-Make sure `backend/start_backend.bat` is still running and shows port `8000`.
-
-### Live Server is on port 5501 instead of 5500
-
-That is okay; the backend already allows both 5500 and 5501 for local testing.
-
----
-
-## What we do after this works
-
-Do NOT move to AWS yet.
-
-Once Gmail is confirmed working locally, the next steps are:
-
-1. Wire the real Gmail messages into the real `Inbox` page.
-2. Download/open real Gmail attachments.
-3. Add deduplication using Gmail Message ID / Thread ID.
-4. Add security screening.
-5. Connect the organiser's LLM Gateway -> AWS Bedrock -> Claude Sonnet 4.5.
-6. Let Claude classify the six categories.
-7. Automate periodic Gmail checking.
-8. Finally deploy frontend + backend + SQLite to AWS Lightsail for 24/7 operation.
+The Gmail account's **password is never used by this application** — Google OAuth handles sign-in
+on Google's own site.

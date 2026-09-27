@@ -73,7 +73,7 @@ async def _loop() -> None:
             await _run_once()
             try:
                 await asyncio.wait_for(_stop_event.wait(), timeout=interval)
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 pass  # normal: interval elapsed, run again
     except asyncio.CancelledError:
         pass

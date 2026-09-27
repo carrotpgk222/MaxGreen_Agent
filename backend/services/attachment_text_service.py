@@ -7,7 +7,6 @@ from pypdf import PdfReader
 
 from services.gmail_service import fetch_attachment
 
-
 MAX_ATTACHMENT_CHARS = 12000
 MAX_TOTAL_CHARS = 24000
 
