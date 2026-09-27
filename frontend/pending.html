@@ -9,6 +9,10 @@
 
   <link rel="icon" href="data:," />
   <link rel="stylesheet" href="./assets/css/base.css" />
+  <link rel="stylesheet" href="./assets/css/quotation.css" />
+  <link rel="stylesheet" href="./assets/css/delivery-order.css" />
+  <link rel="stylesheet" href="./assets/css/invoice.css" />
+  <link rel="stylesheet" href="./assets/css/soa.css" />
 
   <style>
     /* =========================================================
@@ -857,6 +861,164 @@
         flex: 1;
       }
     }
+
+    /* =========================================================
+           EXPANDABLE DOCUMENT PREVIEW
+        ========================================================= */
+
+    .pending-toggle {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      width: 100%;
+      padding: 0;
+      border: 0;
+      background: none;
+      font: inherit;
+      color: inherit;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .pending-toggle:focus-visible {
+      outline: 2px solid #16a34a;
+      outline-offset: 2px;
+      border-radius: 6px;
+    }
+
+    .pending-th-hint {
+      display: block;
+      margin-top: 2px;
+      font-size: 9px;
+      font-weight: 400;
+      letter-spacing: 0.03em;
+      text-transform: none;
+      opacity: 0.62;
+    }
+
+    .pending-caret {
+      flex: 0 0 auto;
+      width: 0;
+      height: 0;
+      border-top: 5px solid transparent;
+      border-bottom: 5px solid transparent;
+      border-left: 7px solid #64748b;
+      transition: transform 140ms ease;
+    }
+
+    .pending-toggle[aria-expanded="true"] .pending-caret {
+      transform: rotate(90deg);
+    }
+
+    .pending-toggle-label {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .pending-row.is-open {
+      background: #ecfdf5;
+    }
+
+    .pending-row.is-open .pending-toggle-label {
+      color: #14532d;
+      font-weight: 600;
+    }
+
+    .pending-preview-row > td {
+      padding: 0;
+      background: #e2e2e2;
+    }
+
+    .pending-preview-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 11px 18px;
+      background: #14532d;
+      color: #dcfce7;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .pending-preview-bar a {
+      color: #bbf7d0;
+      font-size: 11px;
+      text-decoration: underline;
+    }
+
+    .pending-preview-scroll {
+      padding: 18px;
+      overflow-x: auto;
+    }
+
+    /* Keep each paper at its canonical pixel width so the layout stays
+       pixel-exact instead of being squeezed on narrow viewports. */
+    .pending-preview-scroll .quotation-paper,
+    .pending-preview-scroll .delivery-paper,
+    .pending-preview-scroll .invoice-paper {
+      width: 760px;
+      max-width: none;
+      margin: 0 auto;
+    }
+
+    .pending-preview-scroll .soa-paper {
+      width: 980px;
+      max-width: none;
+      margin: 0 auto;
+    }
+
+    .pending-preview-scroll .quotation-pdf-shell,
+    .pending-preview-scroll .delivery-pdf-shell,
+    .pending-preview-scroll .invoice-pdf-shell,
+    .pending-preview-scroll .soa-pdf-shell,
+    .pending-preview-scroll .generic-pending-preview {
+      margin: 0;
+      padding: 0;
+      background: none;
+    }
+
+    .pending-preview-generic {
+      max-width: 620px;
+      margin: 0 auto;
+      padding: 22px 24px;
+      background: #fff;
+      border: 1px solid #94a3b8;
+    }
+
+    .pending-preview-generic h3 {
+      margin: 0 0 14px;
+      font-size: 17px;
+    }
+
+    .pending-preview-generic dl {
+      display: grid;
+      grid-template-columns: 92px 1fr;
+      gap: 7px 14px;
+      margin: 0 0 16px;
+      font-size: 13px;
+    }
+
+    .pending-preview-generic dt {
+      font-weight: 600;
+      color: #475569;
+    }
+
+    .pending-preview-generic dd {
+      margin: 0;
+      word-break: break-word;
+    }
+
+    .pending-preview-note {
+      margin: 0;
+      padding-top: 14px;
+      border-top: 1px solid #e2e8f0;
+      color: #64748b;
+      font-size: 12px;
+    }
   </style>
 </head>
 
@@ -1010,7 +1172,7 @@
           <thead>
 
             <tr>
-              <th>Name</th>
+              <th>Name<span class="pending-th-hint">click to preview</span></th>
               <th>Reference No.</th>
               <th>Category</th>
               <th>Approve on</th>

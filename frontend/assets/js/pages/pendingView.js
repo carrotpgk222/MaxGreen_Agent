@@ -50,27 +50,45 @@ let email =
 
 
 if (!email) {
-<<<<<<< Updated upstream
+  renderDocumentMissing(
+    './pending.html',
+    'Back to Pending'
+  )
+}
+
+
+function renderDocumentMissing(
+  backHref,
+  backLabel,
+  detail = ''
+) {
+
   document.body.innerHTML = `
     <main class="page">
-      <a class="back-link" href="./pending.html">
-        ← Back to Pending
+
+      <a
+        class="back-link"
+        href="${backHref}"
+      >
+        ← ${backLabel}
       </a>
 
       <h1 class="page-title">
         Document not found
       </h1>
+
+      ${
+        detail
+          ? `<p>${detail}</p>`
+          : ''
+      }
+
     </main>
   `
 
-=======
-  renderDocumentMissing('./pending.html', 'Back to Pending')
-}
-
-function renderDocumentMissing(backHref, backLabel, detail = '') {
-  document.body.innerHTML = `<main class="page"><a class="back-link" href="${backHref}">← ${backLabel}</a><h1 class="page-title">Document not found</h1>${detail ? `<p>${detail}</p>` : ''}</main>`
->>>>>>> Stashed changes
-  throw new Error('Pending document not found')
+  throw new Error(
+    'Pending document not found'
+  )
 }
 
 
@@ -1349,17 +1367,8 @@ function closeEmailModal() {
 
 function blobToBase64(blob) {
 
-<<<<<<< Updated upstream
   return new Promise(
     (resolve, reject) => {
-=======
-    emails = getEmails()
-    email = emails.find(item => item.id === id)
-    if (!email) {
-      closeEmailModal()
-      renderDocumentMissing('./pending.html', 'Back to Pending', 'It is no longer in browser storage, so it cannot be sent.')
-    }
->>>>>>> Stashed changes
 
       const reader =
         new FileReader()
