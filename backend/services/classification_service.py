@@ -5,8 +5,7 @@ import re
 from typing import Any
 
 from services.attachment_text_service import extract_attachment_texts
-from services.llm_service import LLMGatewayError, chat_json, configured_model
-
+from services.llm_service import chat_json, configured_model
 
 VALID_CATEGORIES = {"Quotation", "Invoice & DO", "Supplier Payable", "Others"}
 VALID_PARTIES = {"Customer", "Supplier", "Unknown"}
@@ -125,6 +124,16 @@ EMAIL DATA:
     return chat_json(prompt, retry_label="classify the incoming Gmail into one MaxGreen category")
 
 
+def _number_or_none(source: dict[str, Any], key: str) -> float | None:
+    value = source.get(key)
+    if value in (None, ""):
+        return None
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
 def _normalize_quotation_details(raw: Any, subject: str) -> dict[str, Any]:
     if not isinstance(raw, dict):
         raw = {}
@@ -140,22 +149,13 @@ def _normalize_quotation_details(raw: Any, subject: str) -> dict[str, Any]:
         if not description:
             continue
 
-        def number_or_none(key: str) -> float | None:
-            value = item.get(key)
-            if value in (None, ""):
-                return None
-            try:
-                return float(value)
-            except (TypeError, ValueError):
-                return None
-
         items.append(
             {
                 "description": description,
-                "qty": number_or_none("qty"),
+                "qty": _number_or_none(item, "qty"),
                 "uom": str(item.get("uom") or "").strip(),
-                "unit_price": number_or_none("unit_price"),
-                "tax_rate": number_or_none("tax_rate"),
+                "unit_price": _number_or_none(item, "unit_price"),
+                "tax_rate": _number_or_none(item, "tax_rate"),
             }
         )
 

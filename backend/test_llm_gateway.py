@@ -1,7 +1,8 @@
-import os
 import json
-import requests
+import os
 from pathlib import Path
+
+import requests
 from dotenv import load_dotenv
 
 ROOT_DIR = Path(__file__).resolve().parent.parent

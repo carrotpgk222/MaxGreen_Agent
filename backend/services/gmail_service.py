@@ -3,7 +3,7 @@ from __future__ import annotations
 import base64
 import re
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from email.utils import parseaddr
 from pathlib import Path
 from typing import Any
@@ -146,7 +146,7 @@ def normalize_message(message: dict[str, Any]) -> dict[str, Any]:
     received_at = ""
     if internal_date:
         received_at = datetime.fromtimestamp(
-            int(internal_date) / 1000, tz=timezone.utc
+            int(internal_date) / 1000, tz=UTC
         ).isoformat()
 
     return {

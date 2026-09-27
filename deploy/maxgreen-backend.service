@@ -1,0 +1,17 @@
+[Unit]
+Description=MaxGreen Agent FastAPI backend
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/home/ubuntu/MaxGreen_Agent/backend
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/home/ubuntu/MaxGreen_Agent/backend/.venv/bin/python -m uvicorn app:app --host 127.0.0.1 --port 8000
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
