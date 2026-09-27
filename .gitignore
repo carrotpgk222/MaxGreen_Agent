@@ -1,25 +1,86 @@
-# Python
-backend/.venv/
-**/__pycache__/
-*.pyc
-*.pyo
-*.pyd
+# ---------------------------------------------------------------------------
+# Secrets and credentials - NEVER COMMIT
+# ---------------------------------------------------------------------------
 
-# Gmail OAuth secrets - NEVER COMMIT
-backend/secrets/credentials.json
-backend/secrets/token.json
+# Gmail OAuth client + tokens. Whole directory is ignored so that any *future*
+# secret file (client_secret.json, token.json.bak, ...) cannot be added by
+# accident. README.txt is kept so the folder is explained to collaborators.
+backend/secrets/*
+!backend/secrets/README.txt
 
-# Local database
-backend/data/*.db
-backend/data/*.db-shm
-backend/data/*.db-wal
-
-# Environment variables - NEVER COMMIT
+# Environment variables (holds LLM_GATEWAY_API_KEY).
 .env
 .env.*
 !.env.example
+.envrc
 
-# Editor / OS
+# Anything that looks like key material, e.g. the nginx htpasswd file and the
+# TLS cert/key pulled off the Lightsail box.
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+*.htpasswd
+*password*.txt
+
+# ---------------------------------------------------------------------------
+# Local database
+# ---------------------------------------------------------------------------
+# Keep .gitignore the pattern (not the whole folder) so data/.gitkeep stays
+# tracked and the directory still exists after a fresh clone.
+backend/data/*.db
+backend/data/*.db-shm
+backend/data/*.db-wal
+backend/data/*.db-journal
+backend/data/*.sqlite
+backend/data/*.sqlite3
+
+# ---------------------------------------------------------------------------
+# Python
+# ---------------------------------------------------------------------------
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+
+# ---------------------------------------------------------------------------
+# Frontend / Node
+# ---------------------------------------------------------------------------
+# This frontend is buildless vanilla HTML/JS. There is no package.json, so the
+# empty lockfile that npm left behind is meaningless noise - do not commit it.
+node_modules/
+frontend/package-lock.json
+
+# ---------------------------------------------------------------------------
+# Logs
+# ---------------------------------------------------------------------------
+*.log
+logs/
+
+# ---------------------------------------------------------------------------
+# Editor / OS junk
+# ---------------------------------------------------------------------------
 .vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.bak
+*.orig
+*.rej
 .DS_Store
+.AppleDouble
+._*
 Thumbs.db
+desktop.ini
