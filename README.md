@@ -31,15 +31,22 @@ files that sit on disk.
 
 | Piece | Count | Location |
 | --- | --- | --- |
-| Pages | 23 | `frontend/*.html` |
+| Pages | 23 | `frontend/*.html` (~24 300 lines total) |
 | Page controllers | 21 | `frontend/assets/js/pages/*.js` |
 | Shared modules | 23 | `frontend/assets/js/core/*.js` |
-| Stylesheets | 21 | `frontend/assets/css/*.css` |
-| Document templates | 4 | `frontend/assets/templates/*.pdf` |
+| Stylesheets | 21 | `frontend/assets/css/*.css` — 10 still linked, **11 orphaned** |
+| Inline CSS in pages | 19 pages | `<style>` blocks inside the HTML (~17 500 lines) |
+| Document templates | 4 | `frontend/assets/templates/*.pdf` — **unreferenced** |
 
-- Every page is a standalone HTML document that loads exactly one ES module via
+- 22 of the 23 pages load exactly one ES module via
   `<script type="module" src="./assets/js/pages/<page>.js">`. All asset paths are relative, so the
-  app works from any prefix.
+  app works from any prefix. The exception is `attachment-viewer.html`, a self-contained mock with a
+  4-line inline script and no module.
+- **Styling is split across two mechanisms.** `base.css` is the shared shell and is linked by 21
+  pages, but the page-specific CSS was largely inlined into the HTML: 19 pages now carry their own
+  `<style>` block, some over 1 500 lines. 11 of the 21 stylesheets are no longer linked by any page
+  (`dashboard.css`, `customers.css`, `invoice-do.css`, `pending.css`, and others) and are dead
+  weight. The CSP permits this via `style-src 'self' 'unsafe-inline'`.
 - `core/` holds the shared domain layer: document storage per entity (`quotationStorage.js`,
   `invoiceStorage.js`, `deliveryOrderStorage.js`, `soaStorage.js`, `receivableStorage.js`,
   `customerStorage.js`), workflow transitions (`*Workflow.js`, `workflowCategory.js`), Gmail
@@ -48,9 +55,13 @@ files that sit on disk.
   `window.location.hostname`: on `localhost` / `127.0.0.1` / `[::1]` it points straight at
   `http://127.0.0.1:8000` for Live Server development; on any real host it stays empty so calls go
   to same-origin `/api` through the nginx proxy. `apiJson()` unwraps `detail` into a thrown `Error`.
-- Document state lives in `localStorage` (seeded from `assets/data/demo-data.json`). PDFs are
-  produced in-browser from HTML via print; `assets/templates/` holds the reference templates for
-  the quotation, invoice, delivery order and SOA documents.
+- Document state lives in `localStorage`, written **only** through the `core/*Storage.js` modules
+  (seeded from `assets/data/demo-data.json`). The large page modules read and write through those
+  helpers rather than touching `localStorage` directly, which keeps the storage keys in one place.
+- **There is no PDF generation.** No `window.print`, no `@media print`, and no PDF library anywhere
+  in the frontend. The app tracks document *metadata* — a `documentId` and a filename such as
+  `QUOTATION.pdf` — but never renders a PDF file. The four PDFs in `assets/templates/` are
+  unreferenced reference material, not a rendering pipeline.
 
 ### 2. TLS — Let's Encrypt
 

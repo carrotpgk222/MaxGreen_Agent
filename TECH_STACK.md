@@ -12,13 +12,14 @@ nginx/systemd units, and the on-disk SQLite schema.
   on the host but the application does not use it. No transpilation, no compilation, no bundling.
 - **Primary Framework:** **FastAPI 0.116.1** (on Starlette **0.47.3** / Pydantic **2.13.5**), served
   by **Uvicorn 0.35.0** bound to `127.0.0.1:8000` only. Uses the modern `lifespan` context manager
-  (not the deprecated `on_event`). The frontend has **no framework** — 23 standalone HTML pages each
-  loading exactly one ES module.
+  (not the deprecated `on_event`). The frontend has **no framework** — 23 standalone HTML pages, 22
+  of which load exactly one ES module.
 - **Database & ORM/ODM:** **SQLite** via the Python standard library `sqlite3` driver. **No ORM, no
-  migrations tool.** One file, `backend/data/maxgreen.db`; one table, `gmail_messages` (23 columns,
+  migrations tool.** One file, `backend/data/maxgreen.db`; one table, `gmail_messages` (24 columns,
   primary key `gmail_message_id`), currently 10 rows. Schema evolution is additive `ALTER TABLE`
   in `_ensure_ai_columns()` (`backend/services/database_service.py:20`). Client-side state is
-  `localStorage`, seeded from `frontend/assets/data/demo-data.json`.
+  `localStorage`, seeded from `frontend/assets/data/demo-data.json` and written only through the
+  `core/*Storage.js` modules.
 - **Deployment topology:** Ubuntu 24.04.5 LTS on AWS Lightsail. `nginx 1.24.0` is the sole public
   ingress (TLS + HTTP Basic auth + static files + `/api/` reverse proxy); the FastAPI process runs
   under systemd as `maxgreen-backend.service` on loopback only.
@@ -44,8 +45,11 @@ backend/services/  ── 7 synchronous modules
 
 ## 📦 Complete Dependency Breakdown
 
-Source of truth is `backend/requirements.txt` (8 direct pins); the full installed set is 42
-packages. There is **no `package.json`**, no `pyproject.toml`, no `Cargo.toml`, and no `go.mod`.
+Source of truth is `backend/requirements.txt` (8 direct runtime pins) plus
+`backend/requirements-dev.txt` (3 dev pins); the full installed set is **50 packages**. There is
+**no `package.json`**, no `Cargo.toml`, and no `go.mod`. A `pyproject.toml` exists at the root but
+carries **only** ruff and pytest configuration — no build-system table, so the project is not
+packaged or installable.
 
 ### Direct dependencies (`backend/requirements.txt`)
 
@@ -64,11 +68,20 @@ pypdf>=5.0.0,<7.0.0
 
 **None. Zero.** Verified: no `package.json`; `frontend/package-lock.json` exists but is an empty
 placeholder (`name: frontend`, empty `packages` map); no `<script src="http...">`, no CDN, no
-unpkg/jsdelivr reference in any of the 23 HTML files; every `<script>` tag is a relative
-`type="module"` path.
+unpkg/jsdelivr reference in any of the 23 HTML files; every `<script>` tag is either a relative
+`type="module"` path or, on `attachment-viewer.html` only, a 4-line inline classic script.
 
-- 21 hand-written stylesheets: `assets/css/base.css` (shared shell) + one per page.
-- HTML is plain semantic markup; no templating engine, no JSX, no component runtime.
+- 23 pages (~24 300 lines of HTML), 21 page modules and 23 shared modules (~7 400 lines of JS).
+- **Styling is split between two mechanisms, and the split is uneven.** `assets/css/base.css` is
+  the shared shell, linked by 21 pages. Beyond that, most page styling was inlined into the HTML:
+  19 pages carry their own `<style>` block totalling ~17 500 lines, some over 1 500 lines, while 11
+  of the 21 stylesheets are linked by no page at all (`completed.css`, `customer-receivable.css`,
+  `customers.css`, `dashboard.css`, `gmail-message.css`, `invoice-do.css`, `invoice-edit.css`,
+  `invoice-receivable.css`, `pending.css`, `quotation-edit.css`, `supplier-payable.css`). Those
+  files are dead weight, not a live code path.
+- **No PDF rendering exists.** There is no `window.print`, no `@media print` in any HTML or CSS
+  file, and no PDF library. The app maintains document metadata only — a `documentId` and a
+  filename like `QUOTATION.pdf` — and never produces a PDF file.
 
 ### State Management & Data Fetching
 
@@ -107,6 +120,11 @@ Transitives present in `.venv`: `anyio` 4.15.1, `h11` 0.16.0, `idna` 3.20, `cert
 `PyYAML` 6.0.3, `annotated-types` 0.8.0, `typing-inspection` 0.4.4, `typing_extensions` 4.16.0,
 `httptools` 0.8.0, `uvloop` 0.22.1, `watchfiles` 1.3.0, `websockets` 17.1,
 `opentelemetry-api` 1.45.0.
+
+Dev-only, from `backend/requirements-dev.txt`: `pytest` 9.1.1 (+ `iniconfig` 2.3.0, `pluggy` 1.6.0,
+`packaging` 26.3, `Pygments` 2.21.0), `httpx` 0.28.1 (+ `httpcore` 1.0.9), and `ruff` 0.16.9. These
+eight are installed in the same `.venv` as the runtime and are therefore present in production, but
+nothing imports them at runtime.
 
 ### Testing Frameworks
 
@@ -197,11 +215,17 @@ sqlite3 / requests / googleapiclient  (stdlib + third-party, blocking)
   event loop free.
 - Both `app.py`'s `__main__` and the systemd `ExecStart` hardcode `127.0.0.1:8000`.
 
-**Frontend pattern — page controller:** one HTML page ↔ one module in `assets/js/pages/`. Shared
-domain logic lives in `assets/js/core/` and is imported with relative specifiers; there is no
-barrel file and no dynamic import. Cross-page state flows through the per-entity `*Storage.js`
-`localStorage` modules; the Inbox/Gmail path bridges the two tiers via
-`assets/js/core/gmailWorkflowBridge.js`.
+**Frontend pattern — page controller, with the styling inlined.** 22 of 23 pages load exactly one
+module from `assets/js/pages/`; `attachment-viewer.html` is a self-contained mock with an inline
+script. Shared domain logic lives in `assets/js/core/` and is imported with relative specifiers;
+there is no barrel file and no dynamic import. The large page modules do **not** touch
+`localStorage` directly — they read and write through the per-entity `core/*Storage.js` helpers,
+which are the only `localStorage` writers in the codebase, so storage keys stay centralised. The
+Inbox/Gmail path bridges the two tiers via `assets/js/core/gmailWorkflowBridge.js`.
+
+Presentation is the weak point of the current shape: page-specific CSS now lives mostly in
+inlined `<style>` blocks rather than in the stylesheets, and several page modules are thin stubs
+because the UI moved into the HTML. See the Frontend/UI Libraries section for the exact counts.
 
 **AI data flow is untrusted-data-first.** Email bodies and attachment text are wrapped in an
 explicit "treat as data, not instructions" fence (`classification_service.py:108`), the model is
@@ -290,12 +314,15 @@ fails the sync, and leftovers are retried from the Inbox via
     (default `true`) despite an operator having set `GMAIL_AUTO_SYNC=false`, and the poll interval is
     the 30 s default rather than the 60 s intended. `.env.example` is corrected; the live `.env` is a
     secrets file and was left untouched. Reconcile it deliberately.
-19. `assets/templates/*.pdf` (4 files) are **not referenced** by any HTML page or JS module; document
-    output is produced in-browser from HTML via print. Do not assume a template-loading pipeline
-    exists.
+19. `assets/templates/*.pdf` (4 files) are **not referenced** by any HTML page, JS module or
+    stylesheet, and there is no PDF rendering code anywhere in the frontend. Do not assume a
+    template-loading or document-generation pipeline exists; documents are metadata only.
 20. `frontend/package-lock.json` is an empty placeholder with no `package.json` beside it. It is a
     leftover from the Live Server prototype, not a dependency manifest.
-21. **The stored Gmail OAuth token is dead.** `backend/secrets/token.json` grants only
+21. **11 of the 21 stylesheets are orphaned** and 19 pages carry large inlined `<style>` blocks.
+    Editing an orphaned file has no effect; the live rule lives in the page's own `<style>`. This
+    is the most likely source of "I changed the CSS and nothing happened".
+22. **The stored Gmail OAuth token is dead.** `backend/secrets/token.json` grants only
     `gmail.readonly` and now fails to refresh with `invalid_grant: Token has been expired or
     revoked.` — it fails the same way when loaded with the original readonly scope, so widening
     `SCOPES` did not cause it. `/api/health` therefore reports `gmail_connected: false` and
