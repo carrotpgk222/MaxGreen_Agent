@@ -11,6 +11,7 @@ import {
   invoiceFromDeliveryOrder
 } from '../core/invoiceUtils.js'
 import {
+  displayDate,
   formatMoney,
   lineAmount,
   quotationTaxLabel,
@@ -18,6 +19,7 @@ import {
   taxAmount,
   totalInWords
 } from '../core/quotationUtils.js'
+import { completedQuotationRows, isSelectableQuotation } from '../core/quotationPicker.js'
 
 const ADD_CONTACT_VALUE = '__add_contact__'
 const emailId = getQueryParam('id')
@@ -74,6 +76,7 @@ const elements = {
   number: $('inv-number'),
   currency: $('inv-currency'),
   quote: $('inv-ref-quote'),
+  quoteSuggestions: $('inv-ref-quote-suggestions'),
   external: $('inv-external-do'),
   subject: $('inv-subject'),
   items: $('invoice-items'),
@@ -182,6 +185,53 @@ function renderSuggestions() {
   elements.companySuggestions.innerHTML = `${rows}<button type="button" class="company-suggestion add-company-suggestion" data-add-new-company>${addLabel}</button>`
   elements.companySuggestions.hidden = false
   elements.company.setAttribute('aria-expanded', 'true')
+}
+
+function hideRefQuoteSuggestions() {
+  elements.quoteSuggestions.hidden = true
+  elements.quoteSuggestions.innerHTML = ''
+  elements.quote.setAttribute('aria-expanded', 'false')
+}
+
+function renderRefQuoteSuggestions() {
+  const query = elements.quote.value.trim().toLowerCase()
+  const rows = completedQuotationRows().filter(({ email: quoteEmail, quotation }) => {
+    if (!query) return true
+    return [
+      quotation.quotationNumber,
+      quotation.subjectTitle,
+      quotation.company,
+      quoteEmail.subject
+    ].filter(Boolean).join(' ').toLowerCase().includes(query)
+  }).slice(0, 10)
+
+  elements.quoteSuggestions.innerHTML = rows.length ? rows.map(({ email: quoteEmail, quotation }) => `
+    <button class="ref-quote-suggestion" type="button" role="option" data-quote-email-id="${escapeHtml(quoteEmail.id)}">
+      <span>
+        <strong>${escapeHtml(quotation.quotationNumber || quoteEmail.documentId || '—')}</strong>
+        <small>${escapeHtml(quotation.subjectTitle || quoteEmail.subject || '—')}</small>
+      </span>
+      <small>${escapeHtml(displayDate(quotation.issueDate || quoteEmail.receivedDate))}</small>
+    </button>
+  `).join('') : '<div class="ref-quote-empty">No completed quotation matches this search.</div>'
+
+  elements.quoteSuggestions.hidden = false
+  elements.quote.setAttribute('aria-expanded', 'true')
+}
+
+function applyQuotationReference(quoteEmailId) {
+  const quoteEmail = getEmails().find(item => item.id === quoteEmailId)
+  const quotation = getQuotationDraft(quoteEmailId)
+  if (!isSelectableQuotation(quoteEmail) || !quotation) return
+
+  const quoteRef = quotation.quotationNumber || quoteEmail.documentId || ''
+
+  state.sourceQuotationEmailId = quoteEmailId
+  state.refQuoteDocumentId = quoteRef
+  state.reference = quoteRef
+  elements.quote.value = quoteRef
+
+  hideRefQuoteSuggestions()
 }
 
 function openContactModal({ company = null, prefillName = '' } = {}) {
@@ -369,8 +419,27 @@ elements.attn.addEventListener('change', () => {
   snapshotCustomer()
 })
 
+elements.quote.addEventListener('focus', renderRefQuoteSuggestions)
+elements.quote.addEventListener('input', renderRefQuoteSuggestions)
+elements.quote.addEventListener('keydown', event => {
+  if (event.key === 'Escape') hideRefQuoteSuggestions()
+})
+elements.quote.addEventListener('blur', () => {
+  window.setTimeout(() => {
+    elements.quote.value = state.refQuoteDocumentId || state.reference || ''
+    hideRefQuoteSuggestions()
+  }, 150)
+})
+
+elements.quoteSuggestions.addEventListener('mousedown', event => event.preventDefault())
+elements.quoteSuggestions.addEventListener('click', event => {
+  const button = event.target.closest('[data-quote-email-id]')
+  if (button) applyQuotationReference(button.dataset.quoteEmailId)
+})
+
 document.addEventListener('click', event => {
   if (!event.target.closest('.company-combobox')) hideSuggestions()
+  if (!event.target.closest('.ref-quote-picker-field')) hideRefQuoteSuggestions()
 })
 
 elements.newPostal.addEventListener('input', () => { elements.newPostal.value = digitsOnly(elements.newPostal.value) })

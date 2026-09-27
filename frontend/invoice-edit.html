@@ -382,7 +382,7 @@
         }
 
         .invoice-secondary-row .field:nth-child(2)::after {
-            content: "Linked quotation reference";
+            content: "Completed quotation reference";
         }
 
         .invoice-secondary-row .field:nth-child(3)::after {
@@ -447,7 +447,6 @@
         }
 
         #inv-attn,
-        #inv-ref-quote,
         #inv-subject {
             border-color: #c7d2fe;
         }
@@ -507,6 +506,95 @@
         .company-suggestions>*:hover {
             color: #4338ca;
             background: #eef2ff;
+        }
+
+
+        /* =========================================================
+           REF QUOTE SUGGESTIONS
+        ========================================================= */
+
+        .invoice-secondary-row .ref-quote-combobox {
+            order: 2;
+        }
+
+        .ref-quote-picker-field,
+        .ref-quote-combobox {
+            position: relative;
+        }
+
+        .ref-quote-suggestions {
+            position: absolute;
+            z-index: 100;
+
+            top: calc(100% + 5px);
+            left: 0;
+            right: 0;
+
+            max-height: 240px;
+
+            padding: 6px;
+
+            background: #ffffff;
+
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+
+            box-shadow:
+                0 12px 30px rgba(15, 23, 42, 0.13);
+
+            overflow-y: auto;
+        }
+
+        .ref-quote-suggestions[hidden] {
+            display: none;
+        }
+
+        .ref-quote-suggestion {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+
+            width: 100%;
+
+            padding: 10px 12px;
+
+            color: #475569;
+
+            font-size: 13px;
+
+            text-align: left;
+
+            background: transparent;
+            border: 0;
+            border-radius: 7px;
+
+            cursor: pointer;
+        }
+
+        .ref-quote-suggestion:hover,
+        .ref-quote-suggestion:focus {
+            color: #4338ca;
+            background: #eef2ff;
+            outline: none;
+        }
+
+        .ref-quote-suggestion span {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .ref-quote-suggestion small {
+            color: #94a3b8;
+            font-size: 11px;
+        }
+
+        .ref-quote-empty {
+            padding: 10px 12px;
+
+            color: #94a3b8;
+            font-size: 13px;
         }
 
 
@@ -1279,13 +1367,22 @@
                     </div>
 
 
-                    <div class="field">
+                    <div class="field ref-quote-picker-field">
 
                         <label for="inv-ref-quote">
                             Ref Quote
                         </label>
 
-                        <input id="inv-ref-quote" type="text" readonly />
+                        <div class="ref-quote-combobox">
+
+                            <input id="inv-ref-quote" type="text" autocomplete="off" role="combobox"
+                                aria-autocomplete="list" aria-expanded="false"
+                                aria-controls="inv-ref-quote-suggestions"
+                                placeholder="Search completed quotation" />
+
+                            <div class="ref-quote-suggestions" id="inv-ref-quote-suggestions" role="listbox" hidden></div>
+
+                        </div>
 
                     </div>
 

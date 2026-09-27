@@ -2,6 +2,7 @@ import { getEmails } from '../core/storage.js'
 import { getQueryParam } from '../core/utils.js'
 import { getQuotationDraft } from '../core/quotationStorage.js'
 import { getDeliveryOrderDraft, saveDeliveryOrderDraft } from '../core/deliveryOrderStorage.js'
+import { completedQuotationRows, isSelectableQuotation } from '../core/quotationPicker.js'
 import { getCompanies, saveCompanies } from '../core/customerStorage.js'
 import {
   createDefaultDeliveryOrder,
@@ -200,14 +201,6 @@ function saveNewCompanyFromModal() {
   selectCompany(company, attnName)
 }
 
-function completedQuotationRows() {
-  return getEmails()
-    .filter(item => item.status === 'Completed' && item.category === 'Quotation' && !item.deletedFromCompleted)
-    .map(item => ({ email: item, quotation: getQuotationDraft(item.id) }))
-    .filter(item => item.quotation)
-    .sort((a, b) => new Date(b.email.sentAt || b.email.completedAt || b.email.receivedDate) - new Date(a.email.sentAt || a.email.completedAt || a.email.receivedDate))
-}
-
 function hideRefQuoteSuggestions() {
   elements.refQuoteSuggestions.hidden = true
   elements.refQuoteSuggestions.innerHTML = ''
@@ -243,7 +236,7 @@ function renderRefQuoteSuggestions() {
 function applyQuotationReference(quoteEmailId) {
   const quoteEmail = getEmails().find(item => item.id === quoteEmailId)
   const quotation = getQuotationDraft(quoteEmailId)
-  if (!quoteEmail || !quotation || quoteEmail.status !== 'Completed' || quoteEmail.category !== 'Quotation' || quoteEmail.deletedFromCompleted) return
+  if (!isSelectableQuotation(quoteEmail) || !quotation) return
 
   const keep = {
     deliveryOrderNumber: state.deliveryOrderNumber || deliveryDocumentId || '',
