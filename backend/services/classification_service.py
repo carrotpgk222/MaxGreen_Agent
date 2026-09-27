@@ -238,7 +238,7 @@ def _normalize_quotation_details(raw: Any, subject: str) -> dict[str, Any]:
         "subject_title": text("subject_title") or str(subject or "").strip(),
         "items": items,
         "extraction_version": extraction_version,
-        "extraction_source": text("extraction_source"),
+        "extraction_source": text("extraction_source").lower(),
     }
 
 
@@ -513,35 +513,16 @@ def _description_looks_like_email_dump(value: str) -> bool:
 
 
 def _ensure_scope_items(items: list[dict[str, Any]], message: dict[str, Any]) -> list[dict[str, Any]]:
-    """Keep real quotation rows; reject email-subject/generic rows and email dumps."""
-
-    subject = str(message.get("subject") or "").strip()
-
-    def comparable(value: str) -> str:
-        value = re.sub(r"^\s*(?:re|fw|fwd)\s*:\s*", "", str(value or ""), flags=re.IGNORECASE)
-        return re.sub(r"[^a-z0-9]+", " ", value.lower()).strip()
-
-    subject_key = comparable(subject)
+    """Keep concise AI scope rows; otherwise rebuild rows from the source scope section."""
     clean: list[dict[str, Any]] = []
-
     for item in items or []:
         description = str(item.get("description") or "").strip()
         if not description or _description_looks_like_email_dump(description):
             continue
-
-        description_key = comparable(description)
-
-        # Claude sometimes returns the email subject itself as the only quotation row.
-        # A subject such as "Quotation Request - Classroom Supplies" is a title, not a billable item.
-        if subject_key and description_key == subject_key:
-            continue
-
-        if re.match(r"^(quotation|quote)\s+(request|enquiry|inquiry)\b", description_key):
-            continue
-
         clean.append(item)
 
-    # If AI rows were unusable, rebuild them deterministically from the actual email body.
+    # If every AI row was rejected, or a single suspiciously long row remains,
+    # derive deterministic task rows from Scope of Work / action verbs.
     if not clean:
         return _heuristic_scope_items(message)
 
@@ -549,7 +530,6 @@ def _ensure_scope_items(items: list[dict[str, Any]], message: dict[str, Any]) ->
         heuristic = _heuristic_scope_items(message)
         if heuristic:
             return heuristic
-
     return clean[:12]
 
 def _quotation_fallback(message: dict[str, Any]) -> dict[str, Any]:
@@ -573,10 +553,8 @@ def _quotation_fallback(message: dict[str, Any]) -> dict[str, Any]:
         # and require human review.
         "items": items,
 
-        # A successful deterministic parse can be reused without spending more LLM tokens.
-        # If nothing was extracted, keep version 0 so a later retry can attempt AI again.
-        "extraction_version": QUOTATION_EXTRACTION_VERSION if items else 0,
-        "extraction_source": "heuristic" if items else "fallback",
+        "extraction_version": 0,
+        "extraction_source": "fallback",
     }
 
 def _extract_quotation_details(message_data: dict[str, Any], message: dict[str, Any]) -> tuple[dict[str, Any], str, str]:
@@ -621,10 +599,7 @@ EMAIL DATA:
             fallback = _quotation_fallback(message)
             normalized["items"] = fallback["items"]
 
-            if normalized["items"]:
-                normalized["extraction_version"] = QUOTATION_EXTRACTION_VERSION
-                normalized["extraction_source"] = "heuristic"
-            else:
+            if not normalized["items"]:
                 normalized["extraction_version"] = 0
                 normalized["extraction_source"] = "fallback"
                 return (
@@ -756,7 +731,7 @@ def classify_message(message: dict[str, Any]) -> dict[str, Any]:
         if (
             has_existing_details
             and existing_version >= QUOTATION_EXTRACTION_VERSION
-            and existing_source in {"ai", "heuristic"}
+            and existing_source == "ai"
         ):
             quotation_details = _normalize_quotation_details(existing_draft, message.get("subject") or "")
         else:

@@ -52,13 +52,6 @@ function loadQuotation() {
   // draft. The Inbox bridge normally prepares these, but this also works when
   // the user refreshes or opens quotation.html directly.
   if (email?.sourceType === 'gmail' && !draft?.humanEdited) {
-    const hasDescription = Array.isArray(draft?.items) && draft.items.some(item => String(item?.description || '').trim())
-    // Never copy the full email into the quotation Description. If structured AI
-    // extraction is unavailable, use a short subject-based placeholder that the
-    // user can edit while keeping the source email visible above the PDF.
-    const sourceDescription = String(email.subject || '')
-      .replace(/^\s*\[[^\]]+\]\s*/, '')
-      .trim()
     let changed = false
 
     if (!String(draft.subjectTitle || '').trim() && String(email.subject || '').trim()) {
@@ -66,18 +59,26 @@ function loadQuotation() {
       changed = true
     }
 
-    if (!hasDescription && sourceDescription) {
-      draft.items = [createQuotationItem({
-        item: '1',
-        description: sourceDescription,
-        qty: '',
-        preserveBlankQty: true,
-        uom: '',
-        unitPrice: 0,
-        taxRate: 9
-      }, 1)]
+    // Older versions used the Gmail subject as a quotation Description when
+    // extraction failed. Remove that stale placeholder; only actual products /
+    // services extracted from the email body belong in the PDF item table.
+    const normalized = value => String(value || '')
+      .replace(/^\s*\[[^\]]+\]\s*/, '')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .toLowerCase()
+
+    const subject = normalized(email.subject)
+    const items = Array.isArray(draft?.items) ? draft.items : []
+    const isLegacySubjectFallback = (
+      items.length === 1
+      && subject
+      && normalized(items[0]?.description) === subject
+    )
+
+    if (isLegacySubjectFallback) {
+      draft.items = []
       draft.automationFallback = true
-      draft.aiSourceGmailMessageId = email.gmailMessageId || email.id
       changed = true
     }
 

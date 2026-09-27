@@ -55,26 +55,17 @@ function aiQuotationDraft(message, workflowEmail) {
   const sourceItems = Array.isArray(extracted.items) ? extracted.items : []
   const base = createDefaultQuotation(workflowEmail)
 
-  const fallbackDescription = String(workflowEmail.subject || message.subject || 'Customer quotation request').replace(/^\s*\[[^\]]+\]\s*/, '').trim()
-  const items = sourceItems.length
-    ? sourceItems.map((item, index) => createQuotationItem({
-        item: String(index + 1),
-        description: item.description || '',
-        qty: item.qty == null ? '' : item.qty,
-        preserveBlankQty: item.qty == null,
-        uom: item.uom || '',
-        unitPrice: item.unit_price == null ? 0 : item.unit_price,
-        taxRate: item.tax_rate == null ? 9 : item.tax_rate
-      }, index + 1))
-    : [createQuotationItem({
-        item: '1',
-        description: fallbackDescription,
-        qty: '',
-        preserveBlankQty: true,
-        uom: '',
-        unitPrice: 0,
-        taxRate: 9
-      }, 1)]
+  // Only actual extracted quotation items belong in the PDF table.
+  // Never turn the Gmail subject into a fake quotation line item.
+  const items = sourceItems.map((item, index) => createQuotationItem({
+    item: String(index + 1),
+    description: item.description || '',
+    qty: item.qty == null ? '' : item.qty,
+    preserveBlankQty: item.qty == null,
+    uom: item.uom || '',
+    unitPrice: item.unit_price == null ? 0 : item.unit_price,
+    taxRate: item.tax_rate == null ? 9 : item.tax_rate
+  }, index + 1))
 
   const hasStructuredAiFields = Boolean(
     sourceItems.length > 0
@@ -122,6 +113,21 @@ function hasMeaningfulQuotationItems(items = []) {
   })
 }
 
+function normalizedText(value = '') {
+  return String(value || '')
+    .replace(/^\s*\[[^\]]+\]\s*/, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase()
+}
+
+function isLegacySubjectFallback(items = [], subject = '') {
+  if (!Array.isArray(items) || items.length !== 1) return false
+  const description = normalizedText(items[0]?.description)
+  const normalizedSubject = normalizedText(subject)
+  return Boolean(description && normalizedSubject && description === normalizedSubject)
+}
+
 function mergeAutomationIntoDraft(existing, prepared) {
   // Once the human explicitly saves the editor, AI/source automation must never
   // overwrite their decisions on later Inbox refreshes or Gmail syncs.
@@ -132,6 +138,10 @@ function mergeAutomationIntoDraft(existing, prepared) {
   const existingVersion = Number(existing?.aiExtractionVersion || 0)
   const preparedVersion = Number(prepared?.aiExtractionVersion || 0)
   const upgradingAiExtraction = Boolean(prepared?.aiPrefilled && preparedVersion > existingVersion)
+  const legacySubjectFallback = isLegacySubjectFallback(
+    existing?.items,
+    existing?.subjectTitle || prepared?.subjectTitle || ''
+  )
 
   const fillIfBlank = (key) => {
     if (isBlank(merged[key]) && !isBlank(prepared[key])) merged[key] = prepared[key]
@@ -166,9 +176,18 @@ function mergeAutomationIntoDraft(existing, prepared) {
 
   if (
     hasMeaningfulQuotationItems(prepared.items)
-    && (!hasMeaningfulQuotationItems(merged.items) || upgradingFallback || upgradingAiExtraction)
+    && (
+      !hasMeaningfulQuotationItems(merged.items)
+      || upgradingFallback
+      || upgradingAiExtraction
+      || legacySubjectFallback
+    )
   ) {
     merged.items = prepared.items
+  } else if (legacySubjectFallback && !hasMeaningfulQuotationItems(prepared.items)) {
+    // Remove the old subject-based placeholder. A blank editable row is safer
+    // than pretending the email subject is an ordered product/service.
+    merged.items = []
   }
 
   // Carry automation metadata forward so the review page can explain how the
