@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import base64
+import logging
 import mimetypes
 import re
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -15,33 +16,109 @@ from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 
+from services.logging_config import log_event, timed
+from services.security_service import (
+    MAX_ATTACHMENT_BYTES,
+    sanitize_filename,
+    validate_body,
+    validate_email_address,
+    validate_gmail_query,
+    validate_header_value,
+)
+
+logger = logging.getLogger("maxgreen.gmail")
+
 BASE_DIR = Path(__file__).resolve().parents[1]
 SECRETS_DIR = BASE_DIR / "secrets"
 CREDENTIALS_PATH = SECRETS_DIR / "credentials.json"
 TOKEN_PATH = SECRETS_DIR / "token.json"
 
+#: Hard ceiling on an attachment download. Gmail permits ~25 MB; a larger one is not a
+#: document a person is waiting on and would be parsed in-process.
+MAX_FETCH_BYTES = MAX_ATTACHMENT_BYTES
+
 # Read and send. Reading is the only path wired into the app; the send helper below is
-# not currently called by any endpoint.
+# reachable only through services.workflow_service, which enforces human approval.
 SCOPES = [
     "https://www.googleapis.com/auth/gmail.readonly",
     "https://www.googleapis.com/auth/gmail.send",
 ]
 
 
+class GmailSendError(RuntimeError):
+    """A send attempt failed.
+
+    ``safe_detail`` is safe to log; ``retryable`` tells the caller whether another attempt
+    could plausibly succeed, so a duplicate email is never the retry strategy.
+    """
+
+    def __init__(self, message: str, *, code: str, retryable: bool, safe_detail: str = "") -> None:
+        super().__init__(message)
+        self.code = code
+        self.retryable = retryable
+        self.safe_detail = safe_detail or message
+
+
+class GmailReadError(RuntimeError):
+    """A Gmail read failed in a way the caller must handle explicitly."""
+
+
+def _redact_google_error(exc: Exception) -> str:
+    """A short, log-safe description of a Google API failure.
+
+    googleapiclient error strings embed the full request URL, which carries the bearer
+    token. Only the status and the error reason survive.
+    """
+    status = getattr(getattr(exc, "resp", None), "status", None)
+    reason = ""
+    try:
+        content = getattr(exc, "content", b"")
+        if isinstance(content, bytes):
+            content = content.decode("utf-8", errors="replace")
+        if isinstance(content, str) and content:
+            import json as _json
+
+            parsed = _json.loads(content)
+            error = parsed.get("error") if isinstance(parsed, dict) else None
+            if isinstance(error, dict):
+                reason = str(error.get("status") or error.get("message") or "")[:120]
+    except Exception:
+        reason = ""
+
+    parts = [type(exc).__name__]
+    if status is not None:
+        parts.append(f"status={status}")
+    if reason:
+        parts.append(f"reason={reason}")
+    return " ".join(parts)
+
+
+
 def _load_credentials() -> Credentials | None:
     if not TOKEN_PATH.exists():
         return None
-    creds = Credentials.from_authorized_user_file(str(TOKEN_PATH), SCOPES)
-    if creds.expired and creds.refresh_token:
-        creds.refresh(Request())
-        TOKEN_PATH.write_text(creds.to_json(), encoding="utf-8")
-    return creds if creds.valid else None
+    try:
+        creds = Credentials.from_authorized_user_file(str(TOKEN_PATH), SCOPES)
+        if creds.expired and creds.refresh_token:
+            creds.refresh(Request())
+            TOKEN_PATH.write_text(creds.to_json(), encoding="utf-8")
+        return creds if creds.valid else None
+    except Exception as exc:
+        # A corrupt or revoked token must be visible, not silently read as "not connected",
+        # which would send the operator to the wrong fix (re-run the OAuth flow).
+        log_event(
+            logger, "gmail.credentials.invalid", level="error",
+            error_type=type(exc).__name__, error=_redact_google_error(exc), exc_info=True,
+        )
+        return None
 
 
 def is_connected() -> bool:
     try:
         return _load_credentials() is not None
-    except Exception:
+    except Exception as exc:
+        log_event(logger, "gmail.is_connected.failed", level="warning",
+                  error_type=type(exc).__name__, error=str(exc)[:200])
         return False
 
 
@@ -69,7 +146,8 @@ def get_service():
 
 
 def get_profile() -> dict[str, Any]:
-    profile = get_service().users().getProfile(userId="me").execute()
+    with timed("gmail.profile"):
+        profile = get_service().users().getProfile(userId="me").execute()
     return {
         "email": profile.get("emailAddress", ""),
         "messages_total": profile.get("messagesTotal", 0),
@@ -166,13 +244,15 @@ def normalize_message(message: dict[str, Any]) -> dict[str, Any]:
 
 def list_message_ids(limit: int = 25, query: str = "in:inbox") -> list[str]:
     """List message IDs matching the query without fetching full bodies."""
+    safe_query = validate_gmail_query(query)
     service = get_service()
-    response = (
-        service.users()
-        .messages()
-        .list(userId="me", maxResults=max(1, min(limit, 100)), q=query)
-        .execute()
-    )
+    with timed("gmail.messages.list", query=safe_query[:80]):
+        response = (
+            service.users()
+            .messages()
+            .list(userId="me", maxResults=max(1, min(limit, 100)), q=safe_query)
+            .execute()
+        )
     return [item["id"] for item in (response.get("messages", []) or []) if item.get("id")]
 
 
@@ -182,22 +262,27 @@ def fetch_latest_messages(
     skip_ids: set[str] | None = None,
     max_workers: int = 8,
     message_ids: list[str] | None = None,
-) -> list[dict[str, Any]]:
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     """Fetch messages matching query.
 
     - Lists message IDs (one cheap call) unless message_ids is provided.
     - Skips IDs already stored (skip_ids) so repeat syncs only pull new mail.
     - Fetches the remaining full messages concurrently with a thread pool,
       instead of one slow serial round-trip per message.
+
+    Returns ``(messages, failures)``. ``failures`` is non-empty when an individual fetch
+    failed: the caller must report those rather than pretending the sync was complete.
     """
     if message_ids is None:
         service = get_service()
-        response = (
-            service.users()
-            .messages()
-            .list(userId="me", maxResults=max(1, min(limit, 100)), q=query)
-            .execute()
-        )
+        safe_query = validate_gmail_query(query)
+        with timed("gmail.messages.list", query=safe_query[:80]):
+            response = (
+                service.users()
+                .messages()
+                .list(userId="me", maxResults=max(1, min(limit, 100)), q=safe_query)
+                .execute()
+            )
         listed = [item["id"] for item in (response.get("messages", []) or []) if item.get("id")]
     else:
         listed = [mid for mid in message_ids if mid]
@@ -205,9 +290,9 @@ def fetch_latest_messages(
     skip = skip_ids or set()
     to_fetch = [mid for mid in listed if mid not in skip]
     if not to_fetch:
-        return []
+        return [], []
 
-    def _get_full(message_id: str) -> dict[str, Any] | None:
+    def _get_full(message_id: str) -> tuple[dict[str, Any] | None, str]:
         try:
             # Each thread needs its own service/http object; httplib2 is not
             # thread-safe when shared. Build a fresh service per call.
@@ -218,37 +303,71 @@ def fetch_latest_messages(
                 .get(userId="me", id=message_id, format="full")
                 .execute()
             )
-            return normalize_message(full)
-        except Exception:
-            return None
+            return normalize_message(full), ""
+        except Exception as exc:
+            # Recorded, not swallowed. A single bad message must not abort the sync, but it
+            # must not disappear either - the operator retries it on the next tick.
+            return None, _redact_google_error(exc)
 
     workers = max(1, min(max_workers, len(to_fetch)))
     results_by_id: dict[str, dict[str, Any]] = {}
+    failures: list[dict[str, Any]] = []
     with ThreadPoolExecutor(max_workers=workers) as executor:
         future_map = {executor.submit(_get_full, mid): mid for mid in to_fetch}
         for future in as_completed(future_map):
-            normalized = future.result()
+            message_id = future_map[future]
+            try:
+                normalized, error = future.result()
+            except Exception as exc:  # the worker itself blew up
+                failures.append({"gmail_message_id": message_id, "error": _redact_google_error(exc)})
+                continue
             if normalized:
-                results_by_id[future_map[future]] = normalized
+                results_by_id[message_id] = normalized
+            else:
+                failures.append({"gmail_message_id": message_id, "error": error or "fetch_failed"})
+
+    if failures:
+        log_event(
+            logger, "gmail.messages.fetch_incomplete", level="warning",
+            requested=len(to_fetch), fetched=len(results_by_id), failed=len(failures),
+            outcome="partial",
+        )
 
     # Preserve the Gmail list order (newest first).
-    return [results_by_id[mid] for mid in to_fetch if mid in results_by_id]
+    return [results_by_id[mid] for mid in to_fetch if mid in results_by_id], failures
 
 
 def fetch_attachment(gmail_message_id: str, attachment_id: str) -> bytes:
+    """Download one attachment, refusing anything past the size cap.
+
+    The cap is checked from the declared size before the download and again on the decoded
+    bytes, so an attachment that lies about its size still cannot exhaust memory.
+    """
     service = get_service()
-    payload = (
-        service.users()
-        .messages()
-        .attachments()
-        .get(userId="me", messageId=gmail_message_id, id=attachment_id)
-        .execute()
-    )
+    with timed("gmail.attachment.fetch", gmail_message_id=gmail_message_id):
+        payload = (
+            service.users()
+            .messages()
+            .attachments()
+            .get(userId="me", messageId=gmail_message_id, id=attachment_id)
+            .execute()
+        )
     data = payload.get("data", "")
     if not data:
         return b""
     padding = "=" * (-len(data) % 4)
-    return base64.urlsafe_b64decode((data + padding).encode("ascii"))
+    raw = base64.urlsafe_b64decode((data + padding).encode("ascii"))
+    if len(raw) > MAX_FETCH_BYTES:
+        log_event(
+            logger, "gmail.attachment.too_large", level="warning",
+            gmail_message_id=gmail_message_id, attachment_id=attachment_id, bytes=len(raw),
+            limit=MAX_FETCH_BYTES, outcome="rejected",
+        )
+        raise GmailReadError(
+            f"Attachment is {len(raw)} bytes, above the {MAX_FETCH_BYTES} byte limit."
+        )
+    return raw
+
 
 def send_email(
     to: str,
@@ -256,92 +375,92 @@ def send_email(
     body: str,
     attachments: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
+    """Send one email through the connected Gmail account.
+
+    This is a low-level transport helper. It validates its inputs and refuses anything
+    malformed, but it deliberately holds **no** approval logic: the only caller is
+    :func:`services.workflow_service.send_document`, which enforces the human approval
+    gate. Callers must not be added without that gate.
+
+    ``attachments`` format::
+
+        [{"filename": "INV-001.pdf", "data": b"...pdf bytes...", "mime_type": "application/pdf"}]
     """
-    Send an email using the connected Gmail account.
-
-    attachments format:
-
-    [
-        {
-            "filename": "INV-001.pdf",
-            "data": b"...pdf bytes...",
-            "mime_type": "application/pdf"
-        }
-    ]
-    """
-
-    if not to:
-        raise ValueError("Recipient email is required.")
-
-    if not subject:
-        raise ValueError("Email subject is required.")
+    # Validation. A bad address or a header with a newline in it is a bug in the caller,
+    # and it must fail here rather than become a malformed message in a customer's inbox.
+    recipient = validate_email_address(to, field="to")
+    safe_subject = validate_header_value(subject, field="subject", max_length=200)
+    safe_body = validate_body(body)
 
     service = get_service()
 
     message = EmailMessage()
+    message["To"] = recipient
+    message["Subject"] = safe_subject
+    message.set_content(safe_body)
 
-    message["To"] = to
-    message["Subject"] = subject
-
-    message.set_content(body or "")
-
-    # --------------------------------------------------------
-    # ATTACHMENTS
-    # --------------------------------------------------------
-
+    total_attachment_bytes = 0
     for attachment in attachments or []:
-
-        filename = str(
-            attachment.get("filename") or "attachment"
-        )
-
+        filename = sanitize_filename(attachment.get("filename"))
         data = attachment.get("data")
 
-        if not isinstance(data, bytes):
-            continue
+        if not isinstance(data, bytes | bytearray):
+            # Previously a non-bytes attachment was skipped with `continue`, so a document
+            # could be sent silently missing a quoted PDF. Now it is a hard failure.
+            raise GmailSendError(
+                "An attachment could not be read and the email was not sent.",
+                code="attachment_invalid",
+                retryable=False,
+                safe_detail=f"attachment={filename} data_type={type(data).__name__}",
+            )
+
+        data = bytes(data)
+        total_attachment_bytes += len(data)
+        if total_attachment_bytes > MAX_FETCH_BYTES:
+            raise GmailSendError(
+                "The total attachment size is too large and the email was not sent.",
+                code="attachments_too_large",
+                retryable=False,
+                safe_detail=f"bytes={total_attachment_bytes} limit={MAX_FETCH_BYTES}",
+            )
 
         mime_type = (
             attachment.get("mime_type")
             or mimetypes.guess_type(filename)[0]
             or "application/octet-stream"
         )
+        maintype, _, subtype = str(mime_type).partition("/")
+        if not maintype or not subtype or "/" in subtype:
+            maintype, subtype = "application", "octet-stream"
 
-        if "/" in mime_type:
-            maintype, subtype = mime_type.split("/", 1)
-        else:
-            maintype = "application"
-            subtype = "octet-stream"
+        message.add_attachment(data, maintype=maintype, subtype=subtype, filename=filename)
 
-        message.add_attachment(
-            data,
-            maintype=maintype,
-            subtype=subtype,
-            filename=filename,
+    encoded_message = base64.urlsafe_b64encode(message.as_bytes()).decode("ascii")
+
+    try:
+        sent = (
+            service.users()
+            .messages()
+            .send(
+                userId="me",
+                body={"raw": encoded_message},
+            )
+            .execute()
         )
-
-    # --------------------------------------------------------
-    # ENCODE FOR GMAIL API
-    # --------------------------------------------------------
-
-    encoded_message = base64.urlsafe_b64encode(
-        message.as_bytes()
-    ).decode("ascii")
-
-    # --------------------------------------------------------
-    # SEND
-    # --------------------------------------------------------
-
-    sent = (
-        service.users()
-        .messages()
-        .send(
-            userId="me",
-            body={
-                "raw": encoded_message
-            },
+    except Exception as exc:
+        # Distinguish "try again" from "this will never work", so the workflow layer can
+        # say so honestly and the operator does not retry into a duplicate send.
+        status = getattr(getattr(exc, "resp", None), "status", None)
+        retryable = status is None or int(status) in {408, 429, 500, 502, 503, 504}
+        safe = _redact_google_error(exc)
+        log_event(
+            logger, "gmail.send.transport_failed", level="error", outcome="failed",
+            error_code="send_transport_failed", retryable=retryable, error=safe, exc_info=True,
         )
-        .execute()
-    )
+        raise GmailSendError(
+            "Gmail did not accept the message.", code="send_transport_failed",
+            retryable=retryable, safe_detail=safe,
+        ) from exc
 
     return {
         "id": sent.get("id", ""),

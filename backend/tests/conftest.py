@@ -16,7 +16,19 @@ BACKEND_DIR = Path(__file__).resolve().parents[1]
 if str(BACKEND_DIR) not in sys.path:
     sys.path.insert(0, str(BACKEND_DIR))
 
-from services import database_service  # noqa: E402
+from services import database_service, logging_config  # noqa: E402
+
+
+@pytest.fixture(autouse=True)
+def fresh_secret_cache():
+    """The redactor caches configured secret values, so clear it around every test.
+
+    Autouse because a leaked literal secret from one test must not make a later assertion
+    about redaction pass or fail for the wrong reason.
+    """
+    logging_config.reset_secret_cache()
+    yield
+    logging_config.reset_secret_cache()
 
 
 @pytest.fixture
@@ -26,6 +38,7 @@ def temp_db(tmp_path, monkeypatch):
     monkeypatch.setattr(database_service, "DB_PATH", db_path)
     database_service.init_db()
     return db_path
+
 
 
 @pytest.fixture

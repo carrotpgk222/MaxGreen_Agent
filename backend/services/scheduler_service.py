@@ -11,6 +11,8 @@ Design:
   thread pool executor to avoid blocking the event loop.
 - Each run is best-effort: exceptions are logged and the loop continues.
 - Skips work when Gmail is not connected.
+- Each tick gets its own request id, so its log lines correlate independently of
+  whatever HTTP request happened to be in flight.
 """
 
 from __future__ import annotations
@@ -20,6 +22,7 @@ import logging
 import os
 
 from services.gmail_service import is_connected
+from services.logging_config import new_request_id, reset_request_id, set_request_id
 from services.sync_service import sync_gmail
 
 logger = logging.getLogger("maxgreen.scheduler")
@@ -52,15 +55,40 @@ async def _run_once() -> None:
         logger.debug("Skipping scheduled sync: Gmail not connected.")
         return
     loop = asyncio.get_running_loop()
+    # Its own correlation id: this tick is a workflow, not part of any browser request.
+    token = set_request_id(new_request_id())
+    tick_started = loop.time()
     try:
         result = await loop.run_in_executor(
             None, lambda: sync_gmail(limit=_sync_limit(), query=_sync_query())
         )
         fetched = result.get("fetched", 0)
-        if fetched:
-            logger.info("Scheduled Gmail sync fetched %s new message(s).", fetched)
+        failures = len(result.get("fetch_failures") or [])
+        if fetched or failures:
+            logger.info(
+                "Scheduled Gmail sync fetched %s new message(s), %s failure(s).",
+                fetched,
+                failures,
+                extra={
+                    "event": "scheduler.sync.completed",
+                    "fetched": fetched,
+                    "fetch_failures": failures,
+                    "classified": (result.get("ai") or {}).get("processed", 0),
+                    "duration_ms": round((loop.time() - tick_started) * 1000, 2),
+                },
+            )
     except Exception as exc:  # keep the scheduler alive
-        logger.warning("Scheduled Gmail sync failed: %s", exc)
+        logger.warning(
+            "Scheduled Gmail sync failed: %s",
+            exc,
+            extra={
+                "event": "scheduler.sync.failed",
+                "error_type": type(exc).__name__,
+                "duration_ms": round((loop.time() - tick_started) * 1000, 2),
+            },
+        )
+    finally:
+        reset_request_id(token)
 
 
 async def _loop() -> None:
