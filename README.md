@@ -4,6 +4,33 @@ Start with **START_HERE.md** to run it, or **TECH_STACK.md** for the full archit
 dependency inventory and the rules that constrain changes. Deployment config lives in
 **deploy/**.
 
+## Accessing the deployed app
+
+The app is hosted on an AWS Lightsail instance (Ubuntu 24.04 LTS) and is already running. To use the
+deployed version you do not need a local checkout or a running backend — just a browser.
+
+1. Open **<https://54-179-55-232.sslip.io>**. The name is an `sslip.io` wildcard that resolves
+   straight to the Lightsail instance's public IP, so there is no DNS record to configure.
+2. A browser **HTTP Basic** prompt appears on the first request. Authenticate with the credentials
+   from the submission email:
+   - **Username** and **password** as given in that email, or
+   - the shared user id and password sent to you for this deployment.
+3. The browser caches the credential for the session, so subsequent page loads and every `/api/`
+   call go through without re-prompting.
+
+Notes before you start:
+
+- Access is **HTTPS with a Let's Encrypt certificate**, so there is no browser warning as long as
+  the hostname above is used exactly. Using the raw IP instead triggers nginx's `default_server`
+  block, which drops the connection on purpose.
+- The backend is bound to `127.0.0.1:8000` on the instance and is **not** reachable directly — the
+  nginx `/api/` reverse proxy is the only path in, which is why the basic-auth prompt is the single
+  gate for both the pages and the API.
+- If the credentials are rejected, or you get `401`, the account is the nginx one in
+  `/etc/nginx/auth/maxgreen.htpasswd`; re-check the submission email. If Gmail reports
+  `gmail_connected: false` on the Settings page, that is a separate issue from web access — see
+  **Known drift** in **TECH_STACK.md**.
+
 ## Tech stack
 
 Listed **top to bottom** — the order a request actually travels, from the browser down to disk and
@@ -16,10 +43,10 @@ out to third-party APIs.
         ▼
 3. nginx 1.24  ── basic auth · static files · /api/ reverse proxy
         │  HTTP, loopback only
-4. FastAPI 0.116 / Uvicorn 0.35  on 127.0.0.1:8000  (14 REST routes)
+4. FastAPI 0.116 / Uvicorn 0.35  on 127.0.0.1:8000  (23 REST routes)
         ▼
-5. Service layer  (backend/services/ — 7 modules)
-        ├──────────────► 6. SQLite  (backend/data/maxgreen.db, stdlib sqlite3)
+5. Service layer  (backend/services/ — 10 modules)
+        ├──────────────► 6. SQLite  (backend/data/maxgreen.db, stdlib sqlite3, 4 tables)
         └──────────────► 7. Google Gmail API  (OAuth 2.0, readonly + send)
                          8. LLM gateway → Claude Sonnet 4.5  (HTTPS + x-api-key)
 ```
@@ -31,11 +58,11 @@ files that sit on disk.
 
 | Piece | Count | Location |
 | --- | --- | --- |
-| Pages | 23 | `frontend/*.html` (~24 300 lines total) |
+| Pages | 23 | `frontend/*.html` (~23 500 lines total) |
 | Page controllers | 21 | `frontend/assets/js/pages/*.js` |
-| Shared modules | 23 | `frontend/assets/js/core/*.js` |
-| Stylesheets | 21 | `frontend/assets/css/*.css` — 10 still linked, **11 orphaned** |
-| Inline CSS in pages | 19 pages | `<style>` blocks inside the HTML (~17 500 lines) |
+| Shared modules | 26 | `frontend/assets/js/core/*.js` |
+| Stylesheets | 21 | `frontend/assets/css/*.css` — 11 still linked, **10 orphaned** |
+| Inline CSS in pages | 18 pages | `<style>` blocks inside the HTML (~17 500 lines) |
 | Document templates | 4 | `frontend/assets/templates/*.pdf` — **unreferenced** |
 
 - 22 of the 23 pages load exactly one ES module via
@@ -43,21 +70,25 @@ files that sit on disk.
   app works from any prefix. The exception is `attachment-viewer.html`, a self-contained mock with a
   4-line inline script and no module.
 - **Styling is split across two mechanisms.** `base.css` is the shared shell and is linked by 21
-  pages, but the page-specific CSS was largely inlined into the HTML: 19 pages now carry their own
-  `<style>` block, some over 1 500 lines. 11 of the 21 stylesheets are no longer linked by any page
-  (`dashboard.css`, `customers.css`, `invoice-do.css`, `pending.css`, and others) and are dead
-  weight. The CSP permits this via `style-src 'self' 'unsafe-inline'`.
+  pages, but the page-specific CSS was largely inlined into the HTML: 18 pages now carry their own
+  `<style>` block, some over 1 500 lines. 10 of the 21 stylesheets are no longer linked by any page
+  (`completed.css`, `customer-receivable.css`, `customers.css`, `gmail-message.css`, `invoice-do.css`,
+  `invoice-edit.css`, `invoice-receivable.css`, `pending.css`, `quotation-edit.css`,
+  `supplier-payable.css`) and are dead weight. The CSP permits this via `style-src 'self'
+  'unsafe-inline'`.
 - `core/` holds the shared domain layer: document storage per entity (`quotationStorage.js`,
   `invoiceStorage.js`, `deliveryOrderStorage.js`, `soaStorage.js`, `receivableStorage.js`,
   `customerStorage.js`), workflow transitions (`*Workflow.js`, `workflowCategory.js`), Gmail
-  integration (`gmailWorkflowBridge.js`), and helpers.
+  integration (`gmailWorkflowBridge.js`), outbound document preview and send
+  (`documentPreview.js`, `documentSend.js`), and helpers.
 - `core/api.js` is the single HTTP seam. `API_BASE` is chosen at load time from
   `window.location.hostname`: on `localhost` / `127.0.0.1` / `[::1]` it points straight at
   `http://127.0.0.1:8000` for Live Server development; on any real host it stays empty so calls go
   to same-origin `/api` through the nginx proxy. `apiJson()` unwraps `detail` into a thrown `Error`.
-- Document state lives in `localStorage`, written **only** through the `core/*Storage.js` modules
+- Document state lives in `localStorage`, written **mostly** through the `core/*Storage.js` modules
   (seeded from `assets/data/demo-data.json`). The large page modules read and write through those
-  helpers rather than touching `localStorage` directly, which keeps the storage keys in one place.
+  helpers rather than touching `localStorage` directly, which keeps the storage keys in one place —
+  `pages/supplierPayable.js` is the one page module that still writes `localStorage` itself.
 - **There is no PDF generation.** No `window.print`, no `@media print`, and no PDF library anywhere
   in the frontend. The app tracks document *metadata* — a `documentId` and a filename such as
   `QUOTATION.pdf` — but never renders a PDF file. The four PDFs in `assets/templates/` are
@@ -106,14 +137,23 @@ FastAPI — the backend simply is not reachable except through nginx.
   in Starlette 0.47 and Pydantic 2.13.
 - Bound to `127.0.0.1:8000` and nothing else, so the API is only reachable via the proxy.
 - Configuration is read from the repo-root `.env` through `python-dotenv` at import time.
-- 14 routes: `/` and `/api/health`, `/api/gmail/status`, `POST /api/gmail/sync`,
-  `/api/llm/status`, `POST /api/llm/test`, `POST /api/ai/classify/{id}`,
-  `POST /api/ai/classify-unclassified`, `POST /api/gmail/messages/{id}/category`,
-  `/api/dashboard/counts`, `/api/supplier-payable/messages`, `/api/gmail/messages`,
-  `/api/gmail/messages/{id}`, and `/api/gmail/messages/{id}/attachments/{attachment_id}` (streams
-  the attachment inline with `Cache-Control: no-store`).
+- 23 routes:
+  - **Health / status** — `/` and `/api/health`, `/api/gmail/status`, `/api/llm/status`.
+  - **Gmail read** — `POST /api/gmail/sync`, `/api/gmail/messages`,
+    `/api/gmail/messages/{id}`, `/api/gmail/messages/{id}/attachments/{attachment_id}` (streams the
+    attachment inline with `Cache-Control: no-store`).
+  - **Gmail write** — `POST /api/gmail/send`, `POST /api/gmail/messages/{id}/category`.
+  - **AI** — `POST /api/llm/test`, `POST /api/ai/classify/{id}`,
+    `POST /api/ai/classify-unclassified`.
+  - **Dashboard / reporting** — `/api/dashboard/counts`, `/api/supplier-payable/messages`.
+  - **Outbound documents** — `POST /api/documents` (201), `/api/documents`,
+    `/api/documents/{id}`, `/api/documents/{id}/events`, and the four workflow transitions
+    `/api/documents/{id}/submit`, `/approve`, `/reject`, `/send`.
 - Lifespan hooks: `startup` runs `init_db()` then `start_scheduler()`; `shutdown` cancels the
   scheduler. Interactive OpenAPI docs are available on loopback at `/docs`.
+- Six `@app.exception_handler` registrations map domain failures to HTTP: `ValidationError`,
+  `workflow_service.WorkflowError`, `DatabaseError`, `RequestValidationError`, `HTTPException` and a
+  catch-all `Exception`. None of them interpolate an upstream exception into the response body.
 - CORS is scoped by `allow_origin_regex` to `localhost` / `127.0.0.1` on any port, for Live Server
   development only — the same-origin nginx path needs no CORS.
 - Runs as the systemd unit `maxgreen-backend.service` (`Restart=always`, 5 s backoff,
@@ -132,16 +172,23 @@ Thin, synchronous modules; `app.py` only does HTTP concerns and delegates here.
 | `llm_service.py` | Gateway client: config, chat, JSON parsing, retry |
 | `attachment_text_service.py` | Pulls text out of PDF and text attachments for context |
 | `scheduler_service.py` | Background poll loop driving `sync_service` |
+| `security_service.py` | Trust-boundary validation: ids, recipients, filenames, attachment bytes, prompt-injection detection, confidence gate |
+| `workflow_service.py` | Outbound document lifecycle — draft → submit → approve/reject → send, numbering and event log |
+| `logging_config.py` | Structured JSON logging, per-request id, and secret redaction |
 
 ### 7. Storage — SQLite
 
 - One file, `backend/data/maxgreen.db`, through the stdlib `sqlite3` driver (no ORM), opened with
   `row_factory = sqlite3.Row`.
-- A single `gmail_messages` table keyed by `gmail_message_id`, holding envelope fields, body text,
-  attachment/label JSON, plus **12 `ai_*` columns** for the classification result
-  (`ai_category`, `ai_party_type`, `ai_security_status`, `ai_confidence`, `ai_reason`,
-  `ai_quotation_refs_json`, `ai_model`, `ai_classified_at`, `ai_supplier_reference`, `ai_amount`,
-  `ai_due_date`, `ai_quotation_draft_json`).
+- Four tables:
+  - `gmail_messages` (24 columns) keyed by `gmail_message_id`, holding envelope fields, body text,
+    attachment/label JSON, plus **12 `ai_*` columns** for the classification result
+    (`ai_category`, `ai_party_type`, `ai_security_status`, `ai_confidence`, `ai_reason`,
+    `ai_quotation_refs_json`, `ai_model`, `ai_classified_at`, `ai_supplier_reference`, `ai_amount`,
+    `ai_due_date`, `ai_quotation_draft_json`).
+  - `outbound_documents` (26 columns) — the generated-document records behind `/api/documents`.
+  - `workflow_events` (10 columns) — the append-only approval/audit trail per document.
+  - `document_attachments` (7 columns) — outbound attachment metadata and stored bytes.
 - Schema evolution is done at startup by `_ensure_ai_columns()`, which `ALTER TABLE`s in any missing
   column, so upgrades need no migration tooling.
 - Structured values are stored as JSON text in `TEXT` columns rather than normalised child tables.
@@ -149,9 +196,10 @@ Thin, synchronous modules; `app.py` only does HTTP concerns and delegates here.
 ### 8. Google Gmail API — OAuth 2.0
 
 - `google-api-python-client` 2.181, `google-auth-oauthlib` 1.2, `google-auth-httplib2` 0.2.
-- Two scopes are requested: `gmail.readonly` and `gmail.send`. Reading is the only path wired into
-  the app — `gmail_service.py` contains a MIME-composing send function, but no API route or frontend
-  module calls it yet.
+- Two scopes are requested: `gmail.readonly` and `gmail.send`. Both paths are now live:
+  `gmail_service.py` composes MIME mail, `POST /api/gmail/send` exposes it, and
+  `core/documentSend.js` calls it. Sending a document is still gated by the approval workflow —
+  a draft cannot be sent until it has been submitted and approved.
 - `InstalledAppFlow` performs the one-time consent; `credentials.json` and the refresh
   `token.json` live in `backend/secrets/`, which is git-ignored. Expired tokens are refreshed
   transparently and written back.
@@ -201,8 +249,11 @@ placeholder left over from the Live Server prototype.
 ```text
 project/
 ├── START_HERE.md
+├── TECH_STACK.md
+├── pyproject.toml          # ruff + pytest config only, not a build system
 ├── .gitignore
 ├── .env.example
+├── deploy/                 # nginx conf, systemd unit, install.sh
 │
 ├── frontend/      # Existing HTML/CSS/JavaScript app
 │   ├── index.html
@@ -210,22 +261,25 @@ project/
 │   ├── gmail-test.html
 │   └── assets/
 │
-└── backend/       # New Python/FastAPI Gmail backend
+└── backend/       # Python/FastAPI Gmail backend
     ├── app.py
     ├── gmail_auth.py
     ├── test_gmail.py
+    ├── test_llm_gateway.py
     ├── requirements.txt
+    ├── requirements-dev.txt
     ├── setup_windows.bat
     ├── connect_gmail.bat
     ├── test_gmail.bat
     ├── start_backend.bat
-    ├── services/
+    ├── services/           # 10 modules
+    ├── tests/              # pytest suite
     ├── data/
     └── secrets/
 ```
 
 Currently running on an AWS Lightsail instance behind nginx, with Gmail sync, Claude
-classification and AI document pre-fill enabled.
+classification, AI document pre-fill and the outbound document approval workflow enabled.
 
 ## v24 real Gmail Inbox
 

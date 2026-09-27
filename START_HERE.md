@@ -152,7 +152,7 @@ other host it uses same-origin `/api` through the nginx proxy. Both paths work w
 
 ```bash
 cd backend
-.venv/bin/python -m pytest          # 137 tests
+.venv/bin/python -m pytest          # 236 tests
 .venv/bin/ruff check .              # lint
 .venv/bin/ruff check . --fix        # autofix safe findings
 ```
