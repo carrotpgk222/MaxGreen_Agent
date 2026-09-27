@@ -2,7 +2,7 @@ from services.gmail_service import authorize_interactive, get_profile
 
 
 def main() -> None:
-    print("Opening Google sign-in in your browser...")
+    print("Connecting to Gmail...")
     print("Do NOT enter your Gmail password into this terminal. Sign in only on Google's page.\n")
     authorize_interactive()
     profile = get_profile()

@@ -4,12 +4,14 @@ import base64
 import logging
 import mimetypes
 import re
+import webbrowser
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import UTC, datetime
 from email.message import EmailMessage
 from email.utils import parseaddr
 from pathlib import Path
 from typing import Any
+from urllib.parse import parse_qs, urlparse
 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
@@ -43,6 +45,11 @@ SCOPES = [
     "https://www.googleapis.com/auth/gmail.readonly",
     "https://www.googleapis.com/auth/gmail.send",
 ]
+
+#: The Desktop-client redirect registered in credentials.json. Google's out-of-band flow
+#: ("paste this code" page) was retired in 2022, so a headless host cannot be handed a code
+#: directly; the caller approves in a real browser and pastes back the address it landed on.
+LOOPBACK_REDIRECT_URI = "http://localhost"
 
 
 class GmailSendError(RuntimeError):
@@ -133,6 +140,62 @@ def is_connected() -> bool:
         return False
 
 
+def _browser_available() -> bool:
+    """Whether this host can open a sign-in window of its own.
+
+    A deployed backend is a headless box with no browser installed, where
+    ``run_local_server`` aborts with ``webbrowser.Error`` before the user sees anything.
+    """
+    try:
+        webbrowser.get()
+    except webbrowser.Error:
+        return False
+    return True
+
+
+def _authorization_code(pasted: str) -> str:
+    """Pull the authorization code out of a pasted redirect address.
+
+    Accepts the whole address-bar URL, because that is what the user has in front of them
+    after the localhost page fails to load, but also a bare code.
+    """
+    candidate = pasted.strip().strip("\"'")
+    if candidate.startswith(("http://", "https://")):
+        params = parse_qs(urlparse(candidate).query)
+        error = params.get("error", [""])[0]
+        if error:
+            detail = params.get("error_description", [""])[0]
+            raise RuntimeError(f"Google returned an error: {error}{f' ({detail})' if detail else ''}")
+        candidate = params.get("code", [""])[0].strip()
+    if not candidate:
+        raise ValueError(
+            "No authorization code in that input. Paste the full address your browser was "
+            f"redirected to, which should start with '{LOOPBACK_REDIRECT_URI}'."
+        )
+    return candidate
+
+
+def _authorize_by_pasting_redirect(flow: InstalledAppFlow) -> Credentials:
+    """Run the consent screen on the operator's own machine.
+
+    The browser here can only be a human's, somewhere else, so the URL is printed rather
+    than opened and the resulting redirect address is pasted back in.
+    """
+    flow.redirect_uri = LOOPBACK_REDIRECT_URI
+    auth_url, _ = flow.authorization_url(
+        access_type="offline",
+        include_granted_scopes="true",
+        prompt="consent",
+    )
+    print("\nNo browser is available on this machine, so approve access from your own device.")
+    print("Open this link, sign in to Google, and accept the permissions:\n")
+    print(f"  {auth_url}\n")
+    print("The browser will then try to load a localhost page and probably fail to reach it.")
+    print("That failure is expected. Copy the full address from the address bar and paste it here.\n")
+    flow.fetch_token(code=_authorization_code(input("Redirect URL or code: ")))
+    return flow.credentials
+
+
 def authorize_interactive() -> Credentials:
     SECRETS_DIR.mkdir(parents=True, exist_ok=True)
     if not CREDENTIALS_PATH.exists():
@@ -142,7 +205,10 @@ def authorize_interactive() -> Credentials:
         )
 
     flow = InstalledAppFlow.from_client_secrets_file(str(CREDENTIALS_PATH), SCOPES)
-    creds = flow.run_local_server(port=0)
+    if _browser_available():
+        creds = flow.run_local_server(port=0)
+    else:
+        creds = _authorize_by_pasting_redirect(flow)
     TOKEN_PATH.write_text(creds.to_json(), encoding="utf-8")
     return creds
 
