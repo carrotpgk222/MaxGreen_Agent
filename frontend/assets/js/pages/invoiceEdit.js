@@ -8,7 +8,8 @@ import {
   createDefaultInvoice,
   createInvoiceItem,
   escapeHtml,
-  invoiceFromDeliveryOrder
+  invoiceFromDeliveryOrder,
+  invoiceFromQuotation
 } from '../core/invoiceUtils.js'
 import {
   displayDate,
@@ -64,6 +65,7 @@ state.items = (state.items?.length ? state.items : [{}]).map((item, index) => cr
 
 let companies = getCompanies()
 let selectedCompanyId = state.companyId || null
+let selectedQuoteEmailId = state.sourceQuotationEmailId || ''
 let modalCompanyId = null
 let attnBeforeAdd = state.attn || ''
 
@@ -215,13 +217,29 @@ function applyQuotationReference(quoteEmailId) {
   const quotation = getQuotationDraft(quoteEmailId)
   if (!isSelectableQuotation(quoteEmail) || !quotation) return
 
-  const quoteRef = quotation.quotationNumber || quoteEmail.documentId || ''
+  // Mirrors deliveryOrderEdit.js: the picker rebuilds the document from the chosen
+  // quotation, while `keep` holds the fields that belong to this document only.
+  const keep = {
+    invoiceNumber: state.invoiceNumber || invoiceDocumentId || '',
+    documentId: invoiceDocumentId || state.documentId || '',
+    dueDate: state.dueDate,
+    issueDate: state.issueDate,
+    attachments: state.attachments || [],
+    terms: '',
+    paynowQrDataUrl: state.paynowQrDataUrl,
+    externalDeliveryOrderId: state.externalDeliveryOrderId || state.externalReference || ''
+  }
 
-  state.sourceQuotationEmailId = quoteEmailId
-  state.refQuoteDocumentId = quoteRef
-  state.reference = quoteRef
-  elements.quote.value = quoteRef
+  state = {
+    ...invoiceFromQuotation(email, quotation, {
+      sourceQuotationEmailId: quoteEmailId,
+      refQuoteDocumentId: quotation.quotationNumber || quoteEmail.documentId || '',
+      ...keep
+    })
+  }
 
+  selectedQuoteEmailId = quoteEmailId
+  render()
   hideRefQuoteSuggestions()
 }
 

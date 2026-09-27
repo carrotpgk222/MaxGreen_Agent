@@ -42,6 +42,43 @@ export function createDefaultInvoice(email) {
   }
 }
 
+export function invoiceFromQuotation(email, quotation, overrides = {}) {
+  const items = (quotation?.items?.length ? quotation.items : [{}]).map((item, index) => createInvoiceItem({
+    item: String(index + 1),
+    itemCode: item.itemCode || `B${String(index + 1).padStart(3, '0')}`,
+    description: item.description || '',
+    qty: item.qty ?? 1,
+    uom: item.uom || '',
+    unitPrice: item.unitPrice ?? 0,
+    taxRate: item.taxRate ?? 9
+  }, index + 1))
+
+  const quoteRef = overrides.refQuoteDocumentId || quotation?.quotationNumber || quotation?.documentId || ''
+
+  return {
+    ...createDefaultInvoice(email),
+    sourceQuotationEmailId: overrides.sourceQuotationEmailId || email?.sourceQuotationEmailId || '',
+    refQuoteDocumentId: quoteRef,
+    reference: quoteRef,
+    companyId: quotation?.companyId || '',
+    company: quotation?.company || '',
+    customerAddress: quotation?.customerAddress || '',
+    customerPostal: quotation?.customerPostal || '',
+    attn: quotation?.attn || '',
+    issueDate: overrides.issueDate || isoDate(email?.receivedDate),
+    dueDate: quotation?.dueDate || '',
+    currency: quotation?.currency || 'SGD',
+    invoiceNumber: email?.documentId || overrides.invoiceNumber || '',
+    documentId: email?.documentId || overrides.documentId || '',
+    subjectTitle: quotation?.subjectTitle || email?.subject || '',
+    staff: quotation?.staff || '',
+    terms: '',
+    job: quotation?.job || '',
+    items,
+    ...overrides
+  }
+}
+
 export function invoiceFromDeliveryOrder(email, deliveryOrder, quotation = null, overrides = {}) {
   const items = (deliveryOrder?.items?.length ? deliveryOrder.items : [{}]).map((item, index) => createInvoiceItem({
     item: String(index + 1),
