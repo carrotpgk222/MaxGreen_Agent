@@ -247,17 +247,55 @@ def _clean_scope_line(value: str) -> str:
     return text.strip()
 
 
-def _heuristic_scope_items(message: dict[str, Any]) -> list[dict[str, Any]]:
-    """Best-effort fallback: extract requested work, not the whole email."""
-    body = str(message.get("body_text") or message.get("snippet") or "").replace("\r", "\n")
+def _heuristic_scope_items(
+    message: dict[str, Any]
+) -> list[dict[str, Any]]:
+
+    """
+    Best-effort fallback.
+
+    Extract requested services/products from the email without
+    relying on the LLM.
+    """
+
+    body = str(
+        message.get("body_text")
+        or message.get("snippet")
+        or ""
+    ).replace("\r", "\n")
+
     if not body.strip():
         return []
 
+
+    # ---------------------------------------------------------
+    # TRY TO LOCATE A SCOPE / REQUEST SECTION
+    # ---------------------------------------------------------
+
     scope_match = re.search(
-        r"(?is)(?:\*{0,2}\s*)?(?:scope\s+of\s+(?:work|services)|services?\s+required|requested\s+(?:work|services))\s*[:\-]?\s*(.*)",
+        r"(?is)"
+        r"(?:\*{0,2}\s*)?"
+        r"(?:"
+        r"scope\s+of\s+(?:work|services)"
+        r"|services?\s+required"
+        r"|requested\s+(?:work|services|items)"
+        r"|items?\s+required"
+        r"|quotation\s+(?:for|request)"
+        r")"
+        r"\s*[:\-]?\s*(.*)",
         body,
     )
-    scope = scope_match.group(1) if scope_match else body
+
+    scope = (
+        scope_match.group(1)
+        if scope_match
+        else body
+    )
+
+
+    # ---------------------------------------------------------
+    # STOP BEFORE EMAIL / COMMERCIAL INSTRUCTIONS
+    # ---------------------------------------------------------
 
     stop_markers = [
         r"please\s+include\s+in\s+your\s+quotation",
@@ -270,53 +308,194 @@ def _heuristic_scope_items(message: dict[str, Any]) -> list[dict[str, Any]]:
         r"best\s+regards",
         r"regards[,\s]",
     ]
+
     stop = len(scope)
+
     for marker in stop_markers:
-        m = re.search(marker, scope, flags=re.IGNORECASE)
-        if m:
-            stop = min(stop, m.start())
+
+        match = re.search(
+            marker,
+            scope,
+            flags=re.IGNORECASE
+        )
+
+        if match:
+            stop = min(
+                stop,
+                match.start()
+            )
+
     scope = scope[:stop]
 
-    lines = []
+
+    # ---------------------------------------------------------
+    # EXTRACT ITEMS
+    # ---------------------------------------------------------
+
+    items: list[dict[str, Any]] = []
+
+
     for raw in scope.split("\n"):
+
         line = _clean_scope_line(raw)
+
         if not line:
             continue
+
+
         lower = line.lower()
-        if lower in {"scope of work", "scope of services", "services required"}:
+
+
+        # Ignore obvious email text
+        if lower in {
+            "scope of work",
+            "scope of services",
+            "services required",
+        }:
             continue
-        if lower.startswith(("dear ", "hi ", "hello ", "we would like", "we wish to", "for info", "please find")):
-            continue
-        if re.match(r"^(penjuru|terusan|tuas south).*recreation centre", lower):
-            continue
-        if any(token in lower for token in (
-            "deadline", "submit by", "quotation validity", "validity period",
-            "breakdown of costs", "optional cost", "gst", "total cost",
-            "password in next email", "site plan", "tentative full completion",
+
+
+        if lower.startswith((
+            "dear ",
+            "hi ",
+            "hello ",
+            "we would like",
+            "we wish to",
+            "for info",
+            "please find",
         )):
             continue
-        if re.search(r"\b(determine|provide|prepare|submit|address|calculate|verify|endorse|conduct|carry out|perform|apply|obtain|revise|review|inspect|supply|install|repair|replace|construct|design)\b", lower):
-            lines.append(line)
 
-    deduped = []
+
+        if any(
+            token in lower
+            for token in (
+                "deadline",
+                "submit by",
+                "quotation validity",
+                "validity period",
+                "breakdown of costs",
+                "optional cost",
+                "gst",
+                "total cost",
+                "password in next email",
+                "site plan",
+                "tentative full completion",
+            )
+        ):
+            continue
+
+
+        # -----------------------------------------------------
+        # QUANTITY / PRODUCT STYLE
+        #
+        # 20 exercise books
+        # 5 boxes of markers
+        # 3 x whiteboards
+        # 10 pcs pens
+        # -----------------------------------------------------
+
+        quantity_match = re.match(
+            r"^\s*"
+            r"(\d+(?:\.\d+)?)"
+            r"\s*"
+            r"(?:x\s*)?"
+            r"(?:(pcs?|pieces?|boxes?|units?|sets?|packs?)\s+)?"
+            r"(.+)$",
+            line,
+            flags=re.IGNORECASE,
+        )
+
+
+        if quantity_match:
+
+            qty_raw = quantity_match.group(1)
+
+            uom = (
+                quantity_match.group(2)
+                or ""
+            )
+
+            description = (
+                quantity_match.group(3)
+                or ""
+            ).strip()
+
+
+            qty = float(qty_raw)
+
+            if qty.is_integer():
+                qty = int(qty)
+
+
+            if description:
+
+                items.append({
+                    "description": description,
+                    "qty": qty,
+                    "uom": uom,
+                    "unit_price": None,
+                    "tax_rate": None,
+                })
+
+                continue
+
+
+        # -----------------------------------------------------
+        # SERVICE / WORK STYLE
+        # -----------------------------------------------------
+
+        if re.search(
+            r"\b("
+            r"determine|provide|prepare|submit|address|calculate|"
+            r"verify|endorse|conduct|carry out|perform|apply|"
+            r"obtain|revise|review|inspect|supply|install|repair|"
+            r"replace|construct|design|service|maintain"
+            r")\b",
+            lower,
+        ):
+
+            items.append({
+                "description": line,
+                "qty": None,
+                "uom": "",
+                "unit_price": None,
+                "tax_rate": None,
+            })
+
+
+    # ---------------------------------------------------------
+    # REMOVE DUPLICATES
+    # ---------------------------------------------------------
+
+    deduped: list[dict[str, Any]] = []
+
     seen = set()
-    for line in lines:
-        key = re.sub(r"[^a-z0-9]+", "", line.lower())
-        if key and key not in seen:
+
+
+    for item in items:
+
+        key = re.sub(
+            r"[^a-z0-9]+",
+            "",
+            str(
+                item.get("description")
+                or ""
+            ).lower()
+        )
+
+
+        if (
+            key
+            and key not in seen
+        ):
+
             seen.add(key)
-            deduped.append(line)
 
-    return [
-        {
-            "description": line,
-            "qty": None,
-            "uom": "",
-            "unit_price": None,
-            "tax_rate": None,
-        }
-        for line in deduped[:12]
-    ]
+            deduped.append(item)
 
+
+    return deduped[:12]
 
 
 def _description_looks_like_email_dump(value: str) -> bool:
@@ -373,9 +552,18 @@ def _ensure_scope_items(items: list[dict[str, Any]], message: dict[str, Any]) ->
 
 def _quotation_fallback(message: dict[str, Any]) -> dict[str, Any]:
     items = _heuristic_scope_items(message)
-    subject = str(message.get("subject") or "").strip()
+
+    subject = str(
+        message.get("subject") or ""
+    ).strip()
+
     if not items and subject:
-        concise = re.sub(r"^\s*\[[^\]]+\]\s*", "", subject).strip()
+        concise = re.sub(
+            r"^\s*\[[^\]]+\]\s*",
+            "",
+            subject
+        ).strip()
+
         items = [{
             "description": concise or subject,
             "qty": None,
@@ -383,6 +571,7 @@ def _quotation_fallback(message: dict[str, Any]) -> dict[str, Any]:
             "unit_price": None,
             "tax_rate": None,
         }]
+
     return {
         "company": "",
         "attn": "",
@@ -392,7 +581,12 @@ def _quotation_fallback(message: dict[str, Any]) -> dict[str, Any]:
         "currency": "SGD",
         "subject_title": subject,
         "items": items,
-        "extraction_version": QUOTATION_EXTRACTION_VERSION,
+
+        # IMPORTANT:
+        # This is only a fallback.
+        # Do not mark it as a successful AI extraction.
+        "extraction_version": 0,
+        "extraction_source": "fallback",
     }
 
 
@@ -423,8 +617,13 @@ EMAIL DATA:
     try:
         with timed("llm.quotation_extract"):
             parsed, model = chat_json(prompt, retry_label="extract quotation fields from the customer email")
-        normalized = _normalize_quotation_details(parsed, message.get("subject") or "")
+        normalized = _normalize_quotation_details(
+            parsed,
+            message.get("subject") or ""
+        )
+
         normalized["extraction_version"] = QUOTATION_EXTRACTION_VERSION
+        normalized["extraction_source"] = "ai"
         # Claude may occasionally copy the entire email into one Description field.
         # Validate the rows and, when needed, deterministically rebuild them from the
         # actual Scope of Work / action-oriented lines in the source email.
@@ -520,6 +719,7 @@ def classify_message(message: dict[str, Any]) -> dict[str, Any]:
         "subject_title": "",
         "items": [],
         "extraction_version": 0,
+        "extraction_source": "",
     }
     supplier_reference = str(message.get("ai_supplier_reference") or "").strip()
     amount = str(message.get("ai_amount") or "").strip()
@@ -528,12 +728,22 @@ def classify_message(message: dict[str, Any]) -> dict[str, Any]:
 
     if category == "Quotation":
         existing_draft = message.get("ai_quotation_draft")
+
         existing_version = 0
+        existing_source = ""
+
         if isinstance(existing_draft, dict):
+
             try:
-                existing_version = int(existing_draft.get("extraction_version") or 0)
+                existing_version = int(
+                    existing_draft.get("extraction_version") or 0
+                )
             except (TypeError, ValueError):
                 existing_version = 0
+
+            existing_source = str(
+                existing_draft.get("extraction_source") or ""
+            ).strip().lower()
 
         has_existing_details = isinstance(existing_draft, dict) and bool(
             str(existing_draft.get("company") or "").strip()
@@ -543,7 +753,11 @@ def classify_message(message: dict[str, Any]) -> dict[str, Any]:
         )
         # v33 changes the semantic meaning of items: concise billable/requested scope
         # lines, never the whole email. Upgrade old AI drafts once on View/classify.
-        if has_existing_details and existing_version >= QUOTATION_EXTRACTION_VERSION:
+        if (
+                has_existing_details
+                and existing_version >= QUOTATION_EXTRACTION_VERSION
+                and existing_source == "ai"
+            ):
             quotation_details = _normalize_quotation_details(existing_draft, message.get("subject") or "")
         else:
             quotation_details, extract_model, preparation_warning = _extract_quotation_details(data, message)
