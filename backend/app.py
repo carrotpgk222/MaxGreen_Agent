@@ -2,43 +2,57 @@ from __future__ import annotations
 
 import logging
 import mimetypes
-import traceback
+from contextlib import asynccontextmanager
 from pathlib import Path
 from urllib.parse import quote
 
+import uvicorn
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException, Query
-from fastapi import Body
+from fastapi import Body, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
-import uvicorn
 
 BASE_DIR = Path(__file__).resolve().parent
 logger = logging.getLogger("maxgreen")
 load_dotenv(BASE_DIR.parent / ".env")
 
+from services.classification_service import VALID_CATEGORIES, classify_message
 from services.database_service import (
-    count_messages,
     count_inbox_messages,
+    count_messages,
     count_supplier_payable_messages,
     get_message,
     init_db,
     list_messages,
     list_supplier_payable_messages,
     list_unclassified_messages,
-    update_message_classification,
     set_message_category,
+    update_message_classification,
 )
 from services.gmail_service import fetch_attachment, get_profile, is_connected
-from services.sync_service import sync_gmail
-from services.classification_service import classify_message, VALID_CATEGORIES
-from services.llm_service import configured_model, is_configured as llm_is_configured, test_connection
+from services.llm_service import configured_model, test_connection
+from services.llm_service import is_configured as llm_is_configured
 from services.scheduler_service import start_scheduler, stop_scheduler
+from services.sync_service import sync_gmail
+
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    """Order matters: the schema and its additive migrations must exist before the
+    background scheduler starts writing to the database."""
+    init_db()
+    start_scheduler()
+    try:
+        yield
+    finally:
+        await stop_scheduler()
+
 
 app = FastAPI(
     title="MaxGreen Agent Local Backend",
     version="0.5.0",
     description="Local backend for Gmail, Claude classification, and workflow routing.",
+    lifespan=lifespan,
 )
 
 # Local development only: allow any localhost/127.0.0.1 port, including Live Server on :3000.
@@ -51,15 +65,14 @@ app.add_middleware(
 )
 
 
-@app.on_event("startup")
-async def startup() -> None:
-    init_db()
-    start_scheduler()
+def _upstream_failure(message: str, exc: Exception, status_code: int = 502) -> HTTPException:
+    """Log the real upstream error and return a message that is safe to send to the browser.
 
-
-@app.on_event("shutdown")
-async def shutdown() -> None:
-    await stop_scheduler()
+    Upstream exceptions can carry the LLM gateway's response body, model output, Google API
+    tokens and request URLs, so their text must never be echoed in an HTTP response.
+    """
+    logger.error("%s: %s", message, exc, exc_info=True)
+    return HTTPException(status_code=status_code, detail=message)
 
 
 @app.get("/")
@@ -86,7 +99,8 @@ def gmail_status() -> dict:
     try:
         return {"connected": True, **get_profile()}
     except Exception as exc:
-        return {"connected": False, "message": str(exc)}
+        logger.error("Gmail status check failed: %s", exc, exc_info=True)
+        return {"connected": False, "message": "Could not read the Gmail profile. Check the backend logs."}
 
 
 @app.post("/api/gmail/sync")
@@ -106,7 +120,7 @@ def gmail_sync(
             "ai": result.get("ai", {}),
         }
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
+        raise _upstream_failure("Gmail sync failed. Check the backend logs for details.", exc, status_code=500) from exc
 
 
 @app.get("/api/llm/status")
@@ -122,7 +136,7 @@ def llm_test() -> dict:
     try:
         return test_connection()
     except Exception as exc:
-        raise HTTPException(status_code=502, detail=str(exc)) from exc
+        raise _upstream_failure("Could not reach the LLM gateway. Check the backend logs for details.", exc) from exc
 
 
 @app.post("/api/ai/classify/{gmail_message_id}")
@@ -135,8 +149,8 @@ def classify_gmail_message(gmail_message_id: str) -> dict:
         update_message_classification(gmail_message_id, result)
         return {"ok": True, "gmail_message_id": gmail_message_id, "classification": result}
     except Exception as exc:
-        logger.error("AI classification failed for Gmail %s: %s\n%s", gmail_message_id, exc, traceback.format_exc())
-        raise HTTPException(status_code=502, detail=f"AI preparation failed: {exc}") from exc
+        logger.error("AI classification failed for Gmail %s", gmail_message_id, exc_info=True)
+        raise _upstream_failure("AI preparation failed. Check the backend logs for details.", exc) from exc
 
 
 @app.post("/api/ai/classify-unclassified")
@@ -152,7 +166,14 @@ def classify_unclassified(limit: int = Query(default=10, ge=1, le=25)) -> dict:
             update_message_classification(message_id, result)
             results.append({"gmail_message_id": message_id, "ok": True, "classification": result})
         except Exception as exc:
-            results.append({"gmail_message_id": message_id, "ok": False, "error": str(exc)})
+            logger.error("AI classification failed for Gmail %s: %s", message_id, exc, exc_info=True)
+            results.append(
+                {
+                    "gmail_message_id": message_id,
+                    "ok": False,
+                    "error": "Classification failed. See the backend logs for details.",
+                }
+            )
     return {"ok": True, "processed": len(results), "results": results}
 
 
@@ -229,10 +250,18 @@ def gmail_attachment(
     try:
         data = fetch_attachment(gmail_message_id, attachment_id)
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"Could not fetch Gmail attachment: {exc}") from exc
+        raise _upstream_failure(
+            "Could not fetch the Gmail attachment. Check the backend logs for details.",
+            exc,
+            status_code=500,
+        ) from exc
 
     safe_filename = filename or attachment_meta.get("filename") or "attachment"
-    media_type = attachment_meta.get("mime_type") or mimetypes.guess_type(safe_filename)[0] or "application/octet-stream"
+    media_type = (
+        attachment_meta.get("mime_type")
+        or mimetypes.guess_type(safe_filename)[0]
+        or "application/octet-stream"
+    )
     encoded = quote(safe_filename)
 
     return Response(
