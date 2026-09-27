@@ -20,7 +20,7 @@ out to third-party APIs.
         ▼
 5. Service layer  (backend/services/ — 7 modules)
         ├──────────────► 6. SQLite  (backend/data/maxgreen.db, stdlib sqlite3)
-        └──────────────► 7. Google Gmail API  (OAuth 2.0, gmail.readonly)
+        └──────────────► 7. Google Gmail API  (OAuth 2.0, readonly + send)
                          8. LLM gateway → Claude Sonnet 4.5  (HTTPS + x-api-key)
 ```
 
@@ -135,11 +135,12 @@ Thin, synchronous modules; `app.py` only does HTTP concerns and delegates here.
   column, so upgrades need no migration tooling.
 - Structured values are stored as JSON text in `TEXT` columns rather than normalised child tables.
 
-### 8. Google Gmail API — OAuth 2.0, read-only
+### 8. Google Gmail API — OAuth 2.0
 
 - `google-api-python-client` 2.181, `google-auth-oauthlib` 1.2, `google-auth-httplib2` 0.2.
-- The only scope requested is `https://www.googleapis.com/auth/gmail.readonly` — the app never
-  sends mail.
+- Two scopes are requested: `gmail.readonly` and `gmail.send`. Reading is the only path wired into
+  the app — `gmail_service.py` contains a MIME-composing send function, but no API route or frontend
+  module calls it yet.
 - `InstalledAppFlow` performs the one-time consent; `credentials.json` and the refresh
   `token.json` live in `backend/secrets/`, which is git-ignored. Expired tokens are refreshed
   transparently and written back.

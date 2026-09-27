@@ -36,7 +36,7 @@ FastAPI 0.116 / Uvicorn 0.35  ── 14 routes, CORS limited to localhost regex
   ▼
 backend/services/  ── 7 synchronous modules
   ├─► SQLite            backend/data/maxgreen.db
-  ├─► Gmail API         OAuth 2.0, gmail.readonly only
+  ├─► Gmail API         OAuth 2.0, gmail.readonly + gmail.send
   └─► LLM gateway       POST {LLM_GATEWAY_URL}/api/chat, x-api-key → Claude Sonnet 4.5
 ```
 
@@ -257,8 +257,10 @@ fails the sync, and leftovers are retried from the Inbox via
 11. **Treat all model output as hostile.** Every new AI-derived field needs a normaliser against a
     `VALID_*` set with a safe default. Do not pass `chat_json()` output straight into the database
     or the DOM.
-12. Keep Gmail **read-only**. The single scope is `gmail.readonly`; adding `gmail.send` or
-    `gmail.modify` is a deliberate product decision, not a refactor.
+12. `gmail.send` is now in `SCOPES` and `gmail_service.py` can compose and send MIME mail, but
+    **no route or frontend module calls it**. That send path is unreviewed and unreachable. Do not
+    expose it without deciding on consent, rate limits and an audit trail, and do not add
+    `gmail.modify` — anything beyond send deletes or alters real mail.
 13. **Schema changes must be additive** — a new column in `_ensure_ai_columns()` as
     `ALTER TABLE ... ADD COLUMN`. No destructive migration, no ORM, no migration framework. The
     table is keyed on `gmail_message_id`; keep it that way.
@@ -293,3 +295,9 @@ fails the sync, and leftovers are retried from the Inbox via
     exists.
 20. `frontend/package-lock.json` is an empty placeholder with no `package.json` beside it. It is a
     leftover from the Live Server prototype, not a dependency manifest.
+21. **The stored Gmail OAuth token is dead.** `backend/secrets/token.json` grants only
+    `gmail.readonly` and now fails to refresh with `invalid_grant: Token has been expired or
+    revoked.` — it fails the same way when loaded with the original readonly scope, so widening
+    `SCOPES` did not cause it. `/api/health` therefore reports `gmail_connected: false` and
+    background sync is a no-op until someone re-runs `python gmail_auth.py`. Re-consent will grant
+    whatever `SCOPES` contains at that moment, which now includes `gmail.send`.

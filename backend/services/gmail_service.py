@@ -1,15 +1,15 @@
 from __future__ import annotations
 
 import base64
+import mimetypes
 import re
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import UTC, datetime
+from email.message import EmailMessage
 from email.utils import parseaddr
 from pathlib import Path
 from typing import Any
 
-import mimetypes
-from email.message import EmailMessage
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -20,7 +20,8 @@ SECRETS_DIR = BASE_DIR / "secrets"
 CREDENTIALS_PATH = SECRETS_DIR / "credentials.json"
 TOKEN_PATH = SECRETS_DIR / "token.json"
 
-# Read-only first. We will add gmail.send later when the app's sending flow is ready.
+# Read and send. Reading is the only path wired into the app; the send helper below is
+# not currently called by any endpoint.
 SCOPES = [
     "https://www.googleapis.com/auth/gmail.readonly",
     "https://www.googleapis.com/auth/gmail.send",

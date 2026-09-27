@@ -9,8 +9,8 @@
 Gmail → Python backend → SQLite → browser. Inbox messages are pulled from Gmail on a timer, read
 by Claude through the organizer's LLM gateway, classified into a fixed set of workflow categories,
 and surfaced in the Inbox page for review. Quotation, Invoice and Delivery Order drafts are
-pre-filled from the extracted data. Nothing is ever sent back to Gmail — the OAuth scope is
-read-only.
+pre-filled from the extracted data. Reading is the only Gmail path wired into the app; although the
+OAuth consent now also asks for `gmail.send`, no endpoint calls the send function.
 
 ## Production (current deployment)
 
@@ -111,10 +111,13 @@ cd backend
 .venv/bin/python gmail_auth.py
 ```
 
-A browser sign-in opens; approve read-only access. This writes `backend/secrets/token.json`, which
-is also git-ignored. On Windows, double-click `connect_gmail.bat`.
+A browser sign-in opens; approve the requested access. This writes `backend/secrets/token.json`,
+which is also git-ignored. On Windows, double-click `connect_gmail.bat`.
 
-Only `https://www.googleapis.com/auth/gmail.readonly` is requested.
+The consent screen requests `gmail.readonly` **and** `gmail.send`. Only reading is used today — the
+send function in `gmail_service.py` is not called by any endpoint — but Google will not let you
+remove `gmail.send` from the consent screen without re-authorising, so decline it if you would
+rather not grant it.
 
 ### 4. Run the backend
 
