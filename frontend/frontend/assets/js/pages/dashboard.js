@@ -285,216 +285,45 @@ function populateReceivableCards(rows = []) {
 
 
   // ==========================================================
-  // WEEK RANGES
+  // MONTHLY RECEIVABLE RANGES
+  // Older, previous two months, and current month.
   // ==========================================================
 
-  const thisWeekStart =
-    getMonday(today)
-
-
-  const thisWeekEnd =
-    addDays(
-      thisWeekStart,
-      6
-    )
-
-
-  const nextWeekStart =
-    addDays(
-      thisWeekStart,
-      7
-    )
-
-
-  const nextWeekEnd =
-    addDays(
-      thisWeekStart,
-      13
-    )
-
-
-  const followingWeekStart =
-    addDays(
-      thisWeekStart,
-      14
-    )
-
-
-  const followingWeekEnd =
-    addDays(
-      thisWeekStart,
-      20
-    )
-
-
-
-  // ==========================================================
-  // GROUP AMOUNTS
-  // ==========================================================
+  const currentMonthStart = new Date(today.getFullYear(), today.getMonth(), 1)
+  const previousMonthStart = new Date(today.getFullYear(), today.getMonth() - 1, 1)
+  const twoMonthsAgoStart = new Date(today.getFullYear(), today.getMonth() - 2, 1)
+  const nextMonthStart = new Date(today.getFullYear(), today.getMonth() + 1, 1)
 
   let olderAmount = 0
-  let thisWeekAmount = 0
-  let nextWeekAmount = 0
-  let followingWeekAmount = 0
-
-
+  let twoMonthsAgoAmount = 0
+  let previousMonthAmount = 0
+  let currentMonthAmount = 0
 
   receivables.forEach(item => {
-
     if (!item.sentDate) {
-
-      console.warn(
-        'Receivable has no sentEmailOn:',
-        item
-      )
-
+      console.warn('Receivable has no sentEmailOn:', item)
       return
-
     }
 
-
-
-    // --------------------------------------------------------
-    // OLDER
-    // --------------------------------------------------------
-
-    if (
-      item.sentDate < thisWeekStart
-    ) {
-
-      olderAmount +=
-        item.amount
-
-      return
-
+    if (item.sentDate < twoMonthsAgoStart) {
+      olderAmount += item.amount
+    } else if (item.sentDate < previousMonthStart) {
+      twoMonthsAgoAmount += item.amount
+    } else if (item.sentDate < currentMonthStart) {
+      previousMonthAmount += item.amount
+    } else if (item.sentDate < nextMonthStart) {
+      currentMonthAmount += item.amount
     }
-
-
-
-    // --------------------------------------------------------
-    // THIS WEEK
-    // --------------------------------------------------------
-
-    if (
-
-      item.sentDate >=
-      thisWeekStart &&
-
-      item.sentDate <=
-      thisWeekEnd
-
-    ) {
-
-      thisWeekAmount +=
-        item.amount
-
-      return
-
-    }
-
-
-
-    // --------------------------------------------------------
-    // NEXT WEEK
-    // --------------------------------------------------------
-
-    if (
-
-      item.sentDate >=
-      nextWeekStart &&
-
-      item.sentDate <=
-      nextWeekEnd
-
-    ) {
-
-      nextWeekAmount +=
-        item.amount
-
-      return
-
-    }
-
-
-
-    // --------------------------------------------------------
-    // FOLLOWING WEEK
-    // --------------------------------------------------------
-
-    if (
-
-      item.sentDate >=
-      followingWeekStart &&
-
-      item.sentDate <=
-      followingWeekEnd
-
-    ) {
-
-      followingWeekAmount +=
-        item.amount
-
-    }
-
   })
 
-
-
-  // ==========================================================
-  // CHART GROUPS
-  // ==========================================================
+  const monthLabel = date => date.toLocaleString('en-US', { month: 'short' })
 
   const groups = [
-
-    {
-
-      label: 'Older',
-
-      amount:
-        olderAmount
-
-    },
-
-
-    {
-
-      label: 'This week',
-
-      amount:
-        thisWeekAmount
-
-    },
-
-
-    {
-
-      label:
-        formatDateRange(
-          nextWeekStart,
-          nextWeekEnd
-        ),
-
-      amount:
-        nextWeekAmount
-
-    },
-
-
-    {
-
-      label:
-        formatDateRange(
-          followingWeekStart,
-          followingWeekEnd
-        ),
-
-      amount:
-        followingWeekAmount
-
-    }
-
+    { label: 'Older', amount: olderAmount },
+    { label: monthLabel(twoMonthsAgoStart), amount: twoMonthsAgoAmount },
+    { label: monthLabel(previousMonthStart), amount: previousMonthAmount },
+    { label: monthLabel(currentMonthStart), amount: currentMonthAmount }
   ]
-
 
 
   console.log(
